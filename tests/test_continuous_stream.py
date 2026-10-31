@@ -36,8 +36,8 @@ class Rest:
 
 
 class Socket:
-    def __init__(self,rest,ack=True):
-        self.rest,self.ack=rest,ack;self.queue=asyncio.Queue();self.active=set();self.sent=[];self.feeder=None
+    def __init__(self,rest,ack=True,gap=False):
+        self.rest,self.ack=rest,ack;self.gap=gap;self.gapped=False;self.queue=asyncio.Queue();self.active=set();self.sent=[];self.feeder=None
     async def __aenter__(self):
         await self.queue.put({'type':'welcome'});self.feeder=asyncio.create_task(self.feed());return self
     async def __aexit__(self,*args):
@@ -57,7 +57,10 @@ class Socket:
             for topic in sorted(self.active):
                 channel,s=topic.split(':');channel=channel.split('/')[-1]
                 seq=self.rest.sequences.get(s,100)+1
-                if channel=='level2':self.rest.sequences[s]=seq
+                if channel=='level2':
+                    if self.gap and not self.gapped and seq>=105:
+                        seq+=2;self.gapped=True
+                    self.rest.sequences[s]=seq
                 data={'symbol':s,'sequence':seq,'ts':t*1_000_000}
                 if channel=='execution':data.update(tradeId=f'{s}:{seq}',side='buy',size=1,price='1')
                 elif channel=='tickerV2':data.update(bestBidPrice='1',bestAskPrice='1.0002',bestBidSize=100,bestAskSize=100)
@@ -113,7 +116,9 @@ class ContinuousStreamTests(unittest.IsolatedAsyncioTestCase):
     async def test_open_position_pin_is_selected_atomically_even_if_ineligible(self):
         # Initialize a real ledger transition with explicitly synthetic quotes.
         now=__import__('time').time_ns()//1_000_000
-        await self.pipeline.append([scan(now)])
+        packet=scan(now)
+        packet[2]['report']['paper_contract_specs'][SYM]['captured_ms']=now
+        await self.pipeline.append([packet])
         for i in range(3):await self.pipeline.append([market('execution',now,i+1)])
         await self.pipeline.append([market('level2',now,1)])
         await self.pipeline.append([market('tickerV2',now,1)])
@@ -125,6 +130,24 @@ class ContinuousStreamTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn(SYM,result['watch']['deep_symbols'])
         self.assertIn(SYM,result['unavailable'])
         self.assertIsNotNone((await self.pipeline.report())['open_position'])
+
+    async def test_pin_remains_subscribed_after_real_ledger_position_and_rotation(self):
+        await self.test_open_position_pin_is_selected_atomically_even_if_ineligible()
+        with self.assertRaises(asyncio.TimeoutError):
+            await asyncio.wait_for(self.observer.session(),2.2)
+        sent=self.sockets[0].sent
+        self.assertTrue(any(m['type']=='subscribe' and m['topic'].endswith(SYM) for m in sent))
+        self.assertFalse(any(m['type']=='unsubscribe' and m['topic'].endswith(SYM) for m in sent))
+        self.assertIn(SYM,(await self.pipeline.report())['pins'])
+
+    async def test_book_gap_resync_does_not_reconnect_or_claim_missing_deltas(self):
+        self.observer.connector=lambda *a,**k:Socket(self.rest,gap=True)
+        await self.observer.preflight()
+        with self.assertRaises(asyncio.TimeoutError):
+            await asyncio.wait_for(self.observer.session(),.9)
+        self.assertEqual(self.observer.stream_stats['connections'],1)
+        self.assertEqual(self.observer.stream_stats['book_gaps'],1)
+        self.assertGreaterEqual(self.observer.stream_stats['book_resyncs'],4)
 
     async def test_storage_writer_runs_off_the_event_loop(self):
         import threading

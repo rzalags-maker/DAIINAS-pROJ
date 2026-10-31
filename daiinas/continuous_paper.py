@@ -27,7 +27,8 @@ class PaperLedger:
         self.policy,self.shadow=policy,shadow
         identity=canonical({'source_id':source_id,'paper':asdict(policy),'shadow':asdict(shadow),'schema':1})
         row=self.db.execute("SELECT value FROM v33_meta WHERE key='identity'").fetchone()
-        if row and row[0]!=identity:raise ValueError('Account/source/policy identity changed; never reset existing money state')
+        if row and row[0]!=identity:
+            self.db.close();raise ValueError('Account/source/policy identity changed; never reset existing money state')
         self.db.execute('INSERT OR IGNORE INTO v33_meta VALUES (?,?)',('identity',identity))
         self.db.executescript('''
           CREATE TABLE IF NOT EXISTS checkpoint(id INTEGER PRIMARY KEY CHECK(id=1),payload TEXT NOT NULL);
@@ -42,7 +43,8 @@ class PaperLedger:
             'cursor':0,'now_ms':-1,'input_digest':'','cash':8.,'peak':8.,'last_equity':8.,
             'halted':False,'max_drawdown':0.,'external_flows':0.,'realized':0.,'fees':0.,'carry':0.,
             'paused':False,'position':None,'pending':None,'exit_request':None,'scan':None,
-            'books':{},'quotes':{},'trades':{},'episodes':{},'last_print':{},'counts':{},'mark_status':'FLAT'}
+            'books':{},'quotes':{},'trades':{},'episodes':{},'last_print':{},'counts':{},'mark_status':'FLAT','entry_fees':0.,'exit_fees':0.,
+            'closed_summary':{'count':0,'wins':0,'losses':0,'profit':0.,'loss':0.}}
 
     def close(self):self.db.close()
 
@@ -57,8 +59,9 @@ class PaperLedger:
 
     def spec(self,symbol):
         scan=self.state['scan']
-        if not scan or symbol in scan['unavailable']:return None
-        return scan['specs'].get(symbol)
+        if not scan or self.state['now_ms']-scan['available_ms']>600000 or symbol in scan['unavailable']:return None
+        spec=scan['specs'].get(symbol)
+        return spec if spec and self.state['now_ms']-spec['captured_ms']<=600000 else None
 
     def rules(self,symbol):
         spec=self.spec(symbol)
@@ -68,11 +71,14 @@ class PaperLedger:
         now=self.state['now_ms'];book=self.state['books'].get(symbol)
         if not book or not book.get('verified') or not 0<=now-book['available_ms']<=self.shadow.max_book_age_ms:
             return False
+        spec=self.spec(symbol)
+        if book.get('rules_hash') and (not spec or book['rules_hash']!=digest(spec['rules'])):return False
         if quote is not None:
             # Only actually displayed best-level liquidity, never invented depth.
             for name,qkey in [('best_bid','bid'),('best_ask','ask')]:
                 if name not in book or float(book[name])!=float(quote[qkey]):return False
-            if min(float(book.get('bid_base_size',0)),float(book.get('ask_base_size',0)))<=0:return False
+        values=[float(book.get(k,0)) for k in ('bid_base_size','ask_base_size')]
+        if not all(math.isfinite(v) and v>0 for v in values):return False
         return True
 
     def valid_quote(self,q,now):
@@ -113,14 +119,34 @@ class PaperLedger:
         valid=True
         if pos:
             q=s['quotes'].get(pos['symbol'])
-            if not q or not self.valid_quote(q,s['now_ms']) or not self.book_ok(pos['symbol']):
+            current_spec=self.spec(pos['symbol'])
+            contract_ok=current_spec is not None and digest(current_spec['rules'])==pos['rules_hash']
+            if not contract_ok:
+                valid=False;s['mark_status']='UNRESOLVED_CONTRACT_MARK'
+                self.request_exit('CONTRACT_CHANGED');self.unresolved('missing_or_changed_asof_exit_rules')
+                equity=s['last_equity']+external_flow
+            elif not q or not self.valid_quote(q,s['now_ms']) or not self.book_ok(pos['symbol']):
                 valid=False;s['mark_status']='UNRESOLVED_STALE_MARK'
-                self.request_exit('DATA_HEALTH');self.unresolved('missing_or_stale_executable_mark')
+                if s['now_ms']-pos.get('last_good_mark_ms',pos['entry_received_ms'])>self.policy.max_quote_age_ms:
+                    self.request_exit('DATA_HEALTH')
+                self.unresolved('missing_or_stale_executable_mark')
                 equity=s['last_equity']+external_flow
             else:
-                mtm=finish_position(pos,q,s['now_ms'],'MARK_ONLY',self.policy)
+                mtm=finish_position({**pos,'fee_rate':max(current_spec['taker_fee_rate'],self.policy.minimum_taker_fee_rate)},q,s['now_ms'],'MARK_ONLY',self.policy)
                 equity=s['cash']+mtm['gross_pnl_usdt']-mtm['exit_fee_usdt']-mtm['modeled_carry_usdt']
                 s['mark_status']='OBSERVED_QUOTE_WITH_MODELED_EXIT_COSTS'
+                depth=self.executable_quote(pos['symbol'],q)
+                available=float(depth['bid_base_size' if pos['direction']=='LONG' else 'ask_base_size']) if depth else 0
+                if available<pos['quantity_contracts']*pos['contract_multiplier']:
+                    valid=False;s['mark_status']='UNRESOLVED_DEPTH_INDICATIVE_ONLY'
+                    equity=min(equity,s['last_equity'])
+                    self.unresolved('insufficient_verified_depth_for_full_exit')
+                else:pos['last_good_mark_ms']=s['now_ms']
+                spec=self.spec(pos['symbol']);data=self.executable_quote(pos['symbol'],q)
+                if (pos.get('unresolved') and spec and digest(spec['rules'])==pos['rules_hash'] and data
+                    and float(data['bid_base_size' if pos['direction']=='LONG' else 'ask_base_size'])
+                    >=pos['quantity_contracts']*pos['contract_multiplier']):
+                    self.audit('RESOLVED',symbol=pos['symbol'],position_id=pos['id']);pos['unresolved']=None
         else:s['mark_status']='FLAT'
         ctrl=CapitalController(max(s['peak'],1e-9))
         ctrl.peak=s['peak'];ctrl.halted=s['halted'];ctrl.last_equity=s['last_equity']
@@ -179,6 +205,13 @@ class PaperLedger:
             elif now-pos['entry_received_ms']>=self.policy.maximum_holding_ms:self.request_exit('TIME')
             spread=(float(q['ask'])-float(q['bid']))/((float(q['ask'])+float(q['bid']))/2)*10000
             if spread>self.shadow.max_spread_bps:self.request_exit('SPREAD')
+            depth=self.executable_quote(sym,q)
+            if depth and float(depth['bid_base_size' if sign==1 else 'ask_base_size'])<pos['quantity_contracts']*pos['contract_multiplier']:
+                self.request_exit('DEPTH')
+            feature=observe(received_ms=now,recent_trades=s['trades'].get(sym,[]),
+                book_received_ms=s['books'].get(sym,{}).get('available_ms') if self.book_ok(sym,q) else None,quote=q,policy=self.shadow)
+            opposite='SHORT_PRESSURE' if sign==1 else 'LONG_PRESSURE'
+            if feature.get('direction')==opposite:self.request_exit('FLOW_INVALIDATION')
         self.mark()
         pos=s['position']
         if pos and pos['symbol']==sym:
@@ -187,7 +220,7 @@ class PaperLedger:
             data=self.executable_quote(sym,q)
             if not current or digest(current['rules'])!=pos['rules_hash']:
                 self.request_exit('CONTRACT_CHANGED');self.unresolved('missing_or_changed_asof_exit_rules')
-            elif request and self.seq>request['requested_seq'] and now-request['requested_ms']>=self.policy.minimum_entry_latency_ms and int(q['timestamp'])>request['provider_ms']:
+            elif request and self.seq>request['requested_seq'] and now-request['requested_ms']>=self.policy.minimum_entry_latency_ms and int(q['timestamp'])>request['provider_ms'] and q['observed_ms']>=request['requested_ms']+self.policy.minimum_entry_latency_ms:
                 needed=pos['quantity_contracts']*pos['contract_multiplier']
                 available=float(data['bid_base_size' if pos['direction']=='LONG' else 'ask_base_size']) if data else 0
                 if available<needed:
@@ -197,7 +230,11 @@ class PaperLedger:
                     done=finish_position(closing,data,now,request['reason'],self.policy)
                     done['exit_source_seq']=self.seq;done['exit_provider_ms']=int(q['timestamp'])
                     s['cash']+=done['gross_pnl_usdt']-done['exit_fee_usdt']-done['modeled_carry_usdt']
-                    s['fees']+=done['exit_fee_usdt'];s['carry']+=done['modeled_carry_usdt'];s['realized']+=done['net_pnl_usdt']
+                    s['fees']+=done['exit_fee_usdt'];s['exit_fees']=s.get('exit_fees',0)+done['exit_fee_usdt'];s['carry']+=done['modeled_carry_usdt'];s['realized']+=done['net_pnl_usdt']
+                    summary=s.setdefault('closed_summary',{'count':0,'wins':0,'losses':0,'profit':0.,'loss':0.})
+                    summary['count']+=1
+                    if done['net_pnl_usdt']>0:summary['wins']+=1;summary['profit']+=done['net_pnl_usdt']
+                    if done['net_pnl_usdt']<0:summary['losses']+=1;summary['loss']-=done['net_pnl_usdt']
                     self.db.execute('INSERT INTO closed_positions VALUES (?,?)',(pos['id'],canonical(done)))
                     self.audit('CLOSED',position_id=pos['id'],reason=request['reason'],net_pnl=done['net_pnl_usdt'])
                     s['position']=s['exit_request']=None
@@ -206,7 +243,7 @@ class PaperLedger:
         pending=s['pending']
         if pending and pending['symbol']==sym:
             elapsed=now-pending['signal_ms']
-            if elapsed>=self.policy.minimum_entry_latency_ms and self.seq>pending['source_seq'] and int(q['timestamp'])>pending['provider_ms']:
+            if elapsed>=self.policy.minimum_entry_latency_ms and self.seq>pending['source_seq'] and int(q['timestamp'])>pending['provider_ms'] and q['observed_ms']>=pending['signal_ms']+self.policy.minimum_entry_latency_ms:
                 reason=None;plan=None
                 current=self.spec(sym);scan=s['scan'];data=self.executable_quote(sym,q)
                 if s['paused'] or s['halted']:reason='paused_or_halted'
@@ -222,7 +259,7 @@ class PaperLedger:
                 s['pending']=None
                 if plan is None:self.audit('REJECTED',signal_id=pending['id'],symbol=sym,reason=reason)
                 else:
-                    s['cash']-=plan['entry_fee_usdt'];s['fees']+=plan['entry_fee_usdt']
+                    s['cash']-=plan['entry_fee_usdt'];s['fees']+=plan['entry_fee_usdt'];s['entry_fees']=s.get('entry_fees',0)+plan['entry_fee_usdt']
                     s['position']={**plan,'id':'position:'+pending['id'],'symbol':sym,'rules_hash':pending['rules_hash'],
                         'signal_received_ms':pending['signal_ms'],'entry_received_ms':now,
                         'entry_provider_ms':int(q['timestamp']),'entry_source_seq':self.seq,'unresolved':None}
@@ -285,6 +322,10 @@ class PaperLedger:
                 if s['pending'] and available-s['pending']['signal_ms']>self.policy.entry_ttl_ms:
                     self.audit('UNFILLED',reason='entry_ttl',signal_id=s['pending']['id']);s['pending']=None
                 if kind=='SCAN':self.scan(payload)
+                elif kind=='SNAPSHOT':
+                    if payload.get('sha256')!=digest(payload['snapshot']):raise ValueError('Book snapshot digest mismatch')
+                    s['books'].pop(payload['symbol'],None)
+                    self.audit('BOOK_SNAPSHOT',symbol=payload['symbol'],sequence=payload['snapshot']['sequence'])
                 elif kind=='CONTROL':
                     try:self.control(payload)
                     except (ValueError,KeyError,TypeError) as exc:
@@ -293,12 +334,12 @@ class PaperLedger:
                     if payload['state']=='CONNECTED':
                         s['session_id']=payload.get('session_id');s['connected']=True
                         s['trades'].clear()
-                    elif payload['state']=='DISCONNECTED':s['connected']=False
+                    elif payload['state'] in ('DISCONNECTED','CONNECTION_LOSS','STORAGE_CAPACITY_HALT'):s['connected']=False
                     affected=payload.get('symbol')
                     for symbol in list(s['books']):
                         if affected is None or affected==symbol:s['books'].pop(symbol,None)
                     if s['position'] and (affected is None or affected==s['position']['symbol']):
-                        self.request_exit('DATA_HEALTH');self.unresolved(payload['state'])
+                        self.unresolved(payload['state'])
                     self.audit('HEALTH',**payload)
                 elif kind=='MARKET':
                     sym,channel=payload['symbol'],payload['channel'];data=payload['normalized']
@@ -307,10 +348,24 @@ class PaperLedger:
                         s['cursor']=seq;s['input_digest']=digest([s['input_digest'],sha])
                         self.db.execute('INSERT INTO processed VALUES (?,?)',(seq,sha))
                         continue
+                    bound=self.spec(sym)
+                    if payload.get('rules_hash') and (not bound or payload['rules_hash']!=digest(bound['rules'])):
+                        self.audit('REJECTED_EVENT',symbol=sym,reason='normalization_rule_version_mismatch')
+                        s['cursor']=seq;s['input_digest']=digest([s['input_digest'],sha])
+                        self.db.execute('INSERT INTO processed VALUES (?,?)',(seq,sha))
+                        continue
                     if int(payload['event_ms'])>available or int(payload['received_ms'])>available:
-                        raise ValueError('Future market data publication')
+                        self.audit('REJECTED_EVENT',reason='future_market_timestamp',symbol=sym)
+                        s['cursor']=seq;s['input_digest']=digest([s['input_digest'],sha])
+                        self.db.execute('INSERT INTO processed VALUES (?,?)',(seq,sha))
+                        continue
                     if channel=='level2':
-                        s['books'][sym]={**data,'available_ms':available}
+                        if data.get('verified') is not True or available-int(payload['event_ms'])>self.shadow.max_book_age_ms:
+                            s['books'].pop(sym,None)
+                            self.audit('REJECTED_EVENT',symbol=sym,reason='unverified_or_stale_book')
+                        else:
+                            if sym not in s['books']:self.audit('VERIFIED_BOOK',symbol=sym)
+                            s['books'][sym]={**data,'available_ms':available,'rules_hash':payload.get('rules_hash')}
                     elif channel=='execution':
                         if not isinstance(data['buyer_is_maker'],bool) or not all(math.isfinite(float(data[k])) and float(data[k])>0 for k in ('price','quantity')):
                             raise ValueError('Invalid trade side/units')
@@ -318,7 +373,7 @@ class PaperLedger:
                         records.append({**data,'received_ms':available})
                         s['trades'][sym]=[v for v in records if available-v['received_ms']<=self.shadow.window_ms][-5000:]
                         s['last_print'][sym]=available
-                    elif channel=='tickerV2':self.quote(sym,data)
+                    elif channel=='tickerV2':self.quote(sym,{**data,'observed_ms':payload.get('wire_received_ms',payload['received_ms'])})
                     else:raise ValueError('Unknown market channel')
                 elif kind=='CLOCK':
                     if 'service' in payload:s['service']=payload['service']
@@ -338,12 +393,14 @@ class PaperLedger:
         result={'status':'PAPER_ONLY','live_orders_enabled':False,'strategy_validated':False,
             'initial_capital':8.,'cash':s['cash'],'equity_last_mark':s['last_equity'],'mark_status':s['mark_status'],
             'realized_net_pnl':s['realized'],'cash_pnl_excluding_external_flows':s['cash']-8-s['external_flows'],
-            'external_simulated_flows':s['external_flows'],'fees':s['fees'],'modeled_carry':s['carry'],
+            'external_simulated_flows':s['external_flows'],'fees':s['fees'],'entry_fees':s.get('entry_fees',0),
+            'exit_fees':s.get('exit_fees',0),'modeled_carry':s['carry'],'closed_summary':s.get('closed_summary'),
+            'recent_closed_positions':[json.loads(row[0]) for row in self.db.execute('SELECT payload FROM closed_positions ORDER BY rowid DESC LIMIT 20')],
             'peak':s['peak'],'maximum_drawdown':s['max_drawdown'],'halted':s['halted'],'paused_new_entries':s['paused'],
             'open_position':s['position'],'pending_entry':s['pending'],'pending_exit':s['exit_request'],
             'pins':self.pins(),'source_cursor':s['cursor'],'input_digest':s['input_digest'],
             'counts':s['counts'],'scan':s['scan'],'checkpoint_available_ms':s['now_ms'],'service':s.get('service'),
-            '24h_host_gate':'BLOCKED — HOST NOT PROVISIONED'}
+            }
         return deepcopy(result)
 
 
@@ -354,8 +411,12 @@ class Pipeline:
         self.executor=ThreadPoolExecutor(max_workers=1,thread_name_prefix='v33-sqlite')
         def initialize():
             self.source=SourceJournal(source_path)
-            self.ledger=PaperLedger(paper_path,self.source.source_id,policy,shadow)
-            self.recover()
+            try:
+                self.ledger=PaperLedger(paper_path,self.source.source_id,policy,shadow)
+                self.recover()
+            except BaseException:
+                if hasattr(self,'ledger'):self.ledger.close()
+                self.source.close();raise
         try:self.executor.submit(initialize).result()
         except BaseException:self.executor.shutdown();raise
 
@@ -395,7 +456,13 @@ class Pipeline:
             row=raw.get(sym)
             try:
                 if row is None:raise ValueError('Unavailable public contract')
+                if any(float(row[k])!=int(row[k]) for k in ('lotSize','maxOrderQty')):
+                    raise ValueError('Ambiguous fractional contract lot')
                 rule=contract_rule(row)
+                if 'minNotional' in row:
+                    floor=float(row['minNotional'])
+                    if not math.isfinite(floor) or floor<0:raise ValueError('Invalid additional notional floor')
+                    rule=replace(rule,min_notional=str(row['minNotional']))
                 fee=float(row['takerFeeRate'])
                 if (not math.isfinite(fee) or not 0<=fee<.1 or
                     self.ledger.policy.leverage>float(row['maxLeverage']) or
@@ -406,9 +473,13 @@ class Pipeline:
             except (ValueError,KeyError,TypeError):
                 unavailable.append(sym)
                 if sym in prior.get('specs',{}):specs[sym]=prior['specs'][sym]
+        pins=set(self.ledger.pins())
+        watch['deep_symbols']=[s for s in watch['deep_symbols'] if s not in unavailable or s in pins]
+        watch['entered_at']={s:t for s,t in watch['entered_at'].items() if s in watch['deep_symbols']}
         report['paper_contract_specs']=specs
         report['canonical_snapshot_hashes']={'contracts':digest(rows),'all_tickers':digest(ticks)}
-        packet={'report':report,'watch':watch,'unavailable':unavailable}
+        packet={'report':report,'watch':watch,'unavailable':unavailable,
+                'raw_contracts':rows,'raw_tickers':ticks}
         self._append([('SCAN',f'scan:{captured}:{digest(packet)}',packet)])
         return {'watch':deepcopy(watch),'specs':deepcopy(specs),'unavailable':unavailable,
                 'account':self.ledger.report(),'observed_contracts':len(rows)}

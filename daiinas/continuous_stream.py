@@ -17,6 +17,7 @@ from .universe import Policy
 from .universe_rotation import RotationPolicy
 from .providers.kucoin import OrderBook,DataGap,SequenceGap,token_server
 from .risk import ContractRules
+from .continuous_store import digest
 
 CHANNELS=('execution','tickerV2','level2')
 
@@ -77,6 +78,9 @@ class ContinuousObserver(Observer):
     async def snapshot(self,symbol):
         data,_,_=await asyncio.to_thread(self.rest.request,'/api/v1/level2/snapshot',{'symbol':symbol})
         self.books[symbol].snapshot(data,now_ms())
+        await self.pipeline.append([('SNAPSHOT',f'snapshot:{self.session_id}:{symbol}:{uuid4().hex}',
+            {'symbol':symbol,'session_id':self.session_id,'snapshot':data,'sha256':digest(data),
+             'source':'KuCoin public /api/v1/level2/snapshot'})])
         self.stream_stats['snapshots']+=1
 
     def normalize(self,msg,wire_received):
@@ -92,7 +96,8 @@ class ContinuousObserver(Observer):
         self.last_seen[(sym,channel)]=received
         payload={'symbol':symbol,'channel':channel,'event_key':key,'event_ms':t,
                  'received_ms':received,'wire_received_ms':wire_received,
-                 'session_id':self.session_id,'raw':raw,'normalized':normalized}
+                 'session_id':self.session_id,'raw':raw,'normalized':normalized,
+                 'rules_hash':digest(asdict(self.books[sym].rule if channel=='level2' else self.contracts[sym]))}
         return ('MARKET',f'market:{symbol}:{channel}:{key}',payload)
 
     async def reconcile(self,ws):

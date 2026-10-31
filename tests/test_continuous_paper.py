@@ -222,6 +222,73 @@ class LedgerTests(unittest.TestCase):
         self.assertFalse(self.paper.state['halted'])
         self.assertEqual(self.paper.state['counts']['CONTROL_REJECTED'],1)
 
+    def test_old_queued_quote_cannot_fill_after_signal_became_available(self):
+        for i in range(3):self.send(100+i,market('execution',100+i,i+1))
+        self.send(110,market('level2',110,1))
+        self.send(500,market('tickerV2',120,1))
+        self.assertEqual(self.paper.state['pending']['signal_ms'],500)
+        self.send(700,market('tickerV2',200,2))
+        self.assertIsNone(self.paper.state['position'])
+        self.send(800,market('tickerV2',800,3))
+        self.assertIsNotNone(self.paper.state['position'])
+
+    def test_short_transport_gap_does_not_force_a_fake_exit(self):
+        self.opened();ident=self.paper.state['position']['id']
+        self.send(300,('HEALTH','disconnected',{'state':'DISCONNECTED','session_id':'old'}))
+        self.send(350,('HEALTH','connected',{'state':'CONNECTED','session_id':'new'}))
+        book=market('level2',400,2);book[2]['session_id']='new'
+        quote=market('tickerV2',450,3);quote[2]['session_id']='new'
+        self.send(400,book);self.send(450,quote)
+        self.assertEqual(self.paper.state['position']['id'],ident)
+        self.assertIsNone(self.paper.state['exit_request'])
+        self.assertIsNone(self.paper.state['position']['unresolved'])
+        late=market('tickerV2',500,4,bid=.5,ask=.5002);late[2]['session_id']='old'
+        self.send(500,late)
+        self.assertEqual(self.paper.state['counts']['REJECTED_EVENT'],1)
+        self.assertEqual(self.paper.state['position']['id'],ident)
+
+    def test_actual_process_kill_between_fee_and_checkpoint_recovers_once(self):
+        import subprocess,sys
+        self.signal()
+        with patch('daiinas.continuous_store.clock_ms',return_value=221):
+            self.source.append([market('tickerV2',221,2)])
+        self.paper.close()
+        code="""
+import os,signal,sys
+from daiinas.continuous_store import SourceJournal
+from daiinas.continuous_paper import PaperLedger
+s=SourceJournal(sys.argv[1]);p=PaperLedger(sys.argv[2],s.source_id)
+audit=p.audit
+def crash(action,**kw):
+    audit(action,**kw)
+    if action=='OPENED':os.kill(os.getpid(),signal.SIGKILL)
+p.audit=crash
+p.apply(s.after(p.state['cursor']))
+"""
+        result=subprocess.run([sys.executable,'-c',code,str(self.root/'source.sqlite3'),str(self.root/'paper.sqlite3')],capture_output=True)
+        self.assertEqual(result.returncode,-9)
+        self.paper=PaperLedger(self.root/'paper.sqlite3',self.source.source_id)
+        self.assertEqual(self.paper.state['cash'],8)
+        self.paper.apply(self.source.after(self.paper.state['cursor']))
+        fees=self.paper.state['fees']
+        self.paper.apply(self.source.after(0,1000))
+        self.assertEqual(self.paper.state['fees'],fees)
+        self.assertEqual(self.paper.state['counts']['OPENED'],1)
+
+    def test_carry_is_accrued_once_when_no_quote_was_available_for_hours(self):
+        self.opened()
+        late=28_800_300
+        change=scan(late)
+        change[2]['report']['paper_contract_specs'][SYM]['captured_ms']=late
+        self.send(late,change)
+        self.close_quote(late+100,1.01,1.0102)
+        self.close_quote(late+250,1.011,1.0112,4)
+        self.assertIsNone(self.paper.state['position'])
+        carry=self.paper.state['carry']
+        self.assertGreater(carry,0)
+        self.paper.apply(self.source.after(0,1000))
+        self.assertEqual(self.paper.state['carry'],carry)
+
     def test_legacy_database_and_policy_identity_are_protected(self):
         path=self.root/'legacy.sqlite3'
         c=sqlite3.connect(path);c.execute('CREATE TABLE kv(key,value)');c.close()

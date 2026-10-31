@@ -81,9 +81,10 @@ class SourceJournal:
         self.db.execute('BEGIN IMMEDIATE')
         try:
             last=self.db.execute('SELECT available_ms FROM journal ORDER BY seq DESC LIMIT 1').fetchone()
-            previous=last[0] if last else -1
+            base=self.db.execute("SELECT value FROM v33_meta WHERE key='base_available_ms'").fetchone()
+            previous=last[0] if last else int(base[0]) if base else -1
             for kind,key,payload in packets:
-                if kind not in ('SCAN','MARKET','HEALTH','CLOCK','CONTROL'):
+                if kind not in ('SCAN','SNAPSHOT','MARKET','HEALTH','CLOCK','CONTROL'):
                     raise ValueError('Unknown source journal record')
                 semantic=payload.get('raw',payload) if kind=='MARKET' else payload
                 semantic_hash=digest(semantic)

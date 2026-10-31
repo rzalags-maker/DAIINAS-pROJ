@@ -1,0 +1,11 @@
+{
+  "deep": 5,
+  "refresh_seconds": 180,
+  "dwell_seconds": 120,
+  "queue_size": 20000,
+  "max_source_bytes": 68719476736,
+  "max_paper_bytes": 68719476736,
+  "min_free_bytes": 1073741824,
+  "paper": {},
+  "shadow": {}
+}

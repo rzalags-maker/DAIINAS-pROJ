@@ -151,3 +151,10 @@ persistent stop/resume, and online backup. It submits no real orders and needs
 no exchange keys. Hosting templates and operational limitations are in the
 [service runbook](docs/SERVICE.md). Real Binance access and independent-host
 acceptance remain pending as detailed in the validation report.
+
+## v3.3 continuous dynamic paper engine (issue #6)
+
+The focused feature implementation and independent 8-USDT ledger are documented
+in [the v3.3 runbook](docs/V33_CONTINUOUS_PAPER.md). It retains the old systems
+and uses separate source/account files. **LIVE ORDERS DISABLED.**
+The independent 24-hour host gate remains blocked until a persistent server is provisioned.
