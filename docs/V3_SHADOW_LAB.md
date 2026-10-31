@@ -6,6 +6,7 @@
 
 - `daiinas/shadow_flow.py` reads the v3 observer's independent SQLite `raw_events` and `market_scans` tables in receipt-time order; it never reaches ahead to later events.
 - Reports event counts, recent aggressive traded-notional direction (CVD ratio), current best-bid/best-ask displayed-size imbalance, quote spread and last verified order-book update freshness.
+- Separately reports `pressure_snapshots` (each qualifying quote observation) and `pressure_candidates` (deduplicated episodes requiring fresh trades and a side flip or 30-second cooldown). Many repeated price ticks reusing three trades must NOT count as independent market opportunities.
 - Uses provisional observation thresholds: 30 seconds trade window, at least 3 public prints and 25 USDT traded notional, CVD imbalance >=40%, best-quote imbalance >=10% on the same side, max spread 8bps, last verified book event <=8 seconds old.
 - A matching condition is recorded only as `PRESSURE_CANDIDATE`, **never as LONG/SHORT ENTRY**. No conclusion on future market direction and no expected return. Thresholds are invented research hypotheses to be calibrated out of sample, not a rule copied from an influencer.
 - Records per-market explanations such as stale book, too-wide spread, too-few trades, contradictory book pressure. The replay does not pretend to verify completeness of KuCoin public trade prints.
