@@ -1,0 +1,47 @@
+name: DAIINAS v3.2 real-quote micro paper replay
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/v32-micro-paper
+    paths:
+      - daiinas/paper_micro.py
+      - daiinas/universe_observer.py
+      - tests/test_paper_micro.py
+      - .github/workflows/paper-micro-study.yml
+permissions:
+  contents: read
+jobs:
+  paper-study:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install public-only market data dependency
+        run: python -m pip install '.[live]'
+      - name: Complete regression tests, including risk/fees/position lifecycle
+        run: python -m unittest discover -s tests -v
+      - name: Capture new real KuCoin public events and contract specs
+        run: |
+          python -m daiinas.universe_observer --equity 8 --deep 5 --seconds 65 \
+            --db state/v32-source.sqlite3 --report reports/v32-capture.json
+      - name: Evaluate experimental micro paper fills on future OBSERVED quotes
+        run: |
+          python -m daiinas.paper_micro --source-db state/v32-source.sqlite3 \
+            --paper-db state/v32-ledger.sqlite3 --capital 8 \
+            --report reports/v32-paper.json
+      - name: Save source, separate paper ledger and unabridged evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daiinas-v32-observed-paper-evidence
+          if-no-files-found: ignore
+          path: |
+            reports/v32-capture.json
+            reports/v32-paper.json
+            state/v32-source.sqlite3*
+            state/v32-ledger.sqlite3*
+          retention-days: 7
