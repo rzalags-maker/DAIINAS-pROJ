@@ -16,7 +16,7 @@ import sqlite3
 from .adaptive import CapitalController
 from .paper_micro import PaperPolicy, size_for_quote, finish_position, prepare_rules
 from .shadow_flow import ShadowPolicy, observe
-from .continuous_store import SourceJournal, Timeline, canonical, digest, connect_owned
+from .continuous_store import SourceJournal, Timeline, canonical, digest, connect_owned, pinned_selection
 
 
 class PaperLedger:
@@ -290,6 +290,10 @@ class PaperLedger:
                     except (ValueError,KeyError,TypeError) as exc:
                         self.audit('CONTROL_REJECTED',reason=str(exc),operator_action=payload.get('action'))
                 elif kind=='HEALTH':
+                    if payload['state']=='CONNECTED':
+                        s['session_id']=payload.get('session_id');s['connected']=True
+                        s['trades'].clear()
+                    elif payload['state']=='DISCONNECTED':s['connected']=False
                     affected=payload.get('symbol')
                     for symbol in list(s['books']):
                         if affected is None or affected==symbol:s['books'].pop(symbol,None)
@@ -298,6 +302,11 @@ class PaperLedger:
                     self.audit('HEALTH',**payload)
                 elif kind=='MARKET':
                     sym,channel=payload['symbol'],payload['channel'];data=payload['normalized']
+                    if payload.get('session_id') and (not s.get('connected') or payload['session_id']!=s.get('session_id')):
+                        self.audit('REJECTED_EVENT',reason='retired_or_disconnected_session',symbol=sym)
+                        s['cursor']=seq;s['input_digest']=digest([s['input_digest'],sha])
+                        self.db.execute('INSERT INTO processed VALUES (?,?)',(seq,sha))
+                        continue
                     if int(payload['event_ms'])>available or int(payload['received_ms'])>available:
                         raise ValueError('Future market data publication')
                     if channel=='level2':
@@ -311,7 +320,9 @@ class PaperLedger:
                         s['last_print'][sym]=available
                     elif channel=='tickerV2':self.quote(sym,data)
                     else:raise ValueError('Unknown market channel')
-                elif kind!='CLOCK':raise ValueError('Unknown journal kind')
+                elif kind=='CLOCK':
+                    if 'service' in payload:s['service']=payload['service']
+                else:raise ValueError('Unknown journal kind')
                 self.mark()
                 if s['position'] and available-s['position']['entry_received_ms']>=self.policy.maximum_holding_ms:
                     self.request_exit('TIME')
@@ -324,15 +335,16 @@ class PaperLedger:
 
     def report(self):
         s=self.state
-        return {'status':'PAPER_ONLY','live_orders_enabled':False,'strategy_validated':False,
+        result={'status':'PAPER_ONLY','live_orders_enabled':False,'strategy_validated':False,
             'initial_capital':8.,'cash':s['cash'],'equity_last_mark':s['last_equity'],'mark_status':s['mark_status'],
             'realized_net_pnl':s['realized'],'cash_pnl_excluding_external_flows':s['cash']-8-s['external_flows'],
             'external_simulated_flows':s['external_flows'],'fees':s['fees'],'modeled_carry':s['carry'],
             'peak':s['peak'],'maximum_drawdown':s['max_drawdown'],'halted':s['halted'],'paused_new_entries':s['paused'],
             'open_position':s['position'],'pending_entry':s['pending'],'pending_exit':s['exit_request'],
             'pins':self.pins(),'source_cursor':s['cursor'],'input_digest':s['input_digest'],
-            'counts':s['counts'],'scan':s['scan'],'checkpoint_available_ms':s['now_ms'],
+            'counts':s['counts'],'scan':s['scan'],'checkpoint_available_ms':s['now_ms'],'service':s.get('service'),
             '24h_host_gate':'BLOCKED — HOST NOT PROVISIONED'}
+        return deepcopy(result)
 
 
 class Pipeline:
@@ -360,6 +372,49 @@ class Pipeline:
 
     async def append(self,packets):
         return await asyncio.get_running_loop().run_in_executor(self.executor,self._append,packets)
+
+    def _scan(self,rows,ticks,universe_policy,rotation):
+        from .universe import scan
+        from .universe_observer import contract_rule
+        from .continuous_store import clock_ms
+        self.recover()
+        captured=clock_ms()
+        if len({r['symbol'] for r in rows})!=len(rows):raise ValueError('Duplicate public contract identity')
+        equity=min(self.ledger.state['cash'],self.ledger.state['last_equity'])
+        if equity>0:
+            report=scan(rows,ticks,now_ms=captured,equity=equity,policy=universe_policy)
+        else:
+            report={'time_ms':captured,'capital_usdt':equity,'contracts_observed':len(rows),
+                    'preflight_eligible':0,'selected_for_deeper_observation':[],
+                    'audit':[],'status':'HALTED_NONPOSITIVE_EQUITY'}
+        prior=self.ledger.state['scan'] or {}
+        previous=prior.get('watch',{})
+        watch=pinned_selection(report,previous,self.ledger.pins(),rotation)
+        raw={r['symbol']:r for r in rows};specs={};unavailable=[]
+        for sym in watch['deep_symbols']:
+            row=raw.get(sym)
+            try:
+                if row is None:raise ValueError('Unavailable public contract')
+                rule=contract_rule(row)
+                fee=float(row['takerFeeRate'])
+                if (not math.isfinite(fee) or not 0<=fee<.1 or
+                    self.ledger.policy.leverage>float(row['maxLeverage']) or
+                    self.ledger.policy.leverage*float(row['initialMargin'])>1.000001):
+                    raise ValueError('Invalid public leverage/fee limits')
+                specs[sym]={'rules':asdict(rule),'taker_fee_rate':fee,'captured_ms':captured,
+                            'source':'KuCoin public contracts/active'}
+            except (ValueError,KeyError,TypeError):
+                unavailable.append(sym)
+                if sym in prior.get('specs',{}):specs[sym]=prior['specs'][sym]
+        report['paper_contract_specs']=specs
+        report['canonical_snapshot_hashes']={'contracts':digest(rows),'all_tickers':digest(ticks)}
+        packet={'report':report,'watch':watch,'unavailable':unavailable}
+        self._append([('SCAN',f'scan:{captured}:{digest(packet)}',packet)])
+        return {'watch':deepcopy(watch),'specs':deepcopy(specs),'unavailable':unavailable,
+                'account':self.ledger.report(),'observed_contracts':len(rows)}
+
+    async def scan(self,rows,ticks,universe_policy,rotation):
+        return await asyncio.get_running_loop().run_in_executor(self.executor,self._scan,rows,ticks,universe_policy,rotation)
 
     async def report(self):
         return await asyncio.get_running_loop().run_in_executor(self.executor,self.ledger.report)
