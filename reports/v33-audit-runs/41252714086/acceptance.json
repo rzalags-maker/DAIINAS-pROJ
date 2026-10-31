@@ -1,0 +1,109 @@
+{
+  "status": "passed",
+  "live_orders_enabled": false,
+  "tests": {
+    "tests_run": 200,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "expected_failures": 0,
+    "unexpected_successes": 0,
+    "successful": true
+  },
+  "market_scans": 14,
+  "observed_contracts": 717,
+  "public_event_counts": {
+    "execution": 130,
+    "level2": 26417,
+    "tickerV2": 4919
+  },
+  "process_boots": [
+    "b948a375cd0e44bba6436a3d4be4f41c",
+    "22a3b9cc02794c47bd77e2779ed25993"
+  ],
+  "source_cursor": 31797,
+  "input_digest": "0b5b8768b30477164d51df3b0028925831693b654e0811d095c079405eec94f8",
+  "cash": 7.985601083223849,
+  "equity_last_mark": 7.982188226035786,
+  "fees": 0.011018292,
+  "modeled_carry": 6.24776151638889e-07,
+  "closed_summary": {
+    "count": 3,
+    "loss": 0.01268711677615112,
+    "losses": 3,
+    "profit": 0.0,
+    "wins": 0
+  },
+  "open_position": {
+    "direction": "SHORT",
+    "quantity_contracts": 1.0,
+    "contract_multiplier": 0.01,
+    "price_tick_size": "0.01",
+    "entry_price": 285.3,
+    "entry_fee_usdt": 0.0017117999999999999,
+    "fee_rate": 0.0006,
+    "planned_stop_mid": 286.3838475,
+    "planned_target_mid": 283.38730499999997,
+    "planned_stop_quote": 286.4088475,
+    "planned_target_net_usdt": 0.01488737999999984,
+    "planned_loss_usdt": 0.015130620000000159,
+    "risk_budget_usdt": 0.019968282208059622,
+    "margin_reserved_usdt": 0.9510000000000001,
+    "entry_notional_usdt": 2.853,
+    "id": "position:signal:31417:BCHUSDTM:SHORT",
+    "symbol": "BCHUSDTM",
+    "rules_hash": "83b082bb1862162825df2af72b5a5cb695b3a6a84737d581a84ecf60e3239497",
+    "signal_received_ms": 1793489712918,
+    "entry_received_ms": 1793489713024,
+    "entry_observed_bid": 285.36,
+    "entry_observed_ask": 285.41,
+    "entry_wire_received_ms": 1793489713023,
+    "entry_provider_ms": 1793489712962,
+    "entry_source_seq": 31419,
+    "unresolved": "missing_or_stale_executable_mark",
+    "last_good_mark_ms": 1793489716778
+  },
+  "pending_entry": null,
+  "pending_exit": null,
+  "decision_counts": {
+    "BOOK_SNAPSHOT": 56,
+    "CLOSED": 3,
+    "EXIT_REQUEST": 3,
+    "HEALTH": 31,
+    "OPENED": 4,
+    "REJECTED": 4,
+    "REJECTED_EVENT": 57,
+    "RESOLVED": 455,
+    "SCAN": 14,
+    "SIGNAL": 9,
+    "UNRESOLVED": 489,
+    "VERIFIED_BOOK": 21,
+    "UNFILLED": 1
+  },
+  "rejected_and_unresolved_reasons": {
+    "EXIT_REQUEST:DATA_HEALTH": 2,
+    "REJECTED:unverified_or_unaligned_depth_at_entry": 4,
+    "REJECTED_EVENT:normalization_rule_version_mismatch": 57,
+    "UNRESOLVED:CONNECTED": 2,
+    "UNRESOLVED:CONNECTION_LOSS": 2,
+    "UNRESOLVED:DISCONNECTED": 3,
+    "UNRESOLVED:insufficient_verified_depth_for_full_exit": 462,
+    "UNRESOLVED:missing_or_stale_executable_mark": 20,
+    "EXIT_REQUEST:SPREAD": 1
+  },
+  "replay_identical": true,
+  "backup": {
+    "source_id": "5bbea9d1d9ec4127933902f7027f7553",
+    "paper_cursor": 31797,
+    "source_max_seq": 31797,
+    "paper_input_digest": "0b5b8768b30477164d51df3b0028925831693b654e0811d095c079405eec94f8",
+    "sha256": {
+      "source.sqlite3": "c2776dc03bd54a0a42c88aba9529038b9ed46c726405758437cd5123d3191efe",
+      "paper.sqlite3": "1de6a08238a070904acf579d05d7901d1acd722d9d2d146ee9cb0ff54d0f4dab"
+    }
+  },
+  "24h_host_gate": "BLOCKED \u2014 HOST NOT PROVISIONED",
+  "performance_gate": "Not established by bounded infrastructure smoke",
+  "tested_commit": "de172e67b5e1f9a214a68702b2148f24a4b05fa5",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41252714086"
+}

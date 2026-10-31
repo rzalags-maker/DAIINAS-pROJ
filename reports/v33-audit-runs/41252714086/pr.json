@@ -1,0 +1,8 @@
+{
+  "status": "blocked_existing_repository_actions_pr_policy",
+  "prior_denial": "GitHub Actions is not permitted to create or approve pull requests.",
+  "manual_compare_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/compare/feature/v33-continuous-paper...feature/v33-risk-acceptance",
+  "note": "No PR API mutation retried. PR #7 and stable branch remain unchanged.",
+  "tested_commit": "de172e67b5e1f9a214a68702b2148f24a4b05fa5",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41252714086"
+}

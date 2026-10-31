@@ -1,0 +1,215 @@
+{
+  "status": "VERIFIED_COMMITTED_REPORT_ARITHMETIC",
+  "source_status": "BLOCKED_RAW_JOURNAL_NOT_AVAILABLE",
+  "live_orders_enabled": false,
+  "strategy_validated": false,
+  "production_ready": false,
+  "external_flows_in_this_capture": 0,
+  "positions": [
+    {
+      "id": "position:signal:887:PEPEUSDTM:LONG",
+      "symbol": "PEPEUSDTM",
+      "direction": "LONG",
+      "exit_reason": "DATA_HEALTH",
+      "exit_class": "INFRASTRUCTURE",
+      "gross_pnl": -0.00338,
+      "fees": 0.0030968183999999996,
+      "modeled_carry": 2.875937483611111e-07,
+      "net_pnl": -0.006477105993748361,
+      "planned_loss": 0.01427213839999985,
+      "realized_loss": 0.006477105993748361,
+      "planned_risk_budget": 0.02,
+      "planned_risk_utilization": 0.7136069199999925,
+      "loss_over_planned": 0.0,
+      "realized_risk_budget_utilization": 0.32385529968741805,
+      "stop_gap_price": null,
+      "fee_and_carry_pct_abs_gross": 91.63035484462605,
+      "spread_slippage_status": "BLOCKED_RAW_QUOTES_REQUIRED"
+    },
+    {
+      "id": "position:signal:22260:TAOUSDTM:LONG",
+      "symbol": "TAOUSDTM",
+      "direction": "LONG",
+      "exit_reason": "DATA_HEALTH",
+      "exit_class": "INFRASTRUCTURE",
+      "gross_pnl": -0.001,
+      "fees": 0.00284712,
+      "modeled_carry": 1.375821204861111e-07,
+      "net_pnl": -0.003847257582120486,
+      "planned_loss": 0.013241479999999922,
+      "realized_loss": 0.003847257582120486,
+      "planned_risk_budget": 0.01998380723501563,
+      "planned_risk_utilization": 0.6626104747847147,
+      "loss_over_planned": 0.0,
+      "realized_risk_budget_utilization": 0.1925187496494322,
+      "stop_gap_price": null,
+      "fee_and_carry_pct_abs_gross": 284.7257582120486,
+      "spread_slippage_status": "BLOCKED_RAW_QUOTES_REQUIRED"
+    },
+    {
+      "id": "position:signal:28211:PEPEUSDTM:SHORT",
+      "symbol": "PEPEUSDTM",
+      "direction": "SHORT",
+      "exit_reason": "DATA_HEALTH",
+      "exit_class": "INFRASTRUCTURE",
+      "gross_pnl": 0.00208,
+      "fees": 0.0030988463999999994,
+      "modeled_carry": 1.2314263866666667e-07,
+      "net_pnl": -0.0010189695426386662,
+      "planned_loss": 0.013558365600000014,
+      "realized_loss": 0.0010189695426386662,
+      "planned_risk_budget": 0.01997418909106033,
+      "planned_risk_utilization": 0.6787942948867051,
+      "loss_over_planned": 0.0,
+      "realized_risk_budget_utilization": 0.05101431342185087,
+      "stop_gap_price": null,
+      "fee_and_carry_pct_abs_gross": 148.98892031916665,
+      "spread_slippage_status": "BLOCKED_RAW_QUOTES_REQUIRED"
+    }
+  ],
+  "money_event_reconciliation": [
+    {
+      "source_seq": 977,
+      "event": "ENTRY",
+      "position_id": "position:signal:887:PEPEUSDTM:LONG",
+      "cash": 7.9984505768,
+      "reserved_margin": 0.8607906666666666,
+      "free_cash_after_margin": 7.137659910133333,
+      "realized_net": 0.0,
+      "fees": 0.0015494231999999997,
+      "carry": 0.0
+    },
+    {
+      "source_seq": 6334,
+      "event": "EXIT",
+      "position_id": "position:signal:887:PEPEUSDTM:LONG",
+      "cash": 7.993522894006252,
+      "reserved_margin": 0.0,
+      "free_cash_after_margin": 7.993522894006252,
+      "realized_net": -0.0064771059937482845,
+      "fees": 0.0030968183999999996,
+      "carry": 2.875937483611111e-07
+    },
+    {
+      "source_seq": 22757,
+      "event": "ENTRY",
+      "position_id": "position:signal:22260:TAOUSDTM:LONG",
+      "cash": 7.992099034006252,
+      "reserved_margin": 0.7910333333333334,
+      "free_cash_after_margin": 7.201065700672919,
+      "realized_net": -0.0064771059937482845,
+      "fees": 0.0045206783999999995,
+      "carry": 2.875937483611111e-07
+    },
+    {
+      "source_seq": 24432,
+      "event": "EXIT",
+      "position_id": "position:signal:22260:TAOUSDTM:LONG",
+      "cash": 7.989675636424131,
+      "reserved_margin": 0.0,
+      "free_cash_after_margin": 7.989675636424131,
+      "realized_net": -0.010324363575868713,
+      "fees": 0.0059439383999999994,
+      "carry": 4.2517586884722225e-07
+    },
+    {
+      "source_seq": 28293,
+      "event": "ENTRY",
+      "position_id": "position:signal:28211:PEPEUSDTM:SHORT",
+      "cash": 7.988125589224131,
+      "reserved_margin": 0.8611373333333333,
+      "free_cash_after_margin": 7.126988255890798,
+      "realized_net": -0.010324363575868713,
+      "fees": 0.007493985599999999,
+      "carry": 4.2517586884722225e-07
+    },
+    {
+      "source_seq": 31239,
+      "event": "EXIT",
+      "position_id": "position:signal:28211:PEPEUSDTM:SHORT",
+      "cash": 7.988656666881493,
+      "reserved_margin": 0.0,
+      "free_cash_after_margin": 7.988656666881493,
+      "realized_net": -0.011343333118507224,
+      "fees": 0.009042784799999998,
+      "carry": 5.483185075138889e-07
+    }
+  ],
+  "by_market": {
+    "PEPEUSDTM": {
+      "trades": 2.0,
+      "gross_pnl": -0.0013000000000000004,
+      "fees": 0.006195664799999999,
+      "modeled_carry": 4.1073638702777776e-07,
+      "net_pnl": -0.007496075536387027
+    },
+    "TAOUSDTM": {
+      "trades": 1.0,
+      "gross_pnl": -0.001,
+      "fees": 0.00284712,
+      "modeled_carry": 1.375821204861111e-07,
+      "net_pnl": -0.003847257582120486
+    }
+  },
+  "by_direction": {
+    "LONG": {
+      "trades": 2.0,
+      "gross_pnl": -0.00438,
+      "fees": 0.0059439383999999994,
+      "modeled_carry": 4.251758688472222e-07,
+      "net_pnl": -0.010324363575868847
+    },
+    "SHORT": {
+      "trades": 1.0,
+      "gross_pnl": 0.00208,
+      "fees": 0.0030988463999999994,
+      "modeled_carry": 1.2314263866666667e-07,
+      "net_pnl": -0.0010189695426386662
+    }
+  },
+  "gross_positive_movements": 0.00208,
+  "gross_negative_movements": -0.00438,
+  "fee_carry_pct_positive_gross": 434.7756306974766,
+  "fee_carry_pct_abs_negative_gross": 206.46879265998888,
+  "final_cash": 7.988656666881493,
+  "net_pnl": -0.011343333118507224,
+  "first_cash_including_open_fee": 7.988125589224131,
+  "maximum_drawdown_reported": 0.0018861862853939426,
+  "counts": {
+    "BOOK_SNAPSHOT": 50,
+    "CLOSED": 3,
+    "EXIT_REQUEST": 3,
+    "HEALTH": 29,
+    "OPENED": 3,
+    "REJECTED": 5,
+    "REJECTED_EVENT": 65,
+    "RESOLVED": 154,
+    "SCAN": 15,
+    "SIGNAL": 9,
+    "UNRESOLVED": 207,
+    "VERIFIED_BOOK": 18,
+    "UNFILLED": 1
+  },
+  "reason_counts": {
+    "EXIT_REQUEST:DATA_HEALTH": 3,
+    "REJECTED:unverified_or_unaligned_depth_at_entry": 5,
+    "REJECTED_EVENT:normalization_rule_version_mismatch": 65,
+    "UNRESOLVED:BOOK_GAP": 1,
+    "UNRESOLVED:CONNECTED": 5,
+    "UNRESOLVED:CONNECTION_LOSS": 4,
+    "UNRESOLVED:DISCONNECTED": 5,
+    "UNRESOLVED:insufficient_verified_depth_for_full_exit": 161,
+    "UNRESOLVED:missing_or_stale_executable_mark": 31
+  },
+  "storage": null,
+  "24h_host_gate": "BLOCKED \u2014 HOST NOT PROVISIONED",
+  "unverified": [
+    "24h persistent host",
+    "economic edge / out-of-sample",
+    "actual funding",
+    "private account access"
+  ],
+  "evidence_run": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41251111492",
+  "tested_commit": "de172e67b5e1f9a214a68702b2148f24a4b05fa5",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41252714086"
+}
