@@ -1,0 +1,46 @@
+name: DAIINAS v3.1 shadow flow replay (no orders)
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/v3-shadow-replay
+    paths:
+      - daiinas/shadow_flow.py
+      - tests/test_shadow_flow.py
+      - .github/workflows/shadow-flow-research.yml
+permissions:
+  contents: read
+jobs:
+  shadow-research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install public feed dependency
+        run: python -m pip install '.[live]'
+      - name: Full offline regression suite
+        run: python -m unittest discover -s tests -v
+      - name: Capture dynamic real public KuCoin market data
+        run: |
+          python -m daiinas.universe_observer --equity 8 --deep 5 --seconds 65 \
+            --db state/universe-shadow.sqlite3 \
+            --report reports/universe-shadow-connection.json
+      - name: Replay only recorded market events (no paper entries)
+        run: |
+          python -m daiinas.shadow_flow \
+            --db state/universe-shadow.sqlite3 \
+            --output reports/shadow-flow-diagnostics.json
+      - name: Publish replayable public evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daiinas-v31-shadow-evidence
+          if-no-files-found: ignore
+          path: |
+            reports/universe-shadow-connection.json
+            reports/shadow-flow-diagnostics.json
+            state/universe-shadow.sqlite3*
+          retention-days: 7
