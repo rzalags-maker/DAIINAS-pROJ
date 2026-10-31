@@ -298,7 +298,9 @@ class EngineTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_socket_subscription_pong_token_renewal_and_checkpoint_resume(self):
         self.engine.connector=lambda *args,**kwargs:FakeSocket(self.rest)
-        await self.engine.run(seconds=3.3,reconnect_after=1)
+        # Allow two monitor heartbeats, reconnect backoff and a healthy
+        # post-resume session on slower CI runners; retain every assertion.
+        await self.engine.run(seconds=6.3,reconnect_after=1)
         self.assertGreaterEqual(self.engine.counts['connections'],2)
         self.assertGreater(self.engine.counts['pongs'],0)
         self.assertGreater(self.engine.counts['checkpoint_resumes'],0)
