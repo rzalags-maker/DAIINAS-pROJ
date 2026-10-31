@@ -96,6 +96,31 @@ class ShadowTests(unittest.TestCase):
             self.assertFalse(r['validated_positive_expectancy'])
             self.assertEqual(r['candidate_examples'][0]['estimated_minimum_round_trip_cost_bps'],20)
 
+    def test_ticker_bursts_do_not_inflate_independent_opportunities(self):
+        with tempfile.TemporaryDirectory() as d:
+            db=ObservationStore(Path(d)/'repeat.sqlite3')
+            db.record_scan({'time_ms':100,'capital_usdt':8,
+                  'contracts_observed':1,'preflight_eligible':1,
+                  'audit':[{'symbol':'PEPEUSDTM','estimated_round_trip_cost_bps':20}]},
+                  {'time_ms':100,'deep_symbols':['PEPEUSDTM']})
+            sym='PEPEUSDTM'
+            rows=[]
+            for i in range(3):
+                rows.append((sym,'execution',str(i),100+i*5,100+i*5,
+                     {'tradeId':str(i)},{'timestamp':100+i*5,'price':100,
+                     'quantity':.1,'buyer_is_maker':False}))
+            rows.append((sym,'level2','100',115,115,{'sequence':100},
+                         {'book_sequence':100,'verified':True}))
+            for i in range(15):
+                rows.append((sym,'tickerV2',str(i),120+i,120+i,
+                     {'sequence':i},{'timestamp':120+i,**quote()}))
+            db.record_events(rows)
+            r=replay(db.db)
+            db.close()
+            self.assertEqual(r['pressure_snapshots'],15)
+            self.assertEqual(r['pressure_candidates'],1)
+            self.assertEqual(r['pressure_episodes_by_symbol']['PEPEUSDTM'],1)
+
     def test_no_scan_must_fail(self):
         with tempfile.TemporaryDirectory() as d:
             db=ObservationStore(Path(d)/'no-scan.sqlite3')
