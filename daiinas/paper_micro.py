@@ -7,7 +7,7 @@ All entries use a LATER observed quote. Signals are unvalidated hypotheses.
 import argparse
 from collections import Counter, defaultdict, deque
 from dataclasses import asdict, dataclass
-from decimal import Decimal
+from decimal import Decimal, ROUND_CEILING, ROUND_FLOOR
 import hashlib
 import json
 import math
@@ -38,11 +38,12 @@ class PaperPolicy:
     # Research-only carry estimate, NOT verified exchange funding debits.
     modeled_carry_8h_rate: float = .0001
     minimum_net_target_usdt: float = .001
+    max_quote_age_ms: int = 2_000
 
     def __post_init__(self):
         positives=(self.initial_capital_usdt,self.leverage,self.margin_fraction,
                    self.stop_bps,self.target_bps,self.entry_ttl_ms,
-                   self.maximum_holding_ms)
+                   self.maximum_holding_ms,self.max_quote_age_ms)
         nonnegatives=(self.minimum_taker_fee_rate,self.adverse_slippage_bps,
                      self.minimum_entry_latency_ms,self.maximum_entry_drift_bps,
                      self.modeled_carry_8h_rate,self.minimum_net_target_usdt)
@@ -107,15 +108,15 @@ def size_for_quote(*, equity, peak, quote, direction, rules, observed_fee, polic
     mid=(bid+ask)/2
     halfspread=(ask-bid)/2
     s=1 if direction=='LONG' else -1
-    entry=(ask*(1+slip)) if s==1 else (bid*(1-slip))
+    entry=rules.price(ask*(1+slip), up=True) if s==1 else rules.price(bid*(1-slip), up=False)
     # Synthetic stop/target are only planned thresholds. Future fill prices
     # will come from observed bid/ask, with adverse slippage, NEVER from targets.
     stop_mid=mid*(1-s*policy.stop_bps/10_000)
     target_mid=mid*(1+s*policy.target_bps/10_000)
     worst_stop_quote=(stop_mid-halfspread) if s==1 else (stop_mid+halfspread)
     target_exit_quote=(target_mid-halfspread) if s==1 else (target_mid+halfspread)
-    stop_fill=worst_stop_quote*(1-slip if s==1 else 1+slip)
-    target_fill=target_exit_quote*(1-slip if s==1 else 1+slip)
+    stop_fill=rules.price(worst_stop_quote*(1-slip if s==1 else 1+slip),up=s==-1)
+    target_fill=rules.price(target_exit_quote*(1-slip if s==1 else 1+slip),up=s==-1)
     if min(entry,stop_fill,target_fill,stop_mid,target_mid)<=0:
         return None,'invalid_stop_or_target'
     unit=float(rules.contract_size)
@@ -128,10 +129,14 @@ def size_for_quote(*, equity, peak, quote, direction, rules, observed_fee, polic
     quantity=rules.quantity(min(by_risk,by_margin,float(rules.max_qty)))
     if not rules.valid(quantity,entry) or quantity<=0:
         return None,'minimum_lot_exceeds_account_risk_or_margin'
+    available=float(quote['ask_base_size'] if s==1 else quote['bid_base_size'])
+    if not math.isfinite(available) or available < quantity*unit:
+        return None,'insufficient_displayed_depth_at_entry'
     if gain_one*quantity < policy.minimum_net_target_usdt:
         return None,'target_net_pnl_too_small'
     return {
         'direction':direction,'quantity_contracts':quantity,'contract_multiplier':unit,
+        'price_tick_size':rules.tick_size,
         'entry_price':entry,'entry_fee_usdt':entry*unit*quantity*fee,
         'fee_rate':fee,'planned_stop_mid':stop_mid,'planned_target_mid':target_mid,
         'planned_stop_quote':worst_stop_quote,
@@ -151,7 +156,10 @@ def finish_position(pos, quote, timestamp, reason, policy):
     if not math.isfinite(exit_quote) or exit_quote<=0:
         raise ValueError('Invalid observed exit quote')
     slip=policy.adverse_slippage_bps/10_000
-    price=exit_quote*(1-slip if s==1 else 1+slip)
+    modeled=exit_quote*(1-slip if s==1 else 1+slip)
+    tick=Decimal(pos['price_tick_size'])
+    price=float((Decimal(str(modeled))/tick).to_integral_value(
+        rounding=ROUND_FLOOR if s==1 else ROUND_CEILING)*tick)
     quantity=pos['quantity_contracts']
     unit=pos['contract_multiplier']
     fee=price*quantity*unit*pos['fee_rate']
@@ -172,6 +180,10 @@ def simulate(connection, *, policy=PaperPolicy(), shadow=ShadowPolicy()):
     final bid/ask, never force an entry or pretend an 8-USDT lot is affordable.
     """
     connection.row_factory=sqlite3.Row
+    # A future watchlist must never be used to simulate an earlier signal.
+    # Until timeline-aware multi-scan replay is implemented, enforce one scan.
+    if connection.execute('SELECT count(*) FROM market_scans').fetchone()[0] != 1:
+        raise ValueError('Multi-scan capture needs time-aware contract/watchlist replay')
     data=connection.execute('SELECT raw_report FROM market_scans ORDER BY id DESC LIMIT 1').fetchone()
     if not data:
         raise ValueError('Missing public market scan')
@@ -207,6 +219,8 @@ def simulate(connection, *, policy=PaperPolicy(), shadow=ShadowPolicy()):
             raise ValueError('Backward receipt-time replay')
         last_arrival=now
         channel=row['channel']
+        if now < report['time_ms']:
+            continue
         event=json.loads(row['normalized'])
         counts[channel]+=1
         if channel=='level2':
@@ -226,6 +240,10 @@ def simulate(connection, *, policy=PaperPolicy(), shadow=ShadowPolicy()):
             continue
         if channel!='tickerV2':
             continue
+        quote_timestamp=int(event['timestamp'])
+        if not 0 <= now-quote_timestamp <= policy.max_quote_age_ms:
+            counts['stale_quote_skipped']+=1
+            continue
         # A quote is model-executable only while the book feed is fresh;
         # the capture still cannot prove all taker prints were delivered.
         book_ok=(sym in last_book and 0<=now-last_book[sym]<=shadow.max_book_age_ms)
@@ -244,6 +262,13 @@ def simulate(connection, *, policy=PaperPolicy(), shadow=ShadowPolicy()):
                 elif now-position['entry_received_ms']>=policy.maximum_holding_ms:
                     reason='TIME'
                 if reason:
+                    # A top-of-book fill is not defensible when the displayed
+                    # opposite quote has insufficient size for the full exit.
+                    available=float(event['bid_base_size'] if s==1 else event['ask_base_size'])
+                    required=position['quantity_contracts']*position['contract_multiplier']
+                    if not math.isfinite(available) or available < required:
+                        counts['exit_skipped_insufficient_displayed_depth']+=1
+                        continue
                     closed=finish_position(position,event,now,reason,policy)
                     account+=closed['gross_pnl_usdt']-closed['exit_fee_usdt']-closed['modeled_carry_usdt']
                     completed.append(closed)
