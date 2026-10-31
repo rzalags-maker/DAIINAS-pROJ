@@ -136,3 +136,13 @@ they do not establish performance on historical market data.
 Current execution evidence and the outstanding real-data access requirement are
 recorded in [reports/VALIDATION.md](reports/VALIDATION.md). This status is separate
 from the generated historical performance report.
+
+## Continuous scanner and paper service foundation
+
+The existing simulator now supports durable continuation without artificial
+sample-end exits. A Linux worker polls public closed candles, stores scanner
+signals and simulated fills in SQLite, and supports restart recovery, health,
+persistent stop/resume, and online backup. It submits no real orders and needs
+no exchange keys. Hosting templates and operational limitations are in the
+[service runbook](docs/SERVICE.md). Real Binance access and independent-host
+acceptance remain pending as detailed in the validation report.

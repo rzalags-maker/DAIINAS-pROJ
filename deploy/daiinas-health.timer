@@ -1,0 +1,10 @@
+[Unit]
+Description=Check DAIINAS paper worker every minute
+
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=60
+Unit=daiinas-health.service
+
+[Install]
+WantedBy=timers.target

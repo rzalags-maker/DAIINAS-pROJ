@@ -1,0 +1,14 @@
+[Unit]
+Description=DAIINAS paper-worker health probe
+
+[Service]
+Type=oneshot
+User=daiinas
+Group=daiinas
+WorkingDirectory=/opt/daiinas
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/usr/bin/python3 -m daiinas.service health --db /var/lib/daiinas/paper.sqlite3
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/daiinas

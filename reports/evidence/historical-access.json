@@ -1,0 +1,70 @@
+{
+  "recorded_at_utc": "2026-10-31T19:49:33.163873+00:00",
+  "baseline_commit": "3c8421636d44347345b4858c2c729ebdaf130e06",
+  "status": "blocked_by_active_proxy",
+  "download_command": "python -m daiinas download --config configs/default.json",
+  "download_exit_code": 1,
+  "attempts": [
+    {
+      "kind": "archive_checksum",
+      "url": "https://data.binance.vision/data/futures/um/daily/klines/BNBUSDT/5m/BNBUSDT-5m-2025-01-01.zip.CHECKSUM",
+      "error_type": "URLError",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "kind": "documented_rest_alternative",
+      "url": "https://fapi.binance.com/fapi/v1/klines?symbol=BNBUSDT&interval=5m&startTime=1735689600000&endTime=1735775999999&limit=288",
+      "error_type": "URLError",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "kind": "public_rules",
+      "url": "https://fapi.binance.com/fapi/v1/exchangeInfo",
+      "error_type": "URLError",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    }
+  ],
+  "configuration_evidence": {
+    "draft_domains": [
+      "data.binance.vision",
+      "fapi.binance.com"
+    ],
+    "active_custom_allowed_hosts": [],
+    "active_network_policy_state": "unknown",
+    "note": "Draft includes domains; current-instance access tests remain denied. No network policy bypass attempted.",
+    "latest_observation": {
+      "active_custom_allowed_hosts": [],
+      "active_network_policy_state": "enforced"
+    }
+  },
+  "documentation": [
+    {
+      "url": "https://raw.githubusercontent.com/binance/binance-public-data/master/README.md",
+      "http_status": 200,
+      "bytes": 5282,
+      "sha256": "2e133d9945a9263a02781369078e72805eff074680f305cd5460016471c6caad"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/binance/binance-futures-connector-python/main/binance/um_futures/market.py",
+      "http_status": 200,
+      "bytes": 20935,
+      "sha256": "9e55db014233d92bad66a90ec36212f1fada7f1f93a092ec5d6bc9298988659f"
+    }
+  ],
+  "archives_downloaded": 0,
+  "publisher_checksums_downloaded": 0,
+  "exchange_snapshot_present": false,
+  "metrics": {
+    "in_sample": null,
+    "out_of_sample": null,
+    "eight_usdt_minimums": null
+  },
+  "metrics_note": "Unmeasured; not zero-trade results. No downloaded candles/rules, so no performance or contract-minimum conclusion.",
+  "backtest_exit_code": 1,
+  "backtest_error": "FileNotFoundError: [Errno 2] No such file or directory: 'data/BTCUSDT/5m/BTCUSDT-5m-2025-01-01.zip.CHECKSUM'",
+  "offline_verification": {
+    "python": "3.12",
+    "tests_passed": 49,
+    "systemd_unit_static_verification": "passed; not installed or started"
+  }
+}

@@ -1,12 +1,21 @@
 """Shared-equity bar simulator; keyed LONG/SHORT legs; no live execution."""
 from dataclasses import asdict
-from .models import Candle, Position, RiskConfig, StrategyConfig
+import hashlib
+import json
+from .models import Candle, Position, RiskConfig, StrategyConfig, Signal
 from .risk import ContractRules, fill, size
 from .strategy import signal, invalidated
 
 
 def run(data: dict[str, list[Candle]], rules: dict[str, ContractRules],
-        strategy=StrategyConfig(), risk=RiskConfig(), start=0, end=None) -> dict:
+        strategy=StrategyConfig(), risk=RiskConfig(), start=0, end=None,
+        *, checkpoint=None, finalize=True) -> dict:
+    """Existing batch model; optional JSON checkpoint for incremental paper processing.
+
+    In continuation mode supply indicator warm-up candles before ``start``.
+    ``finalize=False`` preserves positions and next-open decisions, never creating
+    an artificial sample-end exit. Default historical behavior is unchanged.
+    """
     symbols = sorted(data)  # deterministic shared-capital tie breaker
     if not symbols or not all(s in rules for s in symbols):
         raise ValueError('Missing data or rules')
@@ -20,6 +29,16 @@ def run(data: dict[str, list[Candle]], rules: dict[str, ContractRules],
     interval = times[1]-times[0]
     if interval <= 0 or any(b-a != interval for a,b in zip(times,times[1:])):
         raise ValueError('Candles must have a uniform positive interval')
+    policy = hashlib.sha256(json.dumps({
+        'strategy': asdict(strategy), 'risk': asdict(risk), 'interval': interval,
+        'rules': {s: asdict(rules[s]) for s in symbols}}, sort_keys=True).encode()).hexdigest()
+    if checkpoint is not None:
+        if checkpoint['version'] != 1 or checkpoint['policy'] != policy:
+            raise ValueError('Incompatible simulator checkpoint')
+        if times[start] != checkpoint['last_time'] + interval:
+            raise ValueError('Checkpoint continuation must be contiguous and exactly once')
+        if start < max(strategy.lookback, strategy.atr_period+1):
+            raise ValueError('Continuation requires indicator warm-up candles')
     cash = risk.initial_capital
     peak = cash
     max_dd = 0.0
@@ -30,6 +49,17 @@ def run(data: dict[str, list[Candle]], rules: dict[str, ContractRules],
     trades, curve = [], []
     rejections = {'minimum_or_risk_budget': 0, 'gap_invalid_stop': 0, 'existing_leg': 0, 'invalid_target': 0}
     count_signals = 0
+    stats = {'trades': 0, 'wins': 0, 'profit': 0.0, 'loss': 0.0}
+    sample_start = times[start]
+    if checkpoint is not None:
+        cash, peak, max_dd = (checkpoint[k] for k in ('cash', 'peak', 'max_dd'))
+        halted = checkpoint['halted']
+        positions = {(p['symbol'], p['side']): Position(**p) for p in checkpoint['positions']}
+        pending = {s: Signal(**sig) for s, sig in checkpoint['pending'].items()}
+        invalid_exits = {tuple(key) for key in checkpoint['invalid_exits']}
+        rejections = dict(checkpoint['rejections'])
+        count_signals, stats = checkpoint['signals'], dict(checkpoint['stats'])
+        sample_start = checkpoint['start_time']
 
     def unreal(prices):
         return sum((prices[p.symbol]-p.entry)*(1 if p.side == 'LONG' else -1)*p.quantity*
@@ -73,7 +103,7 @@ def run(data: dict[str, list[Candle]], rules: dict[str, ContractRules],
                 close(key, price, t, 'stop_gap')
             elif (p.side == 'LONG' and price >= p.target) or (p.side == 'SHORT' and price <= p.target):
                 close(key, p.target, t, 'take_profit')  # no favorable gap improvement
-        for key in list(invalid_exits):
+        for key in sorted(invalid_exits):
             if key in positions:
                 close(key, opens[key[0]], t, 'signal_invalidation')
         open_equity = equity(opens)
@@ -138,12 +168,12 @@ def run(data: dict[str, list[Candle]], rules: dict[str, ContractRules],
             for key in list(positions):
                 close(key, prices[key[0]], t+interval, 'drawdown_halt')
             eq = cash
-        if i == end-1:
+        if i == end-1 and finalize:
             for key in list(positions):
                 close(key, prices[key[0]], t+interval, 'end_of_sample')
             eq = cash
         curve.append({'time': t+interval, 'equity': eq})
-        if not halted and i < end-1:
+        if not halted and (i < end-1 or not finalize):
             for key,p in positions.items():
                 if invalidated(p, prices[p.symbol], strategy):
                     invalid_exits.add(key)
@@ -154,15 +184,32 @@ def run(data: dict[str, list[Candle]], rules: dict[str, ContractRules],
                     count_signals += 1
     wins = [x['net_pnl'] for x in trades if x['net_pnl'] > 0]
     losses = [x['net_pnl'] for x in trades if x['net_pnl'] < 0]
-    profit, loss = sum(wins), -sum(losses)
-    return {'metrics': {'total_trades': len(trades),
-            'win_rate': len(wins)/len(trades) if trades else 0.0,
+    stats['trades'] += len(trades)
+    stats['wins'] += len(wins)
+    stats['profit'] += sum(wins)
+    stats['loss'] -= sum(losses)
+    profit, loss = stats['profit'], stats['loss']
+    result = {'metrics': {'total_trades': stats['trades'],
+            'win_rate': stats['wins']/stats['trades'] if stats['trades'] else 0.0,
             'net_pnl': cash-risk.initial_capital,
             'profit_factor': profit/loss if loss else None,
             'profit_factor_note': None if loss else 'Undefined: no losing trades',
             'maximum_drawdown': max_dd,
-            'average_profit_per_trade': (cash-risk.initial_capital)/len(trades) if trades else 0.0,
+            'average_profit_per_trade': (cash-risk.initial_capital)/stats['trades'] if stats['trades'] else 0.0,
             'final_balance': cash, 'signals': count_signals,
             'rejections': rejections, 'drawdown_halted': halted,
-            'start_time': times[start], 'end_time': times[end-1]+interval},
+            'start_time': sample_start, 'end_time': times[end-1]+interval},
             'trades': trades, 'equity_curve': curve}
+
+    if not finalize:
+        result['metrics']['marked_equity'] = curve[-1]['equity']
+        result['metrics']['marked_net_pnl'] = curve[-1]['equity']-risk.initial_capital
+        result['metrics']['average_profit_per_trade'] = (profit-loss)/stats['trades'] if stats['trades'] else 0.0
+        result['checkpoint'] = {
+            'version': 1, 'policy': policy, 'last_time': times[end-1],
+            'start_time': sample_start, 'cash': cash, 'peak': peak, 'max_dd': max_dd,
+            'halted': halted, 'positions': [asdict(p) for p in positions.values()],
+            'pending': {s: asdict(sig) for s, sig in pending.items()},
+            'invalid_exits': sorted(invalid_exits), 'rejections': rejections,
+            'signals': count_signals, 'stats': stats}
+    return result
