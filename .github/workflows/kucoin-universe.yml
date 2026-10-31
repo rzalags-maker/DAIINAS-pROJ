@@ -1,0 +1,50 @@
+name: KuCoin whole-market opportunity scan (paper only)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/kucoin-universe.yml
+permissions:
+  contents: read
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test standalone preflight filters
+        run: python -m unittest tests/test_universe.py -v
+      - name: Scan entire public KuCoin Futures universe from one snapshot
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, time
+          from pathlib import Path
+          from daiinas.universe import public_get, scan, Policy
+          c=public_get('/api/v1/contracts/active')
+          t=public_get('/api/v1/allTickers')
+          ms=int(time.time()*1000)
+          Path('reports').mkdir(exist_ok=True)
+          print('KuCoin public contracts:',len(c),'all-tickers:',len(t))
+          for equity in [8,50,100]:
+              result=scan(c,t,now_ms=ms,equity=equity,policy=Policy())
+              out=Path(f'reports/universe-{equity}.json')
+              out.write_text(json.dumps(result,indent=2,allow_nan=False)+'\n')
+              print(json.dumps({'capital_usdt':equity,
+                'observed':result['contracts_observed'],
+                'preflight_eligible':result['preflight_eligible'],
+                'status':result['status'],
+                'top_symbols':[x['symbol'] for x in result['selected_for_deeper_observation'][:8]],
+                'rejections':result['rejection_counts']},sort_keys=True))
+          PY
+      - name: Save public preflight audit (no trade orders)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daiinas-universe-preflight
+          if-no-files-found: ignore
+          path: reports/universe-*.json
+          retention-days: 7
