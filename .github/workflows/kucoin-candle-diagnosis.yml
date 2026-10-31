@@ -1,0 +1,46 @@
+name: KuCoin candle-window diagnosis
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/kucoin-candle-diagnosis.yml
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Diagnose exact REST candle time window without secrets
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request, urllib.parse, time, datetime
+          INTERVAL = 300_000
+          NOW = int(time.time()*1000)
+          latest = NOW//INTERVAL*INTERVAL-INTERVAL
+          start = latest-20*INTERVAL
+          end = latest+INTERVAL
+          symbols = ["XBTUSDTM","ETHUSDTM","SOLUSDTM","BNBUSDTM","XRPUSDTM"]
+          print("Now UTC:",datetime.datetime.fromtimestamp(NOW/1000,datetime.timezone.utc).isoformat())
+          print("Requested from:",start,"to:",end-1,"expected bars:",(end-start)//INTERVAL)
+          for sym in symbols:
+              q = urllib.parse.urlencode({'symbol':sym,'granularity':5,'from':start,'to':end-1})
+              u="https://api-futures.kucoin.com/api/v1/kline/query?"+q
+              try:
+                  with urllib.request.urlopen(urllib.request.Request(u,headers={"User-Agent":"DAIINAS-candle-window-diagnostic/1.0"}),timeout=15) as r: resp=json.load(r)
+                  rows=resp.get('data',[])
+                  actual=sorted(int(row[0]) for row in rows)
+                  expected=list(range(start,end,INTERVAL))
+                  missing=sorted(set(expected)-set(actual))
+                  extraneous=sorted(set(actual)-set(expected))
+                  invalid=len(actual)!=len(set(actual))
+                  print(json.dumps({'symbol':sym,'provider_code':resp.get('code'),
+                    'returned_count':len(actual),'expected_count':len(expected),
+                    'first_ms':actual[0] if actual else None,'last_ms':actual[-1] if actual else None,
+                    'missing_count':len(missing),'first_missing_ms':missing[:4],
+                    'extraneous_count':len(extraneous),'first_extraneous_ms':extraneous[:3],
+                    'duplicate_timestamps':invalid}))
+              except Exception as exc:
+                  print(json.dumps({'symbol':sym,'error':type(exc).__name__+': '+str(exc)}))
+          PY
