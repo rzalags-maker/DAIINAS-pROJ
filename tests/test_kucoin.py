@@ -139,6 +139,7 @@ class FakeRest:
         self.t=now_ms()
         self.calls=[]
         self.gap=False
+        self.book_seq={s:100 for s in MAPPING}
 
     def request(self,path,params=None):
         self.calls.append((path,params))
@@ -150,7 +151,7 @@ class FakeRest:
                 'pingInterval':1000,'pingTimeout':1000}]}
         elif path.endswith('/snapshot'):
             symbol=next(s for s,v in MAPPING.items() if v==params['symbol'])
-            data=snapshot(symbol,self.t)
+            data=snapshot(symbol,self.t,self.book_seq[symbol])
         elif path.endswith('/query'):
             step=params['granularity']*60000
             data=[[t,100,101,99,100,10] for t in range(params['from'],params['to']+1,step)]
@@ -160,8 +161,9 @@ class FakeRest:
 
 
 class FakeSocket:
-    def __init__(self,rest,pong=True):
+    def __init__(self,rest,pong=True,gap_once=False):
         self.rest,self.pong=rest,pong
+        self.gap_once,self.sent_gap=gap_once,False
         self.queue=asyncio.Queue()
         self.subscriptions=[]
         self.feeder=None
@@ -192,11 +194,16 @@ class FakeSocket:
             await self.queue.put({'type':'pong','id':msg['id']})
 
     async def feed(self):
-        seq=101
+        seq=max(self.rest.book_seq.values())+1
         while True:
             for symbol in MAPPING:
                 for channel in TOPICS:
-                    await self.queue.put(event(symbol,channel,self.rest.t,seq))
+                    sent=seq
+                    if channel=='level2':
+                        if self.gap_once and not self.sent_gap and seq==104 and symbol=='BTCUSDT':
+                            sent+=2;self.sent_gap=True
+                        self.rest.book_seq[symbol]=max(self.rest.book_seq[symbol],sent)
+                    await self.queue.put(event(symbol,channel,self.rest.t,sent))
             seq+=1
             await asyncio.sleep(.05)
 
@@ -301,6 +308,16 @@ class EngineTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn(b'PUBLIC_TOKEN_MUST_NOT_BE_SAVED',bodies)
         self.assertEqual(self.engine.report(True)['status'],'passed')
         self.assertFalse(self.engine.ready())  # shutdown invalidates every book
+
+    async def test_book_gap_resynchronizes_in_place_without_weakening_continuity(self):
+        self.engine.connector=lambda *args,**kwargs:FakeSocket(self.rest,gap_once=True)
+        await self.engine.run(seconds=2.3)
+        self.assertEqual(self.engine.counts['connections'],1)
+        self.assertEqual(self.engine.counts['book_gaps'],1)
+        self.assertGreaterEqual(self.engine.counts['book_resyncs'],1)
+        self.assertGreater(self.engine.counts['verified_sessions'],0)
+        self.assertGreater(self.engine.counts['paper_batches'],0)
+        self.assertTrue(self.store.db.execute("SELECT count(*) FROM events WHERE kind='kucoin_book_gap'").fetchone()[0])
 
     async def test_missing_pong_forces_reconnect(self):
         self.engine.connector=lambda *args,**kwargs:FakeSocket(self.rest,pong=False)

@@ -75,8 +75,11 @@ The receiver buffers messages from the **subscribed** connection before taking
 public full L2 snapshots via `/api/v1/level2/snapshot`. Changes at/before snapshot
 sequence S are discarded. Only an exact S+1 delta verifies the snapshot bridge;
 every subsequent accepted L2 delta must be exactly +1. Zero quantities remove
-levels. Crossed/empty books, off-tick/off-lot data, sequence gaps, backwards or
-stale/future timestamps invalidate trust and reconnect. All books are rebuilt on
+levels. Crossed/empty books, off-tick/off-lot data, backwards or
+stale/future timestamps invalidate trust and reconnect. A sequence gap suspends
+paper decisions and resynchronizes the affected book in place while other feeds
+continue. A bounded per-book buffer bridges a fresh snapshot; three failed
+resync attempts or overflow reconnect the whole session. All books are rebuilt on
 every reconnect; persisted snapshots are never trusted blindly on restart.
 "Verified" means sequence continuity, price/size validation and uncrossed books;
 KuCoin's protocol here supplies no exchange book checksum to compare.
@@ -87,8 +90,11 @@ cannot prove every trade was delivered. Conflicting duplicates and envelope
 `sn`/data sequence mismatches are rejected. Events are deduplicated persistently.
 Timestamp units are explicit (trade/ticker/snapshot ns, L2 delta ms), with a
 3-second future tolerance and 15-second accepted event-age limit. Missing
-required trade/quote/book streams make readiness false after the configured
-staleness threshold. Buffering is bounded and overflow fails closed.
+required quote/book updates make readiness false after 30 seconds by default.
+Trade prints have no per-message heartbeat guarantee, so observed trade freshness
+uses a separate 120-second default window, retained across reconnects; this is
+not a guarantee that every trade was delivered. Every reconnected book and quote
+must be revalidated before paper processing. Buffering is bounded and overflow fails closed.
 
 Application JSON pings use the server's `pingInterval`; matching pongs are
 required within `pingTimeout`. Reconnect uses bounded exponential backoff and

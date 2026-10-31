@@ -15,7 +15,7 @@ from .data import digest
 from .models import INTERVALS, RiskConfig, StrategyConfig
 from .flow import AggressiveTrade
 from .service import Store, Worker, canonical, now_ms, single_worker
-from .providers.kucoin import (PublicRest, DataGap, MAPPING, REVERSE, TOPICS,
+from .providers.kucoin import (PublicRest, DataGap, SequenceGap, MAPPING, REVERSE, TOPICS,
                                OrderBook, contracts, execution, ticker, integer,
                                timestamp, token_server, klines)
 
@@ -51,6 +51,9 @@ class Engine:
         self.stale_ms = int(config.get('stale_seconds',30)*1000)
         if not 5000 <= self.stale_ms <= 120000:
             raise ValueError('Staleness threshold must be 5..120 seconds')
+        self.trade_stale_ms = int(config.get('trade_stale_seconds',120)*1000)
+        if not 30000 <= self.trade_stale_ms <= 600000:
+            raise ValueError('Trade silence threshold must be 30..600 seconds')
         self.renew_seconds = config.get('token_renew_seconds',72000)
         if not 30 <= self.renew_seconds <= 72000:
             raise ValueError('Renew before the documented 24-hour lifetime (30..72000 seconds)')
@@ -67,7 +70,7 @@ class Engine:
         self.connected = False
         self.session_id = None
         self.counts = {'public_tokens':0,'connections':0,'reconnects':0,'pongs':0,
-                       'renewals':0,'errors':0,'paper_batches':0,'verified_sessions':0,'checkpoint_resumes':0}
+                       'renewals':0,'errors':0,'paper_batches':0,'verified_sessions':0,'checkpoint_resumes':0,'book_gaps':0,'book_resyncs':0}
         self.verified_symbols, self.acked_topics = set(), set()
         self.errors = []
         store.db.executescript('''
@@ -118,7 +121,7 @@ class Engine:
     def ready(self):
         t = now_ms()
         return (self.connected and len(self.books)==len(self.symbols) and all(
-            self.books[s].verified and all(t-self.last.get((s,k),0) < self.stale_ms
+            self.books[s].verified and all(t-self.last.get((s,k),0) < (self.trade_stale_ms if k=='execution' else self.stale_ms)
                                            for k in TOPICS) for s in self.symbols))
 
     def health(self):
@@ -147,6 +150,8 @@ class Engine:
     def ingest(self, msg):
         try:
             return self._ingest(msg)
+        except SequenceGap:
+            raise
         except (ValueError,KeyError):
             self.connected=False
             for book in self.books.values():book.reset()
@@ -237,10 +242,15 @@ class Engine:
             self.counts['checkpoint_resumes'] += 1
         uri = server['endpoint']+('' if server['endpoint'].endswith('/') else '/')+'?'+urlencode(
             {'token':info['token'],'connectId':self.session_id})
-        self.sequences.clear();self.event_times.clear();self.last.clear()
+        self.sequences.clear();self.event_times.clear()
+        # Quiet trade feeds have no heartbeat-per-trade guarantee. Preserve only
+        # recent observed trade timestamps; every book and quote must be renewed.
+        self.last={k:v for k,v in self.last.items() if k[1]=='execution'}
         for book in self.books.values():
             book.reset()
         queue = asyncio.Queue(maxsize=self.queue_size)
+        resyncing=set()
+        buffers={s:[] for s in self.symbols}
         welcome,all_acks = asyncio.Event(),asyncio.Event()
         subscriptions = {f'{channel}-{symbol}':f'/contractMarket/{channel}:{MAPPING[symbol]}'
                          for symbol in self.symbols for channel in TOPICS}
@@ -289,6 +299,25 @@ class Engine:
                         await ws.send(canonical({'id':ping['id'],'type':'ping'}))
                         last_ping=t
 
+            async def resync(symbol):
+                for attempt in range(3):
+                    snapshot=await self.request('/api/v1/level2/snapshot',{'symbol':MAPPING[symbol]})
+                    self.books[symbol].snapshot(snapshot,now_ms())
+                    buffered=buffers[symbol]
+                    buffers[symbol]=[]
+                    try:
+                        with self.store.transaction():
+                            for message in buffered:self.ingest(message)
+                        self.counts['book_resyncs'] += 1
+                        self.store.event('kucoin_book_resync',symbol)
+                        resyncing.remove(symbol)
+                        return
+                    except SequenceGap:
+                        buffers[symbol]=buffered+buffers[symbol]
+                        if len(buffers[symbol])>self.queue_size:
+                            raise DataGap('Book resync buffer overflow')
+                raise DataGap(f'Book resync retries exhausted: {symbol}')
+
             async def consume():
                 while True:
                     first = await queue.get()
@@ -297,13 +326,32 @@ class Engine:
                         try:batch.append(queue.get_nowait())
                         except asyncio.QueueEmpty:break
                     with self.store.transaction():
-                        for message in batch:self.ingest(message)
+                        for message in batch:
+                            topic=message.get('topic','')
+                            symbol=REVERSE.get(topic.split(':')[-1])
+                            is_book=topic.startswith('/contractMarket/level2:')
+                            if is_book and symbol in resyncing:
+                                buffers[symbol].append(message)
+                                if len(buffers[symbol])>self.queue_size:
+                                    raise DataGap('Book resync buffer overflow')
+                                continue
+                            try:
+                                self.ingest(message)
+                            except SequenceGap as exc:
+                                self.counts['book_gaps'] += 1
+                                self.store.event('kucoin_book_gap',f'{symbol}: {exc}')
+                                buffers[symbol]=[message]
+                                resyncing.add(symbol)
+                                tasks.create_task(resync(symbol))
                     await asyncio.sleep(0)
 
             async def paper():
                 while True:
-                    await self.paper_once()
-                    await asyncio.sleep(self.poll_seconds)
+                    if self.ready():
+                        await self.paper_once()
+                        await asyncio.sleep(self.poll_seconds)
+                    else:
+                        await asyncio.sleep(.2)
 
             async def monitor():
                 start = time.monotonic()
@@ -314,7 +362,7 @@ class Engine:
                     if ready and not verified:
                         self.counts['verified_sessions'] += 1;verified=True
                     age=time.monotonic()-start
-                    if age > self.stale_ms/1000 and not ready:
+                    if age > max(self.stale_ms,self.trade_stale_ms)/1000 and not ready:
                         raise DataGap('Stale or missing required trade/quote/book stream')
                     if age >= min(self.renew_seconds,reconnect_after or self.renew_seconds):
                         self.counts['renewals'] += 1
@@ -346,6 +394,7 @@ class Engine:
         delay=1
         while seconds is None or time.monotonic()-started < seconds:
             remaining=None if seconds is None else seconds-(time.monotonic()-started)
+            before_verified=self.counts['verified_sessions']
             try:
                 if remaining is None:
                     await self.session(reconnect_after)
@@ -361,9 +410,10 @@ class Engine:
                     text=re.sub(r'([?&]token=)[^&\s]+',r'\1[redacted]',str(leaf))
                     self.record_error(f'{type(leaf).__name__}: {text}')
             self.counts['reconnects'] += 1
+            if self.counts['verified_sessions']>before_verified:delay=1
             remaining=delay if seconds is None else min(delay,max(0,seconds-(time.monotonic()-started)))
             await asyncio.sleep(remaining)
-            delay=1 if self.counts['verified_sessions'] else min(delay*2,30)
+            delay=min(delay*2,30)
 
     def record_error(self,text):
         self.counts['errors'] += 1
@@ -387,8 +437,11 @@ class Engine:
                 'sequence_verified_symbols':sorted(self.verified_symbols),'paper_decision_batches':decisions,
                 'paper_metrics':self.store.get('metrics'),'contracts':self.normalized,
                 'errors':self.errors,'reconnect_required':require_reconnect,
-                'rest_provenance':[{'fetched_at':t,'url':url,'sha256':sha} for t,url,sha in self.store.db.execute(
-                    'SELECT fetched_at,url,sha256 FROM responses ORDER BY id')],
+                'rest_response_count':self.store.db.execute('SELECT count(*) FROM responses').fetchone()[0],
+                'rest_provenance':[{'fetched_at':t,'url':url,'sha256':sha} for t,url,sha in reversed(list(self.store.db.execute(
+                    'SELECT fetched_at,url,sha256 FROM responses ORDER BY id DESC LIMIT 200')))],
+                'strategy_signals':dict(self.store.db.execute('SELECT side,count(*) FROM signals GROUP BY side').fetchall()),
+                'paper_positions':self.store.get('checkpoint',{}).get('positions',[]),
                 'source_sha256':{str(p):digest(p.read_bytes()) for p in (Path(__file__),Path(__file__).parent/'providers'/'kucoin.py')},
                 'limitations':['Bounded connectivity/persistence check, not a profitability test or production soak.',
                   'Strategy uses KuCoin closed OHLCV via REST; WebSocket trade/quote/L2 feeds gate readiness, not order-flow signals.',

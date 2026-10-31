@@ -19,6 +19,11 @@ class DataGap(ValueError):
     """Data is not safe to use; reset the connection and rebuild books."""
 
 
+class SequenceGap(DataGap):
+    def __init__(self, expected, actual):
+        super().__init__(f'Order-book sequence gap: expected {expected}, received {actual}')
+
+
 def number(value, zero=False):
     try:
         d = Decimal(str(value))
@@ -178,8 +183,9 @@ class OrderBook:
         if seq <= self.sequence:
             return False  # subscription buffer at/before the REST snapshot
         if seq != self.sequence+1:
+            expected=self.sequence+1
             self.reset()
-            raise DataGap('Order-book sequence gap: full resynchronization required')
+            raise SequenceGap(expected,seq)
         t = timestamp(row['timestamp'],'ms',received_ms)
         if t < self.time:
             self.reset()

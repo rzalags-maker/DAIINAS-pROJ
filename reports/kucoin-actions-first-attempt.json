@@ -1,0 +1,379 @@
+{
+  "status": "not_verified",
+  "simulation_only": true,
+  "provider": "KuCoin Classic Futures public WebSocket",
+  "runner": "github-actions",
+  "counts": {
+    "public_tokens": 6,
+    "connections": 6,
+    "reconnects": 6,
+    "pongs": 4,
+    "renewals": 0,
+    "errors": 6,
+    "paper_batches": 0,
+    "verified_sessions": 1,
+    "checkpoint_resumes": 0
+  },
+  "market_event_counts": {
+    "BNBUSDT": {
+      "execution": 10,
+      "tickerV2": 86,
+      "level2": 555
+    },
+    "BTCUSDT": {
+      "execution": 2,
+      "tickerV2": 141,
+      "level2": 6981
+    },
+    "ETHUSDT": {
+      "execution": 5,
+      "tickerV2": 334,
+      "level2": 4278
+    },
+    "SOLUSDT": {
+      "execution": 2,
+      "tickerV2": 291,
+      "level2": 7226
+    },
+    "XRPUSDT": {
+      "execution": 1,
+      "tickerV2": 658,
+      "level2": 1668
+    }
+  },
+  "subscription_acks": [
+    "/contractMarket/execution:BNBUSDTM",
+    "/contractMarket/execution:ETHUSDTM",
+    "/contractMarket/execution:SOLUSDTM",
+    "/contractMarket/execution:XBTUSDTM",
+    "/contractMarket/execution:XRPUSDTM",
+    "/contractMarket/level2:BNBUSDTM",
+    "/contractMarket/level2:ETHUSDTM",
+    "/contractMarket/level2:SOLUSDTM",
+    "/contractMarket/level2:XBTUSDTM",
+    "/contractMarket/level2:XRPUSDTM",
+    "/contractMarket/tickerV2:BNBUSDTM",
+    "/contractMarket/tickerV2:ETHUSDTM",
+    "/contractMarket/tickerV2:SOLUSDTM",
+    "/contractMarket/tickerV2:XBTUSDTM",
+    "/contractMarket/tickerV2:XRPUSDTM"
+  ],
+  "sequence_verified_symbols": [
+    "BNBUSDT",
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT",
+    "XRPUSDT"
+  ],
+  "paper_decision_batches": 0,
+  "paper_metrics": null,
+  "contracts": {
+    "BNBUSDT": {
+      "symbol": "BNBUSDT",
+      "min_qty": "1",
+      "max_qty": "1000000",
+      "step_size": "1",
+      "tick_size": "0.01",
+      "min_notional": "0",
+      "contract_size": "0.01",
+      "exchange_symbol": "BNBUSDTM",
+      "max_leverage": 75.0,
+      "initial_margin": 0.014,
+      "taker_fee_rate": 0.0006,
+      "min_notional_source": "not published; lotSize enforced"
+    },
+    "BTCUSDT": {
+      "symbol": "BTCUSDT",
+      "min_qty": "1",
+      "max_qty": "1000000",
+      "step_size": "1",
+      "tick_size": "0.1",
+      "min_notional": "0",
+      "contract_size": "0.001",
+      "exchange_symbol": "XBTUSDTM",
+      "max_leverage": 125.0,
+      "initial_margin": 0.008,
+      "taker_fee_rate": 0.0006,
+      "min_notional_source": "not published; lotSize enforced"
+    },
+    "ETHUSDT": {
+      "symbol": "ETHUSDT",
+      "min_qty": "1",
+      "max_qty": "1000000",
+      "step_size": "1",
+      "tick_size": "0.01",
+      "min_notional": "0",
+      "contract_size": "0.01",
+      "exchange_symbol": "ETHUSDTM",
+      "max_leverage": 100.0,
+      "initial_margin": 0.01,
+      "taker_fee_rate": 0.0006,
+      "min_notional_source": "not published; lotSize enforced"
+    },
+    "SOLUSDT": {
+      "symbol": "SOLUSDT",
+      "min_qty": "1",
+      "max_qty": "1000000",
+      "step_size": "1",
+      "tick_size": "0.001",
+      "min_notional": "0",
+      "contract_size": "0.1",
+      "exchange_symbol": "SOLUSDTM",
+      "max_leverage": 75.0,
+      "initial_margin": 0.014,
+      "taker_fee_rate": 0.0006,
+      "min_notional_source": "not published; lotSize enforced"
+    },
+    "XRPUSDT": {
+      "symbol": "XRPUSDT",
+      "min_qty": "1",
+      "max_qty": "1000000",
+      "step_size": "1",
+      "tick_size": "0.00001",
+      "min_notional": "0",
+      "contract_size": "10.0",
+      "exchange_symbol": "XRPUSDTM",
+      "max_leverage": 75.0,
+      "initial_margin": 0.014,
+      "taker_fee_rate": 0.0006,
+      "min_notional_source": "not published; lotSize enforced"
+    }
+  },
+  "errors": [
+    "DataGap: Order-book sequence gap: full resynchronization required",
+    "DataGap: Stale or missing required trade/quote/book stream",
+    "DataGap: Order-book sequence gap: full resynchronization required",
+    "DataGap: Order-book sequence gap: full resynchronization required",
+    "DataGap: Order-book sequence gap: full resynchronization required",
+    "DataGap: Stale or missing required trade/quote/book stream"
+  ],
+  "reconnect_required": true,
+  "rest_provenance": [
+    {
+      "fetched_at": 1793477873474,
+      "url": "https://api-futures.kucoin.com/api/v1/contracts/active",
+      "sha256": "a83038981d3d62204ad9686c912133bda9a9953b881e675269777709cbe10dfb"
+    },
+    {
+      "fetched_at": 1793477873749,
+      "url": "https://api-futures.kucoin.com/api/v1/bullet-public",
+      "sha256": "255bb2a70c9dd8f2da8e050647438bf35d1b3b3d8948f54d2ed2cc5e04cac979"
+    },
+    {
+      "fetched_at": 1793477874785,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=BNBUSDTM",
+      "sha256": "2fd38e009775a846b1a0d031127abec5ba623c4dcf09b32879fba31989b018e1"
+    },
+    {
+      "fetched_at": 1793477874996,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XBTUSDTM",
+      "sha256": "3d36cf15a04878cb74453d3e5c215925d91fe513b90d3f093a6b0eee211d7508"
+    },
+    {
+      "fetched_at": 1793477875245,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=ETHUSDTM",
+      "sha256": "65ef3ff41a69391a505be6fd08498ed627be37d1033ae3d5155244da8fecc4a9"
+    },
+    {
+      "fetched_at": 1793477875453,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=SOLUSDTM",
+      "sha256": "367526cd481e58746fb7ffc5bac5ff97543860ff278fd23cb06727ec95502d64"
+    },
+    {
+      "fetched_at": 1793477875672,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XRPUSDTM",
+      "sha256": "725aa05b9dee9366ea06cf6e1cf76c8592b785a351144a82ab1766573e630276"
+    },
+    {
+      "fetched_at": 1793477877875,
+      "url": "https://api-futures.kucoin.com/api/v1/contracts/active",
+      "sha256": "24cd587bb119f096ef4e5c93b38d11bc15867b983383a4f219221389d22569e5"
+    },
+    {
+      "fetched_at": 1793477878081,
+      "url": "https://api-futures.kucoin.com/api/v1/bullet-public",
+      "sha256": "255bb2a70c9dd8f2da8e050647438bf35d1b3b3d8948f54d2ed2cc5e04cac979"
+    },
+    {
+      "fetched_at": 1793477879148,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=BNBUSDTM",
+      "sha256": "52b25f3475477ef17c46a9a86ac31b68a783298ef639d5e6d3944f5d9df9404e"
+    },
+    {
+      "fetched_at": 1793477879366,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XBTUSDTM",
+      "sha256": "75b42cb260a5dbf57e815546aeed59106e1ffb0c79d966405566f13a15dd3f16"
+    },
+    {
+      "fetched_at": 1793477879588,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=ETHUSDTM",
+      "sha256": "628705078697ec740cf42e2f29845d209acee5c557e63f26690eae5f264b9da1"
+    },
+    {
+      "fetched_at": 1793477879816,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=SOLUSDTM",
+      "sha256": "0c271ab200d4c020c797245b3722fa912d63388dd6438cc2110c8720e1ac7180"
+    },
+    {
+      "fetched_at": 1793477880070,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XRPUSDTM",
+      "sha256": "beb0ade52810dbc52e0785931b4880b469a428622213add1351df3ae17cba6ee"
+    },
+    {
+      "fetched_at": 1793477912666,
+      "url": "https://api-futures.kucoin.com/api/v1/contracts/active",
+      "sha256": "da5ce6bcf9c2b872d15edb871e8c1126bf496abeabf0ba44c0afec7d0b020a4e"
+    },
+    {
+      "fetched_at": 1793477912866,
+      "url": "https://api-futures.kucoin.com/api/v1/bullet-public",
+      "sha256": "255bb2a70c9dd8f2da8e050647438bf35d1b3b3d8948f54d2ed2cc5e04cac979"
+    },
+    {
+      "fetched_at": 1793477913910,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=BNBUSDTM",
+      "sha256": "9c7bdbf70302d7dac69b651c0c874c8f5867634f7ce518ab3431f5f46381b636"
+    },
+    {
+      "fetched_at": 1793477914114,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XBTUSDTM",
+      "sha256": "28690bf1d9db706f6f1539be08eab739c9447c2aeb983ddf50b741a7fd25a47f"
+    },
+    {
+      "fetched_at": 1793477914334,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=ETHUSDTM",
+      "sha256": "65a9a3306ba3d9bce8a9a67cd94b50860e5927f08b9b59c972082ff13a0416a3"
+    },
+    {
+      "fetched_at": 1793477914551,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=SOLUSDTM",
+      "sha256": "a35763919b871a19b6e1ee27f18f51ff305e6351c3a43582d53671bbe90aecdd"
+    },
+    {
+      "fetched_at": 1793477914748,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XRPUSDTM",
+      "sha256": "bd24b8a67a79e45f6de3d6328e6801e12b0f2fdee5d3c8120f22383ffe4da14c"
+    },
+    {
+      "fetched_at": 1793477919214,
+      "url": "https://api-futures.kucoin.com/api/v1/contracts/active",
+      "sha256": "cfcc4359caa990d9c31d18a23fee13a569b23de9dbaad038bea58d721e22770e"
+    },
+    {
+      "fetched_at": 1793477919442,
+      "url": "https://api-futures.kucoin.com/api/v1/bullet-public",
+      "sha256": "255bb2a70c9dd8f2da8e050647438bf35d1b3b3d8948f54d2ed2cc5e04cac979"
+    },
+    {
+      "fetched_at": 1793477920386,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=BNBUSDTM",
+      "sha256": "d002adb2e505b12b79a7dca0f6eea175a28c61f9e797ac467e446af788eab2b6"
+    },
+    {
+      "fetched_at": 1793477920623,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XBTUSDTM",
+      "sha256": "2052314be628c79f797872c9e7987fbf104665beb90a9c9b0c67cc0508c5a8c0"
+    },
+    {
+      "fetched_at": 1793477920822,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=ETHUSDTM",
+      "sha256": "5999b0c046f44f19a291017018161a041abe95f326e292037f1be7c3dd3d7ca3"
+    },
+    {
+      "fetched_at": 1793477921035,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=SOLUSDTM",
+      "sha256": "30033ea85d6ca3fd1f32e245ad4c304d922d40ae01102a042b1b113984b7b5a2"
+    },
+    {
+      "fetched_at": 1793477921254,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XRPUSDTM",
+      "sha256": "30bd0cbdf78710af178477b06d66589261f581d8c5b339097d3bb836e13154bd"
+    },
+    {
+      "fetched_at": 1793477929849,
+      "url": "https://api-futures.kucoin.com/api/v1/contracts/active",
+      "sha256": "a3d28b8bad48b521ef96b8512f1d0bf254933147351ef479f20dafee034624f8"
+    },
+    {
+      "fetched_at": 1793477930093,
+      "url": "https://api-futures.kucoin.com/api/v1/bullet-public",
+      "sha256": "255bb2a70c9dd8f2da8e050647438bf35d1b3b3d8948f54d2ed2cc5e04cac979"
+    },
+    {
+      "fetched_at": 1793477931117,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=BNBUSDTM",
+      "sha256": "e2433731c0fcb5a9c02dd811552e314a9d23c7eaa0146376accc13161839c9fb"
+    },
+    {
+      "fetched_at": 1793477931342,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XBTUSDTM",
+      "sha256": "a6ac54f3c018960f0fccb0dcc5283967f35910ce46142449bd80cdbfac9564b5"
+    },
+    {
+      "fetched_at": 1793477931561,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=ETHUSDTM",
+      "sha256": "8b9f23fe788d171d6eaa0decc1882e2ad26698b975166f1a07881585dfb3f71d"
+    },
+    {
+      "fetched_at": 1793477931765,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=SOLUSDTM",
+      "sha256": "92e31f705c9a220ff89e73bf50d0338535a91c87325dc44e02d0c28391ababf6"
+    },
+    {
+      "fetched_at": 1793477931983,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XRPUSDTM",
+      "sha256": "ef3ff19481057d1859e3e85245950420edee01277a002413416bbb3987efbe4a"
+    },
+    {
+      "fetched_at": 1793477948713,
+      "url": "https://api-futures.kucoin.com/api/v1/contracts/active",
+      "sha256": "463a446ff7a694f487043b71651edff4aa3395d5910fab41d97638f72cd62aa1"
+    },
+    {
+      "fetched_at": 1793477948972,
+      "url": "https://api-futures.kucoin.com/api/v1/bullet-public",
+      "sha256": "255bb2a70c9dd8f2da8e050647438bf35d1b3b3d8948f54d2ed2cc5e04cac979"
+    },
+    {
+      "fetched_at": 1793477950098,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=BNBUSDTM",
+      "sha256": "2c8045da0e65407a1523e23cde25d72e8eaf2a478eb6d8039a313c232541a04d"
+    },
+    {
+      "fetched_at": 1793477950359,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XBTUSDTM",
+      "sha256": "7df730811e856b70adb224820741c0a30cfaacbb5db686d3e81ae78f8dafd5f5"
+    },
+    {
+      "fetched_at": 1793477950583,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=ETHUSDTM",
+      "sha256": "9a9fa04444d378e62883723e670c81545f71b3c978e2a2a02c2c811ddb4076fc"
+    },
+    {
+      "fetched_at": 1793477950803,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=SOLUSDTM",
+      "sha256": "8c45426a5d888d070de575c3b39c629c9830014b3823860acc516347909c6ceb"
+    },
+    {
+      "fetched_at": 1793477951003,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XRPUSDTM",
+      "sha256": "9884bb91e063b94d7afec88234d20faf3e83a6647ec3e52858632613fac9ddeb"
+    }
+  ],
+  "source_sha256": {
+    "/home/runner/work/DAIINAS-pROJ/DAIINAS-pROJ/daiinas/kucoin_service.py": "6705ee83c47b8e200ab6b06092de68f207bfd8ad0885989aed2817e1fc163ee6",
+    "/home/runner/work/DAIINAS-pROJ/DAIINAS-pROJ/daiinas/providers/kucoin.py": "78036931bc4cb4a35e79f1fc2bf89e076a199a1014ae1dc2f85a7cc941859ae7"
+  },
+  "limitations": [
+    "Bounded connectivity/persistence check, not a profitability test or production soak.",
+    "Strategy uses KuCoin closed OHLCV via REST; WebSocket trade/quote/L2 feeds gate readiness, not order-flow signals.",
+    "Candle-simulated fills, fixed spread/slippage, conservative funding scenario; no executable quote or liquidation guarantee.",
+    "Restart/outage candle catch-up is retrospective paper accounting, not live fills observed during an outage.",
+    "Trade/ticker sequence monotonicity is checked; their gaps are not assumed contiguous. L2 requires exact +1 bridging.",
+    "No private credentials, live orders, or external trading actions."
+  ],
+  "recorded_at_ms": 1793477992879,
+  "duration_seconds_requested": 120,
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41238221411",
+  "tested_commit": "20cab4e78442331842451d884928e49d5a74235b"
+}
