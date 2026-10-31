@@ -43,10 +43,13 @@ def status(source_path,paper_path):
     now=time.time_ns()//1_000_000;service=state.get('service',{})
     age=now-state['now_ms'];pos=state['position']
     active=service.get('active',[]);verified=service.get('verified_books',[])
-    healthy=(0<=age<15000 and seq==state['cursor'] and service.get('connected',False) and state.get('connected',False)
+    feed_ages=service.get('feed_age_ms',{})
+    fresh_feeds=bool(active) and all(0<=feed_ages.get(sym,{}).get(k,10**12)+max(age,0)<=2000
+                                     for sym in active for k in ('tickerV2','level2'))
+    healthy=(fresh_feeds and 0<=age<15000 and seq==state['cursor'] and service.get('connected',False) and state.get('connected',False)
              and set(active)<=set(verified) and not (pos and pos.get('unresolved')))
     return {'healthy':healthy,'live_orders_enabled':False,'checkpoint_age_ms':age,
-            'unprocessed_records':seq-state['cursor'],'paused_new_entries':state['paused'],
+            'market_feeds_fresh':fresh_feeds,'unprocessed_records':seq-state['cursor'],'paused_new_entries':state['paused'],
             'halted':state['halted'],'cash':state['cash'],'equity_last_mark':state['last_equity'],
             'mark_status':state['mark_status'],'open_position':pos,'pending_entry':state['pending'],
             'pending_exit':state['exit_request'],'service':service,
@@ -67,6 +70,12 @@ def source_maintenance(path,exclusive=False):
 
 
 def backup_pair(source,paper,destination):
+    # Serialize against source replacement, while allowing online append/backup.
+    with source_maintenance(source):
+        return _backup_pair(source,paper,destination)
+
+
+def _backup_pair(source,paper,destination):
     """Copy PAPER first, SOURCE second. Append-only source can be ahead, never behind."""
     dest=Path(destination)
     if dest.exists():raise ValueError('Backup destination must be new; never overwrite evidence')
@@ -111,7 +120,7 @@ def rotate_source(source,paper,archive):
     """
     source=Path(source)
     with single_worker(paper),single_worker(source),source_maintenance(source,exclusive=True):
-        manifest=backup_pair(source,paper,archive)
+        manifest=_backup_pair(source,paper,archive)
         if manifest['paper_cursor']!=manifest['source_max_seq']:
             raise ValueError('Recover all source records before rotation')
         current=readonly(source)

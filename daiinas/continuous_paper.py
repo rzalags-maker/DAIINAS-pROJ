@@ -14,6 +14,7 @@ import math
 import sqlite3
 
 from .adaptive import CapitalController
+from .paper_audit import position_costs
 from .paper_micro import PaperPolicy, size_for_quote, finish_position, prepare_rules
 from .shadow_flow import ShadowPolicy, observe
 from .continuous_store import SourceJournal, Timeline, canonical, digest, connect_owned, pinned_selection
@@ -143,7 +144,7 @@ class PaperLedger:
                 available=float(depth['bid_base_size' if pos['direction']=='LONG' else 'ask_base_size']) if depth else 0
                 if available<pos['quantity_contracts']*pos['contract_multiplier']:
                     valid=False;s['mark_status']='UNRESOLVED_DEPTH_INDICATIVE_ONLY'
-                    equity=min(equity,s['last_equity'])
+                    equity=min(equity,s['last_equity']+external_flow)
                     self.unresolved('insufficient_verified_depth_for_full_exit')
                 else:pos['last_good_mark_ms']=s['now_ms']
                 spec=self.spec(pos['symbol']);data=self.executable_quote(pos['symbol'],q)
@@ -233,6 +234,15 @@ class PaperLedger:
                     closing={**pos,'fee_rate':max(current['taker_fee_rate'],self.policy.minimum_taker_fee_rate)}
                     done=finish_position(closing,data,now,request['reason'],self.policy)
                     done['exit_source_seq']=self.seq;done['exit_provider_ms']=int(q['timestamp'])
+                    done.update(exit_observed_bid=float(q['bid']),exit_observed_ask=float(q['ask']),
+                                exit_request_ms=request['requested_ms'],exit_wire_received_ms=q['observed_ms'])
+                    done['cost_attribution']=position_costs(done,carry_rate=self.policy.modeled_carry_8h_rate)
+                    totals=s.setdefault('execution_cost_totals',{'by_market':{},'by_direction':{}})
+                    for group,label in [('by_market',sym),('by_direction',pos['direction'])]:
+                        values=totals[group].setdefault(label,{'trades':0})
+                        values['trades']+=1
+                        for k in ('gross_pnl','fees','modeled_carry','net_pnl','mid_price_gross_pnl','spread_cost','slippage_and_tick_cost'):
+                            if k in done['cost_attribution']:values[k]=values.get(k,0)+done['cost_attribution'][k]
                     s['cash']+=done['gross_pnl_usdt']-done['exit_fee_usdt']-done['modeled_carry_usdt']
                     s['fees']+=done['exit_fee_usdt'];s['exit_fees']=s.get('exit_fees',0)+done['exit_fee_usdt'];s['carry']+=done['modeled_carry_usdt'];s['realized']+=done['net_pnl_usdt']
                     summary=s.setdefault('closed_summary',{'count':0,'wins':0,'losses':0,'profit':0.,'loss':0.})
@@ -266,6 +276,8 @@ class PaperLedger:
                     s['cash']-=plan['entry_fee_usdt'];s['fees']+=plan['entry_fee_usdt'];s['entry_fees']=s.get('entry_fees',0)+plan['entry_fee_usdt']
                     s['position']={**plan,'id':'position:'+pending['id'],'symbol':sym,'rules_hash':pending['rules_hash'],
                         'signal_received_ms':pending['signal_ms'],'entry_received_ms':now,
+                        'entry_observed_bid':float(q['bid']),'entry_observed_ask':float(q['ask']),
+                        'entry_wire_received_ms':q['observed_ms'],
                         'entry_provider_ms':int(q['timestamp']),'entry_source_seq':self.seq,'unresolved':None}
                     self.audit('OPENED',position_id=s['position']['id'],symbol=sym,direction=plan['direction'],
                                quantity=plan['quantity_contracts'],planned_loss=plan['planned_loss_usdt'])
@@ -395,6 +407,12 @@ class PaperLedger:
     def report(self):
         s=self.state
         result={'status':'PAPER_ONLY','live_orders_enabled':False,'strategy_validated':False,
+            'production_ready':False,
+            'execution_cost_totals':s.get('execution_cost_totals',{}),
+            'cost_attribution_scope':'New closes under audited runtime; older records require offline audit',
+            'executable_equity':s['last_equity'] if s['mark_status'] in ('FLAT','OBSERVED_QUOTE_WITH_MODELED_EXIT_COSTS') else None,
+            'reserved_margin':s['position']['margin_reserved_usdt'] if s['position'] else 0.,
+            'free_cash_after_margin':s['cash']-(s['position']['margin_reserved_usdt'] if s['position'] else 0.),
             'initial_capital':8.,'cash':s['cash'],'equity_last_mark':s['last_equity'],'mark_status':s['mark_status'],
             'realized_net_pnl':s['realized'],'cash_pnl_excluding_external_flows':s['cash']-8-s['external_flows'],
             'external_simulated_flows':s['external_flows'],'fees':s['fees'],'entry_fees':s.get('entry_fees',0),
