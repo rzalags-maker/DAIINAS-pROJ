@@ -130,6 +130,15 @@ class Observer:
             if sym not in source:
                 raise DataGap('Pinned symbol removed from provider contract metadata')
             validated[sym]=contract_rule(source[sym])
+        # Real KuCoin contract metadata is mandatory for later executable
+        # virtual lot-sizing. Older captures without this fail closed in v3.2.
+        # Store only selected public specs to avoid a giant static universe copy.
+        report['paper_contract_specs']={sym:{
+            'rules':asdict(validated[sym]),
+            'taker_fee_rate':float(source[sym]['takerFeeRate']),
+            'source':'KuCoin Classic Futures public contracts/active',
+            'captured_ms':ts,
+        } for sym in decision['deep_symbols']}
         self.store.record_scan(report,decision)
         self.watch=decision
         self.contracts=validated
