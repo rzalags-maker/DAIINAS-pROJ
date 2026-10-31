@@ -143,8 +143,9 @@ def klines(rows, start, end, interval, multiplier, symbol=None):
 
 
 class OrderBook:
-    def __init__(self, symbol, rule):
+    def __init__(self, symbol, rule, exchange_symbol=None):
         self.symbol, self.rule = symbol, rule
+        self.exchange_symbol = exchange_symbol or MAPPING[symbol]
         self.reset()
 
     def reset(self):
@@ -165,7 +166,7 @@ class OrderBook:
 
     def snapshot(self, row, received_ms):
         self.reset()
-        if row['symbol'] != MAPPING[self.symbol]:
+        if row['symbol'] != self.exchange_symbol:
             raise DataGap('Wrong snapshot symbol')
         self.time = timestamp(row['ts'],'ns',received_ms)
         for side in ('bids','asks'):
@@ -224,8 +225,8 @@ class OrderBook:
                             tuple((float(p),float(q)*unit) for p,q in sorted(self.asks.items())))
 
 
-def execution(symbol, row, rule, received_ms):
-    if row['symbol'] != MAPPING[symbol] or row['side'] not in ('buy','sell'):
+def execution(symbol, row, rule, received_ms, exchange_symbol=None):
+    if row['symbol'] != (exchange_symbol or MAPPING[symbol]) or row['side'] not in ('buy','sell'):
         raise DataGap('Invalid execution symbol/side')
     t = timestamp(row['ts'],'ns',received_ms)
     qty = number(row['size'])
@@ -237,8 +238,8 @@ def execution(symbol, row, rule, received_ms):
     return AggressiveTrade(symbol,t,float(price),float(qty)*float(rule.contract_size),row['side']=='sell')
 
 
-def ticker(symbol, row, rule, received_ms):
-    if row['symbol'] != MAPPING[symbol]:
+def ticker(symbol, row, rule, received_ms, exchange_symbol=None):
+    if row['symbol'] != (exchange_symbol or MAPPING[symbol]):
         raise DataGap('Invalid ticker symbol')
     t = timestamp(row['ts'],'ns',received_ms)
     bid,ask = number(row['bestBidPrice']),number(row['bestAskPrice'])
