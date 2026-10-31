@@ -1,0 +1,164 @@
+name: v3.3 continuous dynamic PAPER integrity
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/v33-continuous-paper]
+    paths:
+      - 'daiinas/continuous*.py'
+      - 'configs/continuous*.json'
+      - 'tests/test_continuous*.py'
+      - 'scripts/verify_v33.py'
+      - '.github/workflows/continuous-paper.yml'
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: continuous-paper-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  public-integrity:
+    if: github.ref == 'refs/heads/feature/v33-continuous-paper'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install '.[live]'
+      - name: Remove prior generated reports; never relabel old evidence
+        run: |
+          if [ -f reports/v33-pr.json ]; then cp reports/v33-pr.json /tmp/v33-pr-previous.json; fi
+          for name in tests first restart replay acceptance pr ci-status; do rm -f "reports/v33-$name.json"; done
+      - name: All original and new deterministic tests
+        id: tests
+        run: |
+          python - <<'PY'
+          import json, pathlib, sys, unittest
+          suite=unittest.defaultTestLoader.discover('tests')
+          result=unittest.TextTestRunner(verbosity=2).run(suite)
+          summary={'tests_run':result.testsRun,'failures':len(result.failures),'errors':len(result.errors),
+                   'skipped':len(result.skipped),'expected_failures':len(result.expectedFailures),
+                   'unexpected_successes':len(result.unexpectedSuccesses),'successful':result.wasSuccessful()}
+          pathlib.Path('reports').mkdir(exist_ok=True)
+          pathlib.Path('reports/v33-tests.json').write_text(json.dumps(summary,indent=2)+'\n')
+          sys.exit(0 if result.wasSuccessful() else 1)
+          PY
+      - name: Actual public multi-scan process with scheduled public renewal
+        id: first
+        continue-on-error: true
+        run: python -m daiinas.continuous run --config configs/continuous-smoke.json --seconds 150 --renew-seconds 65 --source-db state/v33-source.sqlite3 --paper-db state/v33-paper.sqlite3 --report reports/v33-first.json
+      - name: A second real process resumes the SAME source and money state
+        id: restart
+        continue-on-error: true
+        run: python -m daiinas.continuous run --config configs/continuous-smoke.json --seconds 80 --renew-seconds 35 --source-db state/v33-source.sqlite3 --paper-db state/v33-paper.sqlite3 --report reports/v33-restart.json
+      - name: Independent deterministic offline multi-scan replay
+        id: replay
+        continue-on-error: true
+        run: python -m daiinas.continuous replay --config configs/continuous-smoke.json --source-db state/v33-source.sqlite3 --paper-db state/v33-replay.sqlite3 --report reports/v33-replay.json
+      - name: Verify online/restart/replay, cash, quote latency and backups
+        if: always()
+        id: verify
+        continue-on-error: true
+        run: python scripts/verify_v33.py
+      - name: Prepare focused draft PR for issue 6 (never merge)
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json,os,urllib.request,urllib.parse,urllib.error,pathlib
+          previous=pathlib.Path('/tmp/v33-pr-previous.json')
+          if previous.exists():
+              old=json.loads(previous.read_text())
+              if old.get('http_status')==403 and 'not permitted to create or approve' in old.get('reason',''):
+                  old['retry_skipped']='Known repository Actions PR policy denial; no credential/settings change observed.'
+                  old['original_denial_run']=old.get('original_denial_run',old.get('github_run_url'))
+                  pathlib.Path('reports/v33-pr.json').write_text(json.dumps(old,indent=2)+'\n')
+                  print(json.dumps(old,indent=2));raise SystemExit(0)
+          repo=os.environ['GITHUB_REPOSITORY'];owner=repo.split('/')[0]
+          head='feature/v33-continuous-paper';base='daiinas-v1'
+          def api(path,data=None):
+              payload=None if data is None else json.dumps(data).encode()
+              req=urllib.request.Request('https://api.github.com/repos/'+repo+path,data=payload,
+                    headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json',
+                             'Content-Type':'application/json','User-Agent':'DAIINAS-v33-CI'})
+              with urllib.request.urlopen(req,timeout=20) as r:return json.load(r)
+          try:
+              found=api('/pulls?'+urllib.parse.urlencode({'state':'open','head':owner+':'+head,'base':base}))
+              if found:pr=found[0]
+              else:
+                  pr=api('/pulls',{'title':'[P0] v3.3 continuous dynamic PAPER engine','head':head,'base':base,'draft':True,
+                    'body':'Refs #6.\n\nAdds timestamp-correct multi-scan public inputs, acknowledged in-session rotation with durable position pins, one shared 8-USDT observed-quote paper ledger, restart/replay/backup controls, tests and separate Linux units.\n\nLIVE ORDERS DISABLED. No private exchange credentials or invented fills.\n\nSee docs/V33_CONTINUOUS_PAPER.md and reports/v33-acceptance.json for exact tests and real-data evidence. Zero trades is a valid integrity outcome.\n\n24-hour persistent-host gate: BLOCKED — HOST NOT PROVISIONED. No merge is requested; unverified host/performance gates remain open.'})
+              result={'status':'draft_pr_created','number':pr['number'],'url':pr['html_url']}
+          except urllib.error.HTTPError as e:
+              body=e.read().decode(errors='replace')
+              try:message=json.loads(body).get('message','GitHub API rejected PR creation')
+              except ValueError:message='GitHub API rejected PR creation'
+              result={'status':'blocked','http_status':e.code,'reason':message,
+                      'manual_compare_url':'https://github.com/'+repo+'/compare/'+base+'...'+head}
+          pathlib.Path('reports').mkdir(exist_ok=True)
+          pathlib.Path('reports/v33-pr.json').write_text(json.dumps(result,indent=2)+'\n')
+          print(json.dumps(result,indent=2))
+          PY
+      - name: Attach exact tested revision and run provenance
+        if: always()
+        env:
+          TESTS_OUTCOME: ${{ steps.tests.outcome }}
+          FIRST_OUTCOME: ${{ steps.first.outcome }}
+          RESTART_OUTCOME: ${{ steps.restart.outcome }}
+          REPLAY_OUTCOME: ${{ steps.replay.outcome }}
+          VERIFY_OUTCOME: ${{ steps.verify.outcome }}
+        run: |
+          python - <<'PY'
+          import os,json,pathlib
+          outcomes={k.lower():os.environ.get(k+'_OUTCOME','unknown') for k in ('TESTS','FIRST','RESTART','REPLAY','VERIFY')}
+          pathlib.Path('reports/v33-ci-status.json').write_text(json.dumps(outcomes,indent=2)+'\n')
+          for name in ('tests','first','restart','replay','acceptance','pr','ci-status'):
+              p=pathlib.Path(f'reports/v33-{name}.json')
+              if not p.exists():continue
+              data=json.loads(p.read_text());data['tested_commit']=os.environ['GITHUB_SHA']
+              data['github_run_url']=f'https://github.com/{os.environ["GITHUB_REPOSITORY"]}/actions/runs/{os.environ["GITHUB_RUN_ID"]}'
+              p.write_text(json.dumps(data,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v33-public-source-paper-restart-replay
+          path: |
+            reports/v33-*.json
+            state/v33-*.sqlite3*
+            state/v33-backup/
+          retention-days: 14
+      - name: Preserve evidence without changing newer source commits
+        if: always()
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          export GIT_INDEX_FILE="$RUNNER_TEMP/v33-evidence-index"
+          for attempt in 1 2 3; do
+            git fetch origin "$BRANCH"
+            latest="$(git rev-parse FETCH_HEAD)"
+            git read-tree "$latest"
+            for name in tests first restart replay acceptance pr ci-status; do
+              path="reports/v33-$name.json"
+              if [ ! -f "$path" ]; then continue; fi
+              blob="$(git hash-object -w "$path")"
+              git update-index --add --cacheinfo "100644,$blob,$path"
+              git update-index --add --cacheinfo "100644,$blob,reports/v33-runs/$GITHUB_RUN_ID/$name.json"
+            done
+            tree="$(git write-tree)"
+            commit="$(git commit-tree "$tree" -p "$latest" -m 'Record v3.3 public paper integrity and PR evidence')"
+            if git push origin "$commit:refs/heads/$BRANCH"; then exit 0; fi
+          done
+          exit 1
+      - name: Require actual integrity verification
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          result=json.load(open('reports/v33-acceptance.json'))
+          assert result['status']=='passed',result.get('error','Actual integrity verification did not pass')
+          PY
