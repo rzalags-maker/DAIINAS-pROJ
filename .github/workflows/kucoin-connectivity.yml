@@ -1,0 +1,68 @@
+name: KuCoin public Futures connectivity
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/kucoin-connectivity.yml
+permissions:
+  contents: read
+jobs:
+  public-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Install WebSocket test client (public endpoints only)
+        run: python -m pip install 'websockets>=14,<17'
+      - name: Test KuCoin public contract metadata, token and live WebSocket
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import asyncio, json, urllib.request, urllib.parse
+          from websockets.asyncio.client import connect
+
+          BASE = 'https://api-futures.kucoin.com'
+          def request(path, method='GET'):
+              req = urllib.request.Request(BASE+path,method=method,
+                  headers={'User-Agent':'DAIINAS-public-market-probe/0.1'})
+              with urllib.request.urlopen(req, timeout=18) as r:
+                  body=json.load(r)
+                  status=r.status
+              if body.get('code') != '200000':
+                  raise RuntimeError(f'{path}: provider code {body.get("code")}')
+              return body['data'],status
+
+          async def main():
+              contracts,status=request('/api/v1/contracts/active')
+              tracked = ('XBTUSDTM','ETHUSDTM','SOLUSDTM','BNBUSDTM','XRPUSDTM')
+              found = {c['symbol']:c for c in contracts if c.get('symbol') in tracked}
+              print(f'Public contract metadata: HTTP {status}; {len(found)}/{len(tracked)} target symbols present')
+              if not {'XBTUSDTM'}.issubset(found):
+                  raise RuntimeError('BTC USD-M contract absent; inspect symbol naming')
+              info,status=request('/api/v1/bullet-public',method='POST')
+              if not info.get('token') or not info.get('instanceServers'):
+                  raise RuntimeError('No public token or WebSocket endpoint')
+              print(f'Public websocket token: HTTP {status}; endpoint delivered (token not logged)')
+              endpoint=info['instanceServers'][0]['endpoint']
+              qs=urllib.parse.urlencode({'token':info['token'],'connectId':'daiinas-public-probe'})
+              uri=endpoint.rstrip('/')+'/?'+qs
+              async with connect(uri,open_timeout=15,ping_interval=15,ping_timeout=10) as ws:
+                  welcome=json.loads(await asyncio.wait_for(ws.recv(),timeout=15))
+                  if welcome.get('type')!='welcome':
+                      raise RuntimeError(f'Expected welcome, got type {welcome.get("type")}')
+                  print('Futures WebSocket welcome: received')
+                  topic='/contractMarket/tickerV2:XBTUSDTM'
+                  await ws.send(json.dumps({'id':'daiinas-1','type':'subscribe','topic':topic,'response':True}))
+                  ack=False; live=False
+                  for _ in range(30):
+                      try: msg=json.loads(await asyncio.wait_for(ws.recv(),timeout=2))
+                      except asyncio.TimeoutError: break
+                      if msg.get('type')=='ack':ack=True
+                      if msg.get('type')=='message' and msg.get('topic')==topic:
+                          live=True
+                          print('TickerV2 live event: received (data content not logged)')
+                          break
+                  print(f'Futures WebSocket subscription ack: {ack}; live tick: {live}')
+                  if not ack:raise RuntimeError('Missing subscription acknowledgement')
+              print('KuCoin public connectivity: PASS; no trading credentials or orders')
+          asyncio.run(main())
+          PY
