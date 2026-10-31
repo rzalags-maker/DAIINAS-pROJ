@@ -1,46 +1,46 @@
 {
-  "status": "not_verified",
+  "status": "passed",
   "simulation_only": true,
   "provider": "KuCoin Classic Futures public WebSocket",
   "runner": "github-actions",
   "counts": {
-    "public_tokens": 3,
-    "connections": 3,
-    "reconnects": 2,
-    "pongs": 6,
-    "renewals": 2,
+    "public_tokens": 5,
+    "connections": 5,
+    "reconnects": 4,
+    "pongs": 8,
+    "renewals": 4,
     "errors": 0,
     "paper_batches": 1,
-    "verified_sessions": 1,
-    "checkpoint_resumes": 0,
-    "book_gaps": 4,
-    "book_resyncs": 4
+    "verified_sessions": 5,
+    "checkpoint_resumes": 4,
+    "book_gaps": 6,
+    "book_resyncs": 6
   },
   "market_event_counts": {
     "BNBUSDT": {
-      "execution": 9,
-      "tickerV2": 1433,
-      "level2": 4892
+      "execution": 10,
+      "tickerV2": 544,
+      "level2": 3089
     },
     "BTCUSDT": {
-      "execution": 6,
-      "tickerV2": 415,
-      "level2": 14302
+      "execution": 25,
+      "tickerV2": 1345,
+      "level2": 25321
     },
     "ETHUSDT": {
-      "execution": 8,
-      "tickerV2": 471,
-      "level2": 8898
+      "execution": 31,
+      "tickerV2": 1047,
+      "level2": 13689
     },
     "SOLUSDT": {
       "execution": 18,
-      "tickerV2": 721,
-      "level2": 15776
+      "tickerV2": 1160,
+      "level2": 21351
     },
     "XRPUSDT": {
-      "execution": 1,
-      "tickerV2": 1899,
-      "level2": 4992
+      "execution": 10,
+      "tickerV2": 3063,
+      "level2": 9783
     }
   },
   "subscription_acks": [
@@ -71,7 +71,7 @@
   "paper_metrics": {
     "average_profit_per_trade": 0.0,
     "drawdown_halted": false,
-    "end_time": 1793478900000,
+    "end_time": 1793479200000,
     "final_balance": 8.0,
     "marked_equity": 8.0,
     "marked_net_pnl": 0.0,
@@ -85,15 +85,15 @@
       "invalid_target": 0,
       "minimum_or_risk_budget": 0
     },
-    "signals": 0,
-    "start_time": 1793478600000,
+    "signals": 1,
+    "start_time": 1793478900000,
     "total_trades": 0,
     "win_rate": 0.0
   },
   "paper_status": {
     "error": null,
     "status": "running",
-    "time": 1793479039673
+    "time": 1793479298351
   },
   "contracts": {
     "BNBUSDT": {
@@ -169,169 +169,331 @@
   },
   "errors": [],
   "reconnect_required": true,
-  "rest_response_count": 31,
+  "rest_response_count": 63,
   "rest_provenance": [
     {
-      "fetched_at": 1793478929896,
+      "fetched_at": 1793479282061,
       "url": "https://api-futures.kucoin.com/api/v1/contracts/active",
-      "sha256": "2d605aa2349c7e980acc5b49afcd617f88584f055379407de31eea47d7233195"
+      "sha256": "da7b1022955f281d0677a1a913fbe33dfbd6a9fe82006f15e129abf78f18b54a"
     },
     {
-      "fetched_at": 1793478930152,
+      "fetched_at": 1793479282250,
       "url": "https://api-futures.kucoin.com/api/v1/bullet-public",
       "sha256": "255bb2a70c9dd8f2da8e050647438bf35d1b3b3d8948f54d2ed2cc5e04cac979"
     },
     {
-      "fetched_at": 1793478931288,
+      "fetched_at": 1793479283146,
       "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=BNBUSDTM",
-      "sha256": "b029ac4de587272125afa5cf0000d2fc965c9b917ab34e0d4bf4138bbaf65c15"
+      "sha256": "d498f117c894d5db5c63e373b310d1440b505c6e9847513c97fb5679245f33b4"
     },
     {
-      "fetched_at": 1793478931513,
+      "fetched_at": 1793479283327,
       "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XBTUSDTM",
-      "sha256": "51f15ab74e77e66db7bbcfab4d05f1655e3883cf7f340fc7d275c3e826d65b3d"
+      "sha256": "2f559d2ca7f86955cc8e0f42fabb7a88996d364d4bd927ebcc884ee32e6dadd6"
     },
     {
-      "fetched_at": 1793478931723,
+      "fetched_at": 1793479283503,
       "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=ETHUSDTM",
-      "sha256": "57cec6ed986de2b20009a89eef98c0150af416a9c0deda7bf736527f23ec8db2"
+      "sha256": "98a9c0472b005a3e395ae30a7c280dbf2dd8ed0b867c0b41402a4b48a3823c67"
     },
     {
-      "fetched_at": 1793478931927,
+      "fetched_at": 1793479283668,
       "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=SOLUSDTM",
-      "sha256": "44cee26c821c4f9212e3d02e3f1c77e22180bd60013d950040d949fb00d620fb"
+      "sha256": "e53d201d4c5fe20a3e47f7de8a50536a73f9878aacfed653f39aeedd38d53e66"
     },
     {
-      "fetched_at": 1793478932148,
+      "fetched_at": 1793479283831,
       "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XRPUSDTM",
-      "sha256": "9c4daa3a388a089b8b05c62d2640d44dac01e0176e2c970fbc6db33910bf5183"
+      "sha256": "e27a02bdfc7bc81870e18df7938a14e4dd67d585e4814d17a5228189a249d38b"
     },
     {
-      "fetched_at": 1793478932378,
-      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=BNBUSDTM",
-      "sha256": "5e7c86db8be13d2ecca8b41b8ee64f683cc669c66e68e67828340cb1ff14f74c"
-    },
-    {
-      "fetched_at": 1793478973681,
-      "url": "https://api-futures.kucoin.com/api/v1/contracts/active",
-      "sha256": "ef4461f53553e02695645000e1c43f93ec5af1f0dfbb2ee764a7d6de4d6ff01a"
-    },
-    {
-      "fetched_at": 1793478973881,
-      "url": "https://api-futures.kucoin.com/api/v1/bullet-public",
-      "sha256": "255bb2a70c9dd8f2da8e050647438bf35d1b3b3d8948f54d2ed2cc5e04cac979"
-    },
-    {
-      "fetched_at": 1793478974886,
-      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=BNBUSDTM",
-      "sha256": "e70a2c04dea89c266ec97364f989e00fa1618c219a9bb06904b0e42acfdc7c1e"
-    },
-    {
-      "fetched_at": 1793478975095,
-      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XBTUSDTM",
-      "sha256": "cd9bdeaa05a23fb5a4b0c736f67d292150ddbb7d93703b14b4c899b3737b05de"
-    },
-    {
-      "fetched_at": 1793478975303,
-      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=ETHUSDTM",
-      "sha256": "b265f04e95565f791ea106bec14981bb1230e32727a4e96f6c1b82854aec4aa9"
-    },
-    {
-      "fetched_at": 1793478975547,
-      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=SOLUSDTM",
-      "sha256": "d1e4b0a47217fef33b1a20aeab8c40f1c11943bd8c5f33a7b8df75ce25c232fb"
-    },
-    {
-      "fetched_at": 1793478975746,
-      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XRPUSDTM",
-      "sha256": "1a2ca13d294dcd28f0428247f63377e193f046a4527378c92ce0f1ad1d734220"
-    },
-    {
-      "fetched_at": 1793478975952,
-      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XBTUSDTM",
-      "sha256": "5942eb0670e3b69e8d91045c5b614183a3e46469ec8b209cdec62f6428b63937"
-    },
-    {
-      "fetched_at": 1793478975964,
-      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=BNBUSDTM",
-      "sha256": "f192160c521c371aaaff207858188d2a8d03b3cd1c59552b736c2ddcf1063def"
-    },
-    {
-      "fetched_at": 1793479018255,
-      "url": "https://api-futures.kucoin.com/api/v1/contracts/active",
-      "sha256": "ece6443b0374c7d3ab1cc1b59d2298b92a855caff4dc74c887e28201f61dc0ea"
-    },
-    {
-      "fetched_at": 1793479018451,
-      "url": "https://api-futures.kucoin.com/api/v1/bullet-public",
-      "sha256": "255bb2a70c9dd8f2da8e050647438bf35d1b3b3d8948f54d2ed2cc5e04cac979"
-    },
-    {
-      "fetched_at": 1793479019622,
-      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=BNBUSDTM",
-      "sha256": "33cb39e18c8ff8182440a4ed173d892e13f09f5f2ff07c8eb71c3389d26312e2"
-    },
-    {
-      "fetched_at": 1793479019822,
-      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XBTUSDTM",
-      "sha256": "2f45b36e8ee6a419a9c3bafac814547d23e0a8ffe2a60ad5b0efa8e7e5cdfcb9"
-    },
-    {
-      "fetched_at": 1793479020026,
-      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=ETHUSDTM",
-      "sha256": "d1435dff269bb96b7571823649ef14715caec11dc7ec6e7cd436b015516c995a"
-    },
-    {
-      "fetched_at": 1793479020231,
-      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=SOLUSDTM",
-      "sha256": "95013d685b76f7ef228149ff0c1ebf56bba8c3558f60d36dfcf2325f299259c6"
-    },
-    {
-      "fetched_at": 1793479020435,
-      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XRPUSDTM",
-      "sha256": "bf8fdd81c69e366b663c14f3acfc51ab7d1c1f254c8342bc4754c785bed11338"
-    },
-    {
-      "fetched_at": 1793479020649,
-      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=BNBUSDTM",
-      "sha256": "7417c88f52cde90d62bb1d8effc6422910962ddbf3547ac9b90275befaf1ab1c"
-    },
-    {
-      "fetched_at": 1793479038691,
+      "fetched_at": 1793479297509,
       "url": "https://api-futures.kucoin.com/api/v1/timestamp",
-      "sha256": "d4675241f63685b6f69c265d7bec5380a2b243de4074f7181f1a3296700446e5"
+      "sha256": "3f7b4446a62854446cbd11b22e71bb3f4cf3122df7aadd18a5824a926f271f86"
     },
     {
-      "fetched_at": 1793479038885,
-      "url": "https://api-futures.kucoin.com/api/v1/kline/query?symbol=BNBUSDTM&granularity=5&from=1793472600000&to=1793478899999",
-      "sha256": "f834f942c01150879e9781c71f2f36d515fe2a9b16f370cb425b8a6bbae43144"
+      "fetched_at": 1793479297663,
+      "url": "https://api-futures.kucoin.com/api/v1/kline/query?symbol=BNBUSDTM&granularity=5&from=1793472900000&to=1793479199999",
+      "sha256": "f82af34b2e997c750ab2b9fea69f80e35bdb6f7a1ed6a182799002d8cd6f0b81"
     },
     {
-      "fetched_at": 1793479039080,
-      "url": "https://api-futures.kucoin.com/api/v1/kline/query?symbol=XBTUSDTM&granularity=5&from=1793472600000&to=1793478899999",
-      "sha256": "eec24e73ef7bf863d2a799846376892a8119c7c002917d0080c3bbb0f4dc5051"
+      "fetched_at": 1793479297831,
+      "url": "https://api-futures.kucoin.com/api/v1/kline/query?symbol=XBTUSDTM&granularity=5&from=1793472900000&to=1793479199999",
+      "sha256": "c2442a8e9137c68c66a986a0b59551bfa56189bde5975f862702388131e13eb8"
     },
     {
-      "fetched_at": 1793479039285,
-      "url": "https://api-futures.kucoin.com/api/v1/kline/query?symbol=ETHUSDTM&granularity=5&from=1793472600000&to=1793478899999",
-      "sha256": "0228b29e9617f7bcee17d5b85d0bde9835f01ea0d686dc2889b9c6bdfc86d1a7"
+      "fetched_at": 1793479297999,
+      "url": "https://api-futures.kucoin.com/api/v1/kline/query?symbol=ETHUSDTM&granularity=5&from=1793472900000&to=1793479199999",
+      "sha256": "0ac13ab4a07f56dba0df2e8099061d81657c3a8e5101a184610c8a5f698c7d47"
     },
     {
-      "fetched_at": 1793479039478,
-      "url": "https://api-futures.kucoin.com/api/v1/kline/query?symbol=SOLUSDTM&granularity=5&from=1793472600000&to=1793478899999",
-      "sha256": "46bca17654f55912a50593ee07bfa6309df1d2813b37ee28d3bb06cee16badc4"
+      "fetched_at": 1793479298158,
+      "url": "https://api-futures.kucoin.com/api/v1/kline/query?symbol=SOLUSDTM&granularity=5&from=1793472900000&to=1793479199999",
+      "sha256": "03187bf015aefa08012f4fb82b68976e055f70adf40bffbbe56b9bd1ac71405d"
     },
     {
-      "fetched_at": 1793479039669,
-      "url": "https://api-futures.kucoin.com/api/v1/kline/query?symbol=XRPUSDTM&granularity=5&from=1793472600000&to=1793478899999",
-      "sha256": "5420b8f82e6cb88428817fd3adea628c48617ec69e5ad4848fc1d9715202ee3f"
+      "fetched_at": 1793479298350,
+      "url": "https://api-futures.kucoin.com/api/v1/kline/query?symbol=XRPUSDTM&granularity=5&from=1793472900000&to=1793479199999",
+      "sha256": "51c0a109f1f19a55df83b1580770c239ee24c71bc4aec3338c3780e806e09567"
+    },
+    {
+      "fetched_at": 1793479308500,
+      "url": "https://api-futures.kucoin.com/api/v1/timestamp",
+      "sha256": "a4b3f362ead4620aa3a98b0b74599e057bb44da693a6b8438958dc2bf91d85a6"
+    },
+    {
+      "fetched_at": 1793479318648,
+      "url": "https://api-futures.kucoin.com/api/v1/timestamp",
+      "sha256": "d7eba8d4b072087137a1dae256861599917da014d3d33bdaed6b47bc08ec7727"
+    },
+    {
+      "fetched_at": 1793479325274,
+      "url": "https://api-futures.kucoin.com/api/v1/contracts/active",
+      "sha256": "7153bf26f41b4fa2acb01d1090a992430933b7e022a9c1592914478049f4bbed"
+    },
+    {
+      "fetched_at": 1793479325431,
+      "url": "https://api-futures.kucoin.com/api/v1/bullet-public",
+      "sha256": "255bb2a70c9dd8f2da8e050647438bf35d1b3b3d8948f54d2ed2cc5e04cac979"
+    },
+    {
+      "fetched_at": 1793479326236,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=BNBUSDTM",
+      "sha256": "11658d7c1d21be381100c506ca3ef62bef4c67b32e671b61c5574a0378032bed"
+    },
+    {
+      "fetched_at": 1793479326416,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XBTUSDTM",
+      "sha256": "e6ab555dd6dfeba721329a916d764f2d38ecc1ff40a57443e2237c978070517b"
+    },
+    {
+      "fetched_at": 1793479326581,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=ETHUSDTM",
+      "sha256": "a055daa330d9277e8e520738c31ce9dbc42d84cc98fb833d4c96ca3c5630e078"
+    },
+    {
+      "fetched_at": 1793479326753,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=SOLUSDTM",
+      "sha256": "e7c88541ba83da5a044b58a107e4187e8d64865bdabedbe57303a27e90de32c7"
+    },
+    {
+      "fetched_at": 1793479326912,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XRPUSDTM",
+      "sha256": "d006dc909b5bb014b64852f08e35190a6f803ed222ab23c122f00d263c9e54c7"
+    },
+    {
+      "fetched_at": 1793479327083,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=ETHUSDTM",
+      "sha256": "4f735a25142a828c4d85eddfd58721e10a30c3d47874562b659b12c94bfaedbc"
+    },
+    {
+      "fetched_at": 1793479328066,
+      "url": "https://api-futures.kucoin.com/api/v1/timestamp",
+      "sha256": "9fc6b5d518a6ea0e96ddebed7899124e11d6a3303e433325ea48fd9d83526e31"
+    },
+    {
+      "fetched_at": 1793479338215,
+      "url": "https://api-futures.kucoin.com/api/v1/timestamp",
+      "sha256": "3bbd856fddf064a7233d5927abbd1799b344d0310564ad88888572de2122012c"
+    },
+    {
+      "fetched_at": 1793479348379,
+      "url": "https://api-futures.kucoin.com/api/v1/timestamp",
+      "sha256": "4cdb2e74c075d3f1b4ba7bf75c72eabdfda4f354c4b6d8033752bae162868f44"
+    },
+    {
+      "fetched_at": 1793479358524,
+      "url": "https://api-futures.kucoin.com/api/v1/timestamp",
+      "sha256": "1fe8d2a88a465bc19dfe6eaafa4c425a0cb77acdd3390ce9bc94c18e3243b707"
+    },
+    {
+      "fetched_at": 1793479368365,
+      "url": "https://api-futures.kucoin.com/api/v1/contracts/active",
+      "sha256": "28f6320ea2552beb76036e89d63455dd44d45f44d2be78f1344db392fb82bc16"
+    },
+    {
+      "fetched_at": 1793479368535,
+      "url": "https://api-futures.kucoin.com/api/v1/bullet-public",
+      "sha256": "255bb2a70c9dd8f2da8e050647438bf35d1b3b3d8948f54d2ed2cc5e04cac979"
+    },
+    {
+      "fetched_at": 1793479369501,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=BNBUSDTM",
+      "sha256": "b4b51b8ac8d7f0664323c280dacd730316251187a356150d53390171549dfb00"
+    },
+    {
+      "fetched_at": 1793479369668,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XBTUSDTM",
+      "sha256": "a60602b28e567e3e9dba9527ad387bf21f06faa9782b0dbbc0350e5c89964e9b"
+    },
+    {
+      "fetched_at": 1793479369831,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=ETHUSDTM",
+      "sha256": "a4dd83ef7ed429dec9e774ffe317b726d3c8aa05682dbc85c8a8a742247b8e61"
+    },
+    {
+      "fetched_at": 1793479370002,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=SOLUSDTM",
+      "sha256": "19fdcd58ce9af1f1830d8513868dd2a3494e8e4eb346f842a3da9a03bb45fe28"
+    },
+    {
+      "fetched_at": 1793479370172,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XRPUSDTM",
+      "sha256": "4b52318db4941881e69d84b49e42bc218f43c448184800506a8876de9a89d402"
+    },
+    {
+      "fetched_at": 1793479384765,
+      "url": "https://api-futures.kucoin.com/api/v1/timestamp",
+      "sha256": "1418a45da03e191437d759c26b739c32976bab2bd12e9432a2b6032f9dd1acfa"
+    },
+    {
+      "fetched_at": 1793479394917,
+      "url": "https://api-futures.kucoin.com/api/v1/timestamp",
+      "sha256": "f3ea34c581b3b8ad246e6e37c124d04480a98f391c2895e682b7ed42d7d5276d"
+    },
+    {
+      "fetched_at": 1793479405147,
+      "url": "https://api-futures.kucoin.com/api/v1/timestamp",
+      "sha256": "6323b7810bd8e24f0dd81a32182b7a86938d441314b593b39cf1f9ef6914ff95"
+    },
+    {
+      "fetched_at": 1793479411584,
+      "url": "https://api-futures.kucoin.com/api/v1/contracts/active",
+      "sha256": "2f85ac1da1f48723f4bf3f26981991ed82a098ef8b7e1559a111e1862344e13c"
+    },
+    {
+      "fetched_at": 1793479411740,
+      "url": "https://api-futures.kucoin.com/api/v1/bullet-public",
+      "sha256": "255bb2a70c9dd8f2da8e050647438bf35d1b3b3d8948f54d2ed2cc5e04cac979"
+    },
+    {
+      "fetched_at": 1793479412501,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=BNBUSDTM",
+      "sha256": "985b3ea76ef13c7f8fab54765a7e170a87b10e45fdb0b94e6e37f2980f41aa87"
+    },
+    {
+      "fetched_at": 1793479412675,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XBTUSDTM",
+      "sha256": "3af6c8fe3f203f0f47e3050a844e3a6fec440d343ffab91ffab7f01c4bcbfc8d"
+    },
+    {
+      "fetched_at": 1793479412833,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=ETHUSDTM",
+      "sha256": "41812f704d0310094e31403e5ce57a7a4b281e60ab7510d39f9406fc65ca1c24"
+    },
+    {
+      "fetched_at": 1793479412992,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=SOLUSDTM",
+      "sha256": "51f7a794e0b44218f431900712edaf6e3be97c5e4f16f9a2066b5ca4357c6050"
+    },
+    {
+      "fetched_at": 1793479413144,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XRPUSDTM",
+      "sha256": "82e42f95b0b732b34dc52c2009762f5b106c922a03099b6f0388d843357465a9"
+    },
+    {
+      "fetched_at": 1793479413303,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XBTUSDTM",
+      "sha256": "c71efba8fa152462663542c5eaecef067b181c1456cb851043e5460266c5c211"
+    },
+    {
+      "fetched_at": 1793479413312,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=BNBUSDTM",
+      "sha256": "b1f169440a3e95badbc1bb19e82985884483b27081e7f9f7d83fcbb1e8099eb0"
+    },
+    {
+      "fetched_at": 1793479413465,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=BNBUSDTM",
+      "sha256": "4b22ea3dff761863e919490de55d2a63b2825be9efe08e115b4b3ad40214171e"
+    },
+    {
+      "fetched_at": 1793479415309,
+      "url": "https://api-futures.kucoin.com/api/v1/timestamp",
+      "sha256": "d2c3e137928f004099c557eb6668753a4b55c3a8b622f3aeb3e1e5dccf587d3b"
+    },
+    {
+      "fetched_at": 1793479425466,
+      "url": "https://api-futures.kucoin.com/api/v1/timestamp",
+      "sha256": "8e17e76474bddebfe7c1f7f749f6dbf4eb46baf6fbfc4fcab647eb7590fd49de"
+    },
+    {
+      "fetched_at": 1793479435617,
+      "url": "https://api-futures.kucoin.com/api/v1/timestamp",
+      "sha256": "9f18d2707957d062b4207494aaa6d85d2a23efa87682a1e9271399c32b27fae5"
+    },
+    {
+      "fetched_at": 1793479445768,
+      "url": "https://api-futures.kucoin.com/api/v1/timestamp",
+      "sha256": "836a99e1da5eec7f7a948692c2789843f72f3568bae9cd9ae2a29b0fe1266d98"
+    },
+    {
+      "fetched_at": 1793479454573,
+      "url": "https://api-futures.kucoin.com/api/v1/contracts/active",
+      "sha256": "37b49a2864b726c9d4761f13a101b6903a64374406bd8408a366100a2afd9723"
+    },
+    {
+      "fetched_at": 1793479454733,
+      "url": "https://api-futures.kucoin.com/api/v1/bullet-public",
+      "sha256": "255bb2a70c9dd8f2da8e050647438bf35d1b3b3d8948f54d2ed2cc5e04cac979"
+    },
+    {
+      "fetched_at": 1793479455554,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=BNBUSDTM",
+      "sha256": "0ce29b1ce905affe095f6cd3a9ed0e3c1ae267e65949f84f3b849812da8167ac"
+    },
+    {
+      "fetched_at": 1793479455710,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XBTUSDTM",
+      "sha256": "fa742757307218ef38ee3b4bc09cef3a8509c8dd30fd30679dc5b8be3b0b0fa4"
+    },
+    {
+      "fetched_at": 1793479455867,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=ETHUSDTM",
+      "sha256": "b0b3db5804182f642abf209dfafa895b57c65ebf9003acf62d202077456c943c"
+    },
+    {
+      "fetched_at": 1793479456024,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=SOLUSDTM",
+      "sha256": "6893f41e2a8d235f7aaa9f9339e13308c29f1c2b202f20d0b1432f59b2248c84"
+    },
+    {
+      "fetched_at": 1793479456178,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XRPUSDTM",
+      "sha256": "0a5446a2208bbc4a20f5af552b5e6a26504b78688a6ac01c7d91953e87ca2b90"
+    },
+    {
+      "fetched_at": 1793479456342,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XBTUSDTM",
+      "sha256": "cd7e9f8a87c3f58a4c853a2fe18b12a8b63833339459a05ceb0efb0be600b053"
+    },
+    {
+      "fetched_at": 1793479456351,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=ETHUSDTM",
+      "sha256": "3a79a23cb33841ae5ad40644647b0106dbc0b2e4a2dce24af2107a541dcc4dea"
+    },
+    {
+      "fetched_at": 1793479456359,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XRPUSDTM",
+      "sha256": "0a5446a2208bbc4a20f5af552b5e6a26504b78688a6ac01c7d91953e87ca2b90"
+    },
+    {
+      "fetched_at": 1793479456526,
+      "url": "https://api-futures.kucoin.com/api/v1/level2/snapshot?symbol=XRPUSDTM",
+      "sha256": "dfd97e1fd7a2aa93fb0b6a9965eb76dee6b26a5cd979f48304c41592ab3fa64e"
+    },
+    {
+      "fetched_at": 1793479457538,
+      "url": "https://api-futures.kucoin.com/api/v1/timestamp",
+      "sha256": "0069c9dd5f39b1d68365e5ad42813ab2e6abe6c3467102002104ad7d9e67184d"
     }
   ],
-  "strategy_signals": {},
+  "strategy_signals": {
+    "LONG": 1
+  },
   "paper_positions": [],
   "paper_gap_observations": [],
   "source_sha256": {
-    "/home/runner/work/DAIINAS-pROJ/DAIINAS-pROJ/daiinas/kucoin_service.py": "2138f9515ebb6dcdac1814b29b1b575a44e0f5a0bba11922ff8ec130b5088ac4",
+    "/home/runner/work/DAIINAS-pROJ/DAIINAS-pROJ/daiinas/kucoin_service.py": "34babc85cd0b27592a561b3c6b933cbc312ec8b638b17a61ef48ec088abbbba6",
     "/home/runner/work/DAIINAS-pROJ/DAIINAS-pROJ/daiinas/providers/kucoin.py": "9330accc71a4493f22643df4d431e9009c065336dd40d20a97d00fd44481d448"
   },
   "limitations": [
@@ -342,8 +504,8 @@
     "Trade/ticker sequence monotonicity is checked; their gaps are not assumed contiguous. L2 requires exact +1 bridging.",
     "No private credentials, live orders, or external trading actions."
   ],
-  "recorded_at_ms": 1793479049596,
-  "duration_seconds_requested": 120,
-  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41239583332",
-  "tested_commit": "36bbae655dc394e02b391290661ce6f04d7db4d0"
+  "recorded_at_ms": 1793479461811,
+  "duration_seconds_requested": 180,
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41240044645",
+  "tested_commit": "5bc1f164e558ad9d72d5112fcd004310d84ebeb0"
 }
