@@ -9,6 +9,9 @@ description = "Simulation-only perpetual futures liquidity reversal research"
 requires-python = ">=3.11"
 dependencies = []
 
+[project.optional-dependencies]
+live = ["websockets==16.0"]
+
 [project.scripts]
 daiinas = "daiinas.cli:main"
 

@@ -1,4 +1,4 @@
-"""Future data adapters only. No flow signal is implemented or backtested."""
+"""Public flow data interfaces. KuCoin implements these; no flow signal is backtested."""
 from dataclasses import dataclass
 from typing import Protocol
 

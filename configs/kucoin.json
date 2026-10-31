@@ -1,0 +1,11 @@
+{
+  "symbols": ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT"],
+  "interval": "1m",
+  "strategy": {},
+  "risk": {},
+  "poll_seconds": 10,
+  "max_catchup_bars": 1000,
+  "stale_seconds": 30,
+  "queue_size": 20000,
+  "token_renew_seconds": 72000
+}

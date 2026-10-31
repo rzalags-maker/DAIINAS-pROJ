@@ -1,0 +1,74 @@
+name: KuCoin real-data paper smoke
+on:
+  workflow_dispatch:
+  push:
+    branches: [daiinas-v1]
+    paths:
+      - 'daiinas/kucoin_service.py'
+      - 'daiinas/providers/**'
+      - 'configs/kucoin.json'
+      - '.github/workflows/kucoin-paper-smoke.yml'
+permissions:
+  contents: write
+concurrency:
+  group: kucoin-paper-smoke-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  public-paper-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install '.[live]'
+      - name: Offline regression and lifecycle tests
+        run: python -m unittest discover -s tests -v
+      - name: Bounded real KuCoin market and paper run with forced token renewal
+        id: smoke
+        continue-on-error: true
+        run: python -m daiinas.kucoin_service smoke --seconds 120 --reconnect-after 40 --db state/kucoin-smoke.sqlite3 --report reports/kucoin-actions-connection.json
+      - name: Publish report in job summary
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          path=Path('reports/kucoin-actions-connection.json')
+          if path.exists():
+              data=json.loads(path.read_text())
+              data['github_run_url']=f'https://github.com/{os.environ["GITHUB_REPOSITORY"]}/actions/runs/{os.environ["GITHUB_RUN_ID"]}'
+              data['tested_commit']=os.environ['GITHUB_SHA']
+              path.write_text(json.dumps(data,indent=2)+'\n')
+              with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as out:
+                  out.write('# KuCoin public paper smoke\n\n```json\n'+path.read_text()+'```\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kucoin-public-paper-evidence
+          path: |
+            reports/kucoin-actions-connection.json
+            state/kucoin-smoke.sqlite3*
+          retention-days: 7
+      - name: Commit bounded connection evidence if branch has not moved
+        if: always()
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          if [ ! -f reports/kucoin-actions-connection.json ]; then exit 0; fi
+          git fetch origin "$BRANCH"
+          if [ "$(git rev-parse FETCH_HEAD)" != "$GITHUB_SHA" ]; then
+            echo 'Branch advanced; preserved evidence as artifact instead of changing newer work.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add reports/kucoin-actions-connection.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Record bounded KuCoin public market paper smoke evidence'
+          git push origin "HEAD:refs/heads/$BRANCH"
+      - name: Require a verified real-data run
+        if: steps.smoke.outcome != 'success'
+        run: exit 1

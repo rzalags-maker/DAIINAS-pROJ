@@ -1,5 +1,5 @@
 [Unit]
-Description=DAIINAS read-only scanner and simulated paper account
+Description=DAIINAS KuCoin read-only scanner and simulated paper account
 Wants=network-online.target
 After=network-online.target
 
@@ -9,7 +9,7 @@ User=daiinas
 Group=daiinas
 WorkingDirectory=/opt/daiinas
 Environment=PYTHONDONTWRITEBYTECODE=1
-ExecStart=/usr/bin/python3 -m daiinas.service run --db /var/lib/daiinas/paper.sqlite3 --config /opt/daiinas/configs/service.json --rules-file /var/lib/daiinas/exchangeInfo.json
+ExecStart=/usr/bin/python3 -m daiinas.kucoin_service run --db /var/lib/daiinas/kucoin.sqlite3 --config /opt/daiinas/configs/kucoin.json --report /var/lib/daiinas/connection.json
 Restart=on-failure
 RestartSec=15
 TimeoutStopSec=420

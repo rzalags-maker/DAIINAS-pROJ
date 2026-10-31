@@ -92,7 +92,10 @@ class Store:
         healthy = (age < max(60_000, cfg.get('poll_seconds', 10)*3000)
                    and beat.get('status') in ('running', 'stopped')
                    and (stopped or not stale))
-        return {'healthy': healthy, 'stopped': stopped, 'heartbeat': beat,
+        live = self.get('kucoin_health')
+        if live is not None:
+            healthy = healthy and (stopped or (live.get('ready',False) and now_ms()-live.get('time',0) < 15000))
+        return {'live_market': live, 'healthy': healthy, 'stopped': stopped, 'heartbeat': beat,
                 'data_stale': stale, 'last_processed_open': last,
                 'metrics': self.get('metrics'), 'simulation_only': True,
                 'positions': self.get('checkpoint', {}).get('positions', [])}
@@ -133,8 +136,9 @@ class PublicFuturesSource:
 
 
 class Worker:
-    def __init__(self, store, config, rules, rules_payload, source=None):
+    def __init__(self, store, config, rules, rules_payload, source=None, after_process=None):
         self.store, self.cfg, self.rules = store, config, rules
+        self.after_process = after_process
         self.source = source or PublicFuturesSource()
         self.strategy = StrategyConfig(**config.get('strategy', {}))
         self.risk = RiskConfig(**config.get('risk', {}))
@@ -228,6 +232,8 @@ class Worker:
                 'INSERT INTO responses(fetched_at,url,sha256,payload) VALUES (?,?,?,?)', self.source.responses)
             self.store.set('checkpoint', result['checkpoint'])
             self.store.set('metrics', result['metrics'])
+            if self.after_process is not None:
+                self.after_process(result, window, start)
             self.store.event('processed', f'{result["checkpoint"]["last_time"]}; recovered={bool(checkpoint)}')
             self.beat('running')
         return len(result['equity_curve'])

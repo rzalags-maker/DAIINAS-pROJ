@@ -16,8 +16,9 @@ class ContractRules:
 
     def __post_init__(self):
         values = [Decimal(v) for k, v in self.__dict__.items() if k != 'symbol']
-        if any(not v.is_finite() or v <= 0 for v in values):
-            raise ValueError('Contract filters must be finite and positive')
+        if any(not v.is_finite() or v < 0 for v in values) or any(
+                Decimal(v) <= 0 for k,v in self.__dict__.items() if k not in ('symbol','min_notional')):
+            raise ValueError('Contract filters must be finite; only an unpublished notional floor may be zero')
         if Decimal(self.min_qty) > Decimal(self.max_qty):
             raise ValueError('Invalid quantity range')
 

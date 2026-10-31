@@ -1,6 +1,10 @@
-# DAIINAS — Micro Trading Engine v1
+# DAIINAS — Micro Trading Engine v2
 
 Python 3.11+ cryptocurrency perpetual-futures **research and simulation only**.
+
+KuCoin Classic Futures WebSocket is the primary live provider; see the
+[KuCoin service runbook](docs/KUCOIN.md). Binance archives remain a separate
+historical research provider. The existing strategy and account model are retained.
 No live execution module, signed API calls, exchange keys, Bitsgap, martingale,
 or loss-based risk escalation. Initial simulated capital is **8 USDT**.
 

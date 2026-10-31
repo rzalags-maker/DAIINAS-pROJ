@@ -1,0 +1,68 @@
+{
+  "status": "not_verified",
+  "simulation_only": true,
+  "provider": "KuCoin Classic Futures public WebSocket",
+  "runner": "local",
+  "counts": {
+    "public_tokens": 0,
+    "connections": 0,
+    "reconnects": 0,
+    "pongs": 0,
+    "renewals": 0,
+    "errors": 1,
+    "paper_batches": 0,
+    "verified_sessions": 0,
+    "checkpoint_resumes": 0
+  },
+  "market_event_counts": {
+    "BNBUSDT": {
+      "execution": 0,
+      "tickerV2": 0,
+      "level2": 0
+    },
+    "BTCUSDT": {
+      "execution": 0,
+      "tickerV2": 0,
+      "level2": 0
+    },
+    "ETHUSDT": {
+      "execution": 0,
+      "tickerV2": 0,
+      "level2": 0
+    },
+    "SOLUSDT": {
+      "execution": 0,
+      "tickerV2": 0,
+      "level2": 0
+    },
+    "XRPUSDT": {
+      "execution": 0,
+      "tickerV2": 0,
+      "level2": 0
+    }
+  },
+  "subscription_acks": [],
+  "sequence_verified_symbols": [],
+  "paper_decision_batches": 0,
+  "paper_metrics": null,
+  "contracts": {},
+  "errors": [
+    "URLError: <urlopen error Tunnel connection failed: 403 Forbidden>"
+  ],
+  "reconnect_required": true,
+  "rest_provenance": [],
+  "source_sha256": {
+    "/workspace/DAIINAS-pROJ/daiinas/kucoin_service.py": "6705ee83c47b8e200ab6b06092de68f207bfd8ad0885989aed2817e1fc163ee6",
+    "/workspace/DAIINAS-pROJ/daiinas/providers/kucoin.py": "78036931bc4cb4a35e79f1fc2bf89e076a199a1014ae1dc2f85a7cc941859ae7"
+  },
+  "limitations": [
+    "Bounded connectivity/persistence check, not a profitability test or production soak.",
+    "Strategy uses KuCoin closed OHLCV via REST; WebSocket trade/quote/L2 feeds gate readiness, not order-flow signals.",
+    "Candle-simulated fills, fixed spread/slippage, conservative funding scenario; no executable quote or liquidation guarantee.",
+    "Restart/outage candle catch-up is retrospective paper accounting, not live fills observed during an outage.",
+    "Trade/ticker sequence monotonicity is checked; their gaps are not assumed contiguous. L2 requires exact +1 bridging.",
+    "No private credentials, live orders, or external trading actions."
+  ],
+  "recorded_at_ms": 1793477844921,
+  "duration_seconds_requested": 120
+}
