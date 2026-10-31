@@ -1,0 +1,9 @@
+{
+  "symbols": ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT"],
+  "interval": "5m",
+  "start": "2025-01-01",
+  "end": "2025-01-15",
+  "in_sample_fraction": 0.7,
+  "strategy": {},
+  "risk": {}
+}
