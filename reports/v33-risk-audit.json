@@ -1,6 +1,6 @@
 {
   "status": "VERIFIED_COMMITTED_REPORT_ARITHMETIC",
-  "source_status": "BLOCKED_RAW_JOURNAL_NOT_AVAILABLE",
+  "source_status": "VERIFIED_FULL_HASH_CHAIN",
   "live_orders_enabled": false,
   "strategy_validated": false,
   "production_ready": false,
@@ -24,7 +24,14 @@
       "realized_risk_budget_utilization": 0.32385529968741805,
       "stop_gap_price": null,
       "fee_and_carry_pct_abs_gross": 91.63035484462605,
-      "spread_slippage_status": "BLOCKED_RAW_QUOTES_REQUIRED"
+      "spread_slippage_status": "VERIFIED_OBSERVED_BBO_WITH_MODELED_FILLS",
+      "mid_price_gross_pnl": -0.001378,
+      "spread_cost": 0.000962,
+      "slippage_and_tick_cost": 0.00104,
+      "round_trip_cost_usdt": 0.005099105993748361,
+      "round_trip_cost_bps": 19.753977226056737,
+      "modeled_break_even_mid_price_move": 9.805973064900693e-09,
+      "modeled_break_even_move_bps": 19.753977226056737
     },
     {
       "id": "position:signal:22260:TAOUSDTM:LONG",
@@ -44,7 +51,14 @@
       "realized_risk_budget_utilization": 0.1925187496494322,
       "stop_gap_price": null,
       "fee_and_carry_pct_abs_gross": 284.7257582120486,
-      "spread_slippage_status": "BLOCKED_RAW_QUOTES_REQUIRED"
+      "spread_slippage_status": "VERIFIED_OBSERVED_BBO_WITH_MODELED_FILLS",
+      "mid_price_gross_pnl": 0.00085,
+      "spread_cost": 0.00085,
+      "slippage_and_tick_cost": 0.001,
+      "round_trip_cost_usdt": 0.004697257582120486,
+      "round_trip_cost_bps": 19.802523480198502,
+      "modeled_break_even_mid_price_move": 0.4697257582120486,
+      "modeled_break_even_move_bps": 19.802523480198502
     },
     {
       "id": "position:signal:28211:PEPEUSDTM:SHORT",
@@ -64,7 +78,14 @@
       "realized_risk_budget_utilization": 0.05101431342185087,
       "stop_gap_price": null,
       "fee_and_carry_pct_abs_gross": 148.98892031916665,
-      "spread_slippage_status": "BLOCKED_RAW_QUOTES_REQUIRED"
+      "spread_slippage_status": "VERIFIED_OBSERVED_BBO_WITH_MODELED_FILLS",
+      "mid_price_gross_pnl": 0.003692,
+      "spread_cost": 0.000572,
+      "slippage_and_tick_cost": 0.00104,
+      "round_trip_cost_usdt": 0.004710969542638666,
+      "round_trip_cost_bps": 18.23050199270878,
+      "modeled_break_even_mid_price_move": 9.059556812766667e-09,
+      "modeled_break_even_move_bps": 18.23050199270878
     }
   ],
   "money_event_reconciliation": [
@@ -141,14 +162,20 @@
       "gross_pnl": -0.0013000000000000004,
       "fees": 0.006195664799999999,
       "modeled_carry": 4.1073638702777776e-07,
-      "net_pnl": -0.007496075536387027
+      "net_pnl": -0.007496075536387027,
+      "mid_price_gross_pnl": 0.002314,
+      "spread_cost": 0.001534,
+      "slippage_and_tick_cost": 0.00208
     },
     "TAOUSDTM": {
       "trades": 1.0,
       "gross_pnl": -0.001,
       "fees": 0.00284712,
       "modeled_carry": 1.375821204861111e-07,
-      "net_pnl": -0.003847257582120486
+      "net_pnl": -0.003847257582120486,
+      "mid_price_gross_pnl": 0.00085,
+      "spread_cost": 0.00085,
+      "slippage_and_tick_cost": 0.001
     }
   },
   "by_direction": {
@@ -157,20 +184,62 @@
       "gross_pnl": -0.00438,
       "fees": 0.0059439383999999994,
       "modeled_carry": 4.251758688472222e-07,
-      "net_pnl": -0.010324363575868847
+      "net_pnl": -0.010324363575868847,
+      "mid_price_gross_pnl": -0.0005280000000000001,
+      "spread_cost": 0.0018119999999999998,
+      "slippage_and_tick_cost": 0.00204
     },
     "SHORT": {
       "trades": 1.0,
       "gross_pnl": 0.00208,
       "fees": 0.0030988463999999994,
       "modeled_carry": 1.2314263866666667e-07,
-      "net_pnl": -0.0010189695426386662
+      "net_pnl": -0.0010189695426386662,
+      "mid_price_gross_pnl": 0.003692,
+      "spread_cost": 0.000572,
+      "slippage_and_tick_cost": 0.00104
     }
   },
   "gross_positive_movements": 0.00208,
   "gross_negative_movements": -0.00438,
   "fee_carry_pct_positive_gross": 434.7756306974766,
   "fee_carry_pct_abs_negative_gross": 206.46879265998888,
+  "checkpoint_reconciliation": {
+    "first": {
+      "cash": 7.988125589224131,
+      "reserved_margin": 0.8611373333333333,
+      "realized_net": -0.010324363575868713,
+      "fees": 0.007493985599999999,
+      "carry_realized": 4.2517586884722225e-07,
+      "equity_last_mark": 7.985482808855322,
+      "mark_status": "UNRESOLVED_STALE_MARK",
+      "marked_unrealized_after_exit_costs": -0.002642780368809383,
+      "drawdown_reported": 0.0018861862853939426
+    },
+    "restart": {
+      "cash": 7.988656666881493,
+      "reserved_margin": 0,
+      "realized_net": -0.011343333118507224,
+      "fees": 0.009042784799999998,
+      "carry_realized": 5.48318507513889e-07,
+      "equity_last_mark": 7.988656666881493,
+      "mark_status": "FLAT",
+      "marked_unrealized_after_exit_costs": 0.0,
+      "drawdown_reported": 0.0018861862853939426
+    },
+    "replay": {
+      "cash": 7.988656666881493,
+      "reserved_margin": 0,
+      "realized_net": -0.011343333118507224,
+      "fees": 0.009042784799999998,
+      "carry_realized": 5.48318507513889e-07,
+      "equity_last_mark": 7.988656666881493,
+      "mark_status": "FLAT",
+      "marked_unrealized_after_exit_costs": 0.0,
+      "drawdown_reported": 0.0018861862853939426
+    }
+  },
+  "drawdown_verification": "Report/replay equality; not an independent reconstruction of every intratick mark",
   "final_cash": 7.988656666881493,
   "net_pnl": -0.011343333118507224,
   "first_cash_including_open_fee": 7.988125589224131,
@@ -201,7 +270,20 @@
     "UNRESOLVED:insufficient_verified_depth_for_full_exit": 161,
     "UNRESOLVED:missing_or_stale_executable_mark": 31
   },
-  "storage": null,
+  "storage": {
+    "measured_source_bytes": 86556672,
+    "measured_seconds": 229.749,
+    "events": {
+      "CLOCK": 230,
+      "SCAN": 15,
+      "HEALTH": 29,
+      "MARKET": 41668,
+      "SNAPSHOT": 50
+    },
+    "estimated_source_bytes_24h_same_rate": 32550724750.923832,
+    "planning_envelope_5x_source_bytes_24h": 162753623754.61917,
+    "estimate_not_24h_measurement": true
+  },
   "24h_host_gate": "BLOCKED \u2014 HOST NOT PROVISIONED",
   "unverified": [
     "24h persistent host",
@@ -210,6 +292,6 @@
     "private account access"
   ],
   "evidence_run": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41251111492",
-  "tested_commit": "de172e67b5e1f9a214a68702b2148f24a4b05fa5",
-  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41252714086"
+  "tested_commit": "93d9a4b1c00a6de165bacf4cdc2d8c8726ae5366",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41252889266"
 }
