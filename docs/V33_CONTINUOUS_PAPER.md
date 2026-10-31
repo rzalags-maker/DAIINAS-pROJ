@@ -106,6 +106,7 @@ mark-to-market is labeled unresolved; cash is not presented as current equity.
 python -m daiinas.continuous replay --source-db state/v33-source.sqlite3 \
   --paper-db state/v33-replay.sqlite3 --report reports/v33-replay.json
 python -m daiinas.continuous backup --destination backups/v33-001
+python -m daiinas.continuous verify-backup --destination backups/v33-001
 ```
 
 Replaying the same journal again verifies old hashes and does not duplicate
@@ -149,7 +150,21 @@ KuCoin Futures WSS instance. No API secret values or private endpoint access.
 
 Install/enable the three v3.3 units after reviewing the host setup. Use journald
 and the health unit's nonzero status for host monitoring/alerting. Back up off-host
-and rehearse recovery. No server was provisioned or independently deployed by
+and rehearse recovery. After creating the dedicated user and the venv, install the units on that host:
+
+```bash
+sudo install -m 644 deploy/daiinas-v33.service deploy/daiinas-v33-health.service deploy/daiinas-v33-health.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now daiinas-v33.service daiinas-v33-health.timer
+sudo journalctl -u daiinas-v33.service
+```
+
+Use explicit `/var/lib/daiinas-v33/...` database arguments for CLI controls on
+that host, matching the unit, rather than the development `state/...` defaults.
+Static unit syntax was checked with the local interpreter path substituted;
+the actual `/opt/daiinas/.venv` runtime remains a host provisioning step.
+
+No server was provisioned or independently deployed by
 this code change, and no alerts are sent externally by the application.
 
 ## Acceptance/evidence gates

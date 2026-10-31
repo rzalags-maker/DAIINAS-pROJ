@@ -54,7 +54,7 @@ def verify(root=Path('.')):
             'fees':second['fees'],'modeled_carry':second['modeled_carry'],
             'closed_summary':second['closed_summary'],'open_position':second['open_position'],
             'pending_entry':second['pending_entry'],'pending_exit':second['pending_exit'],
-            'decision_counts':second['counts'],'replay_identical':True,'backup':backup,
+            'decision_counts':second['counts'],'rejected_and_unresolved_reasons':second.get('reason_counts',{}),'replay_identical':True,'backup':backup,
             '24h_host_gate':'BLOCKED — HOST NOT PROVISIONED',
             'performance_gate':'Not established by bounded infrastructure smoke'}
 

@@ -15,7 +15,7 @@ from uuid import uuid4
 from .continuous_store import SourceJournal,canonical,digest
 from .continuous_paper import Pipeline,PaperLedger
 from .continuous_stream import ContinuousObserver
-from .continuous_ops import (status,backup_pair,rotate_source,readonly,file_bytes,source_maintenance)
+from .continuous_ops import (status,backup_pair,verify_backup,rotate_source,readonly,file_bytes,source_maintenance)
 from .paper_micro import PaperPolicy
 from .shadow_flow import ShadowPolicy
 from .service import single_worker
@@ -71,7 +71,7 @@ async def service(args,config,paper,shadow):
     async def loops():
         delay=1
         while not stop.is_set():
-            previous_connections=observer.stream_stats['connections']
+            previous_pongs=observer.stream_stats['pongs']
             try:
                 await observer.preflight()
                 await observer.session(renew_after=args.renew_seconds)
@@ -88,7 +88,7 @@ async def service(args,config,paper,shadow):
             if stop.is_set():break
             try:await asyncio.wait_for(stop.wait(),delay)
             except asyncio.TimeoutError:pass
-            delay=1 if observer.stream_stats['connections']>previous_connections else min(delay*2,30)
+            delay=1 if observer.stream_stats['pongs']>previous_pongs else min(delay*2,30)
     async def clocks():
         tick=0
         while not stop.is_set():
@@ -145,7 +145,7 @@ async def service(args,config,paper,shadow):
 
 def main(argv=None):
     p=argparse.ArgumentParser(description='Continuous dynamic paper engine. LIVE ORDERS DISABLED.')
-    p.add_argument('command',choices=['run','replay','stop','resume','status','reset-halt','capital-flow','backup','archive-source'])
+    p.add_argument('command',choices=['run','replay','stop','resume','status','reset-halt','capital-flow','backup','verify-backup','archive-source'])
     p.add_argument('--config',type=Path,default=Path('configs/continuous.json'))
     p.add_argument('--source-db',type=Path,default=Path('state/v33-source.sqlite3'))
     p.add_argument('--paper-db',type=Path,default=Path('state/v33-paper.sqlite3'))
@@ -172,6 +172,9 @@ def main(argv=None):
         print(json.dumps(result,indent=2));return 0
     if a.command=='status':
         result=status(a.source_db,a.paper_db);print(json.dumps(result,indent=2));return 0 if result['healthy'] else 1
+    if a.command=='verify-backup':
+        if a.destination is None:p.error('A --destination backup directory is required')
+        print(json.dumps(verify_backup(a.destination),indent=2));return 0
     if a.command in ('backup','archive-source'):
         if a.destination is None:p.error('A new --destination is required')
         result=(backup_pair if a.command=='backup' else rotate_source)(a.source_db,a.paper_db,a.destination)

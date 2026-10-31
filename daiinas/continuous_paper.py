@@ -44,7 +44,7 @@ class PaperLedger:
             'halted':False,'max_drawdown':0.,'external_flows':0.,'realized':0.,'fees':0.,'carry':0.,
             'paused':False,'position':None,'pending':None,'exit_request':None,'scan':None,
             'books':{},'quotes':{},'trades':{},'episodes':{},'last_print':{},'counts':{},'mark_status':'FLAT','entry_fees':0.,'exit_fees':0.,
-            'closed_summary':{'count':0,'wins':0,'losses':0,'profit':0.,'loss':0.}}
+            'reason_counts':{},'closed_summary':{'count':0,'wins':0,'losses':0,'profit':0.,'loss':0.}}
 
     def close(self):self.db.close()
 
@@ -53,6 +53,10 @@ class PaperLedger:
                         (self.seq,self.idx,action,canonical({'time_ms':self.state['now_ms'],**detail})))
         self.idx+=1
         self.state['counts'][action]=self.state['counts'].get(action,0)+1
+        if action in ('REJECTED','REJECTED_EVENT','REJECTED_QUOTE','UNRESOLVED','EXIT_REQUEST','CONTROL_REJECTED') and detail.get('reason'):
+            key=action+':'+str(detail['reason'])
+            reasons=self.state.setdefault('reason_counts',{})
+            reasons[key]=reasons.get(key,0)+1
 
     def pins(self):
         return sorted({x['symbol'] for x in (self.state['position'],self.state['pending'],self.state['exit_request']) if x})
@@ -399,7 +403,7 @@ class PaperLedger:
             'peak':s['peak'],'maximum_drawdown':s['max_drawdown'],'halted':s['halted'],'paused_new_entries':s['paused'],
             'open_position':s['position'],'pending_entry':s['pending'],'pending_exit':s['exit_request'],
             'pins':self.pins(),'source_cursor':s['cursor'],'input_digest':s['input_digest'],
-            'counts':s['counts'],'scan':s['scan'],'checkpoint_available_ms':s['now_ms'],'service':s.get('service'),
+            'counts':s['counts'],'reason_counts':s.get('reason_counts',{}),'scan':s['scan'],'checkpoint_available_ms':s['now_ms'],'service':s.get('service'),
             }
         return deepcopy(result)
 
