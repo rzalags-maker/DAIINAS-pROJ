@@ -41,6 +41,8 @@ class PaperStudyTests(unittest.TestCase):
         self.temp.cleanup()
 
     def add(self,channel,t,idx,data):
+        if channel == 'tickerV2':
+            data={**data,'timestamp':t}
         self.rows.append((SYM,channel,str(idx),t,t,{'sequence':idx},data))
 
     def signals(self,side='buy'):
@@ -201,6 +203,40 @@ class PaperStudyTests(unittest.TestCase):
         self.assertEqual(c.execute('SELECT COUNT(*) FROM paper_runs').fetchone()[0],1)
         c.close()
         with self.assertRaises(ValueError):record_study(self.path,self.path,x)
+
+
+    def test_stale_quote_cannot_enter_or_exit(self):
+        self.signals()
+        # A stale provider timestamp at a newly received tick cannot fill.
+        self.rows.append((SYM,'tickerV2','2',221,3000,{},bbo()))
+        x=self.replay()
+        self.assertEqual(x['signals_and_rejections']['stale_quote_skipped'],1)
+        self.assertEqual(x['completed_paper_trades'],0)
+        self.assertIsNone(x['open_simulated_position'])
+
+    def test_insufficient_best_quote_depth_blocks_entry(self):
+        self.signals()
+        self.add('tickerV2',221,2,bbo(ask_size=1))
+        x=self.replay()
+        self.assertEqual(x['signals_and_rejections']['insufficient_displayed_depth_at_entry'],1)
+        self.assertIsNone(x['open_simulated_position'])
+
+    def test_insufficient_displayed_exit_depth_cannot_create_fill(self):
+        self.signals()
+        self.add('tickerV2',221,2,bbo())
+        self.add('level2',480,2,{'book_sequence':2,'verified':True})
+        self.add('tickerV2',500,3,bbo(bid=1.01,ask=1.0102,bid_size=.01))
+        x=self.replay()
+        self.assertEqual(x['completed_paper_trades'],0)
+        self.assertEqual(x['signals_and_rejections']['exit_skipped_insufficient_displayed_depth'],1)
+        self.assertIsNotNone(x['open_simulated_position'])
+
+    def test_future_whole_market_selection_never_leaks_into_past(self):
+        self.store.record_scan({'time_ms':999999,'capital_usdt':8,'contracts_observed':1,
+            'preflight_eligible':1,'paper_contract_specs':specs()},
+            {'time_ms':999999,'deep_symbols':[SYM]})
+        with self.assertRaisesRegex(ValueError,'Multi-scan'):
+            self.replay()
 
     def test_invalid_policy_rejected(self):
         with self.assertRaises(ValueError):PaperPolicy(initial_capital_usdt=0)
