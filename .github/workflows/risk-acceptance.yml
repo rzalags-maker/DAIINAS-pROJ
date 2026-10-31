@@ -38,20 +38,38 @@ jobs:
           python - <<'PY'
           import json,os,urllib.request,pathlib,zipfile,io
           repo=os.environ['GITHUB_REPOSITORY']
+          class SafeRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self,req,fp,code,msg,headers,newurl):
+                  result=super().redirect_request(req,fp,code,msg,headers,newurl)
+                  if result is not None:result.remove_header('Authorization')
+                  return result
+          opener=urllib.request.build_opener(SafeRedirect())
           def api(path):
-            return urllib.request.urlopen(urllib.request.Request('https://api.github.com/repos/'+repo+path,
-              headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'}),timeout=60)
-          with api('/actions/runs/41251111492/artifacts') as r:items=json.load(r)['artifacts']
-          a=next(x for x in items if x['name']=='v33-public-source-paper-restart-replay' and not x['expired'])
-          with api('/actions/artifacts/'+str(a['id'])+'/zip') as r:data=r.read()
-          root=pathlib.Path('state/original');root.mkdir(parents=True,exist_ok=True)
-          with zipfile.ZipFile(io.BytesIO(data)) as z:
-            for info in z.infolist():
-              path=pathlib.PurePosixPath(info.filename)
-              if path.is_absolute() or '..' in path.parts:raise ValueError('Unsafe artifact path')
-            z.extractall(root)
-          pathlib.Path('reports/v33-original-artifact.json').write_text(json.dumps({'run_id':41251111492,
-             'artifact_id':a['id'],'bytes':len(data),'sha256':__import__('hashlib').sha256(data).hexdigest()},indent=2)+'\n')
+              return opener.open(urllib.request.Request('https://api.github.com/repos/'+repo+path,
+                headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'}),timeout=60)
+          try:
+              with api('/actions/runs/41251111492/artifacts') as r:items=json.load(r)['artifacts']
+              a=next(x for x in items if x['name']=='v33-public-source-paper-restart-replay' and not x['expired'])
+              with api('/actions/artifacts/'+str(a['id'])+'/zip') as r:data=r.read()
+              root=pathlib.Path('state/original');root.mkdir(parents=True,exist_ok=True)
+              with zipfile.ZipFile(io.BytesIO(data)) as z:
+                  for info in z.infolist():
+                      path=pathlib.PurePosixPath(info.filename)
+                      if path.is_absolute() or '..' in path.parts:raise ValueError('Unsafe artifact path')
+                  z.extractall(root)
+              result={'status':'downloaded','run_id':41251111492,'artifact_id':a['id'],'bytes':len(data),
+                 'sha256':__import__('hashlib').sha256(data).hexdigest()}
+          except Exception as exc:
+              result={'status':'blocked','exception_type':type(exc).__name__}
+              if isinstance(exc,urllib.error.HTTPError):
+                  result['http_status']=exc.code
+                  try:result['reason']=json.loads(exc.read()).get('message','HTTP request rejected')
+                  except Exception:result['reason']='HTTP request rejected'
+              elif isinstance(exc,StopIteration):result['reason']='Original artifact missing or expired'
+              else:result['reason']='Original artifact retrieval failed; see CI logs for transport diagnostics'
+          pathlib.Path('reports/v33-original-artifact.json').write_text(json.dumps(result,indent=2)+'\n')
+          print(json.dumps(result,indent=2))
+          if result['status']!='downloaded':raise SystemExit(1)
           PY
           python -m daiinas.paper_audit --source state/original/state/v33-source.sqlite3 --paper state/original/state/v33-paper.sqlite3
           python -m daiinas.continuous replay --source-db state/original/state/v33-source.sqlite3 --paper-db state/original-replay.sqlite3 --report reports/v33-original-replay.json
