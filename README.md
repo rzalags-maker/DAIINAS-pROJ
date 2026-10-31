@@ -157,4 +157,5 @@ acceptance remain pending as detailed in the validation report.
 The focused feature implementation and independent 8-USDT ledger are documented
 in [the v3.3 runbook](docs/V33_CONTINUOUS_PAPER.md). It retains the old systems
 and uses separate source/account files. **LIVE ORDERS DISABLED.**
-The independent 24-hour host gate remains blocked until a persistent server is provisioned.
+See [the validation record](reports/V33_VALIDATION.md) for real public-data evidence
+and open gates. The independent 24-hour host gate remains blocked until a persistent server is provisioned.
