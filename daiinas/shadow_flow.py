@@ -109,6 +109,9 @@ def replay(connection, *, policy=ShadowPolicy()):
     last_book={}
     counts=Counter()
     observations=Counter()
+    episodes=Counter()
+    last_episode={}
+    last_execution_arrival={}
     examples=[]
     last_arrival=-1
     sql="""SELECT symbol,channel,event_ms,received_ms,normalized
@@ -132,6 +135,7 @@ def replay(connection, *, policy=ShadowPolicy()):
             tr={'received_ms':received,'quantity':obj['quantity'],
                 'price':obj['price'],'buyer_is_maker':obj['buyer_is_maker']}
             trades[sym].append(tr)
+            last_execution_arrival[sym]=received
             # Consume no more than the trailing recent window.
             while trades[sym] and received-trades[sym][0]['received_ms']>policy.window_ms:
                 trades[sym].popleft()
@@ -143,11 +147,23 @@ def replay(connection, *, policy=ShadowPolicy()):
         feature=observe(received_ms=received,recent_trades=trades[sym],
                         book_received_ms=last_book.get(sym),quote=obj,policy=policy)
         observations[(sym,feature['state'],feature['reason'])]+=1
-        if feature['state']=='PRESSURE_CANDIDATE' and len(examples)<25:
-            pre=by_symbol.get(sym,{})
-            # Cost floor is indicative only: derived from earlier scan quote.
-            feature['estimated_minimum_round_trip_cost_bps']=pre.get('estimated_round_trip_cost_bps')
-            examples.append({'symbol':sym,'received_ms':received,**feature})
+        if feature['state']=='PRESSURE_CANDIDATE':
+            # Repeated ticker changes reusing the same executions are NOT
+            # independent opportunities. Record a new episode only after
+            # fresh prints and either a side flip or a full window cooldown.
+            old=last_episode.get(sym)
+            newest=last_execution_arrival.get(sym,-1)
+            new_evidence=(old is None or newest>old[1])
+            side_flipped=old is not None and feature['direction']!=old[2]
+            cooldown=old is None or received-old[0]>=policy.window_ms
+            if new_evidence and (side_flipped or cooldown):
+                episodes[sym]+=1
+                last_episode[sym]=(received,newest,feature['direction'])
+                if len(examples)<25:
+                    pre=by_symbol.get(sym,{})
+                    # Cost floor is only indicative: earlier scan snapshot.
+                    feature['estimated_minimum_round_trip_cost_bps']=pre.get('estimated_round_trip_cost_bps')
+                    examples.append({'symbol':sym,'received_ms':received,**feature})
     return {
         'status':'REPLAY_DIAGNOSTICS_ONLY',
         'simulation_only':True, 'market_orders_enabled':False,
@@ -155,8 +171,10 @@ def replay(connection, *, policy=ShadowPolicy()):
         'market_contracts_in_original_scan':scan_report['contracts_observed'],
         'observed_symbols':sorted(set(x[0] for x in observations)),
         'event_counts':dict(counts),
-        'pressure_candidates':sum(n for (s,state,reason),n in observations.items()
+        'pressure_snapshots':sum(n for (s,state,reason),n in observations.items()
                                   if state=='PRESSURE_CANDIDATE'),
+        'pressure_candidates':sum(episodes.values()),
+        'pressure_episodes_by_symbol':dict(episodes),
         'decision_reasons':{f'{sym}:{reason}':n for (sym,state,reason),n in sorted(observations.items())},
         'candidate_examples':examples,
         'policy':asdict(policy),
