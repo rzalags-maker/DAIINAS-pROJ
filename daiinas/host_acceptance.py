@@ -16,7 +16,8 @@ def sample(source,paper,host_id):
     result=status(source,paper)
     with closing(readonly(paper)) as c:
         state=json.loads(c.execute('SELECT payload FROM checkpoint WHERE id=1').fetchone()[0])
-        result.update(counts=state['counts'],pins=sorted({x['symbol'] for x in
+        identity=json.loads(c.execute("SELECT value FROM v33_meta WHERE key='identity'").fetchone()[0])
+        result.update(source_id=identity['source_id'],counts=state['counts'],pins=sorted({x['symbol'] for x in
             (state['position'],state['pending'],state['exit_request']) if x}),
             source_cursor=state['cursor'],input_digest=state['input_digest'],
             current_paper_integrity=c.execute('PRAGMA quick_check').fetchone()[0])
@@ -30,13 +31,18 @@ def evaluate(samples,manifest,proof):
     if len(samples)<2:raise ValueError('Need multiple actual host samples')
     s=sorted(samples,key=lambda r:r['observed_ms'])
     if any(x['observed_ms']<=s[i-1]['observed_ms'] for i,x in enumerate(s) if i):raise ValueError('Duplicate/regressed sample time')
+    healthy_fraction=sum(bool(x['healthy']) for x in s)/len(s)
     checks={
+      'at_least_99pct_healthy_samples':healthy_fraction>=.99,
       'independent_host_attested':proof.get('independent_persistent_host') is True,
       'single_host':len({x['host_id'] for x in s})==1 and all(x['host_id'] for x in s),
       'at_least_24h':s[-1]['observed_ms']-s[0]['observed_ms']>=86400000,
       'sample_gaps_bounded':max(b['observed_ms']-a['observed_ms'] for a,b in zip(s,s[1:]))<=120000,
       'no_live_orders':all(x['live_orders_enabled'] is False for x in s),
       'source_advanced':s[-1]['source_cursor']>s[0]['source_cursor'],
+      'same_source_identity':bool(s[0].get('source_id')) and len({x.get('source_id') for x in s})==1,
+      'no_cursor_regression':all(b['source_cursor']>=a['source_cursor'] for a,b in zip(s,s[1:])),
+      'multiple_process_boots':len({x.get('service',{}).get('boot_id') for x in s}-{None})>=2,
       'multiple_scans':s[-1]['counts'].get('SCAN',0)-s[0]['counts'].get('SCAN',0)>=2,
       'integrity':all(x['current_paper_integrity']=='ok' for x in s),
       'closing_health':s[-1]['healthy'] is True,

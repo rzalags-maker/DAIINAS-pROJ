@@ -114,7 +114,8 @@ class SourceJournal:
                 rows.append((seq,available,kind,key,payload,sha))
             self.db.execute('COMMIT')
         except BaseException:
-            self.db.execute('ROLLBACK');raise
+            if self.db.in_transaction:self.db.execute('ROLLBACK')
+            raise
         return rows
 
     def after(self,seq,limit=500):

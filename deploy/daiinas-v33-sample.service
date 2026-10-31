@@ -1,0 +1,17 @@
+[Unit]
+Description=DAIINAS read-only independent host evidence sample
+After=daiinas-v33.service
+
+[Service]
+Type=oneshot
+User=daiinas
+Group=daiinas
+WorkingDirectory=/opt/daiinas
+Environment=PYTHONDONTWRITEBYTECODE=1
+UMask=0077
+ExecStart=/opt/daiinas/.venv/bin/python -m daiinas.host_acceptance sample --host-id %H --samples /var/lib/daiinas-v33/evidence/health.jsonl
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/daiinas-v33

@@ -62,6 +62,26 @@ jobs:
           assert all(a[k]==b[k] for k in keys)
           pathlib.Path('reports/v33-original-parity.json').write_text(json.dumps({'financial_replay_identical':True,'compared_keys':keys},indent=2)+'\n')
           PY
+      - name: Capture official public host pricing reference (no provisioning)
+        continue-on-error: true
+        run: |
+          python - <<'PY'
+          import urllib.request,hashlib,json,pathlib,re,datetime
+          from html.parser import HTMLParser
+          url='https://aws.amazon.com/lightsail/pricing/'
+          result={'source_url':url,'retrieved_utc':datetime.datetime.now(datetime.timezone.utc).isoformat()}
+          try:
+              raw=urllib.request.urlopen(url,timeout=30).read()
+              class Text(HTMLParser):
+                  def __init__(self):super().__init__();self.parts=[]
+                  def handle_data(self,t):self.parts.append(t)
+              p=Text();p.feed(raw.decode());text=re.sub(r'\s+',' ',' '.join(p.parts))
+              result.update(status='retrieved_official_page',sha256=hashlib.sha256(raw).hexdigest(),
+                 excerpts=[text[max(0,m.start()-120):m.end()+180] for m in re.finditer(r'\$12|2 GB|2GB|60 GB',text)][:20],
+                 caveat='Provider quote, region, tax, storage and egress must be reviewed; no purchase made.')
+          except Exception as exc:result.update(status='not_verified',error=type(exc).__name__+': '+str(exc))
+          pathlib.Path('reports/v33-host-pricing.json').write_text(json.dumps(result,indent=2)+'\n')
+          PY
       - name: Remove prior generated reports; never relabel old evidence
         run: |
           if [ -f reports/v33-pr.json ]; then cp reports/v33-pr.json /tmp/v33-pr-previous.json; fi
@@ -111,6 +131,7 @@ jobs:
       - name: Attach exact tested revision and run provenance
         if: always()
         env:
+          ORIGINAL_OUTCOME: ${{ steps.original.outcome }}
           TESTS_OUTCOME: ${{ steps.tests.outcome }}
           FIRST_OUTCOME: ${{ steps.first.outcome }}
           RESTART_OUTCOME: ${{ steps.restart.outcome }}
@@ -119,9 +140,9 @@ jobs:
         run: |
           python - <<'PY'
           import os,json,pathlib
-          outcomes={k.lower():os.environ.get(k+'_OUTCOME','unknown') for k in ('TESTS','FIRST','RESTART','REPLAY','VERIFY')}
+          outcomes={k.lower():os.environ.get(k+'_OUTCOME','unknown') for k in ('ORIGINAL','TESTS','FIRST','RESTART','REPLAY','VERIFY')}
           pathlib.Path('reports/v33-ci-status.json').write_text(json.dumps(outcomes,indent=2)+'\n')
-          for name in ('tests','first','restart','replay','acceptance','pr','ci-status','risk-audit','original-artifact','original-parity'):
+          for name in ('tests','first','restart','replay','acceptance','pr','ci-status','risk-audit','original-artifact','original-parity','host-pricing'):
               p=pathlib.Path(f'reports/v33-{name}.json')
               if not p.exists():continue
               data=json.loads(p.read_text());data['tested_commit']=os.environ['GITHUB_SHA']
@@ -151,7 +172,7 @@ jobs:
             git fetch origin "$BRANCH"
             latest="$(git rev-parse FETCH_HEAD)"
             git read-tree "$latest"
-            for name in tests first restart replay acceptance pr ci-status risk-audit original-artifact original-parity; do
+            for name in tests first restart replay acceptance pr ci-status risk-audit original-artifact original-parity host-pricing; do
               path="reports/v33-$name.json"
               if [ ! -f "$path" ]; then continue; fi
               blob="$(git hash-object -w "$path")"

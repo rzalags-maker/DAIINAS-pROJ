@@ -91,6 +91,22 @@ class FinancialAuditTests(unittest.TestCase):
         self.send(301,('CLOCK','disk:recovered',{}))
         self.assertEqual(self.paper.state['cash'],8.)
 
+    def test_actual_sqlite_full_paper_restores_memory_before_recovery(self):
+        import sqlite3
+        from copy import deepcopy
+        before=deepcopy(self.paper.state)
+        pages=self.paper.db.execute('PRAGMA page_count').fetchone()[0]
+        self.paper.db.execute('PRAGMA max_page_count='+str(pages))
+        with patch('daiinas.continuous_store.clock_ms',return_value=300):
+            rows=self.source.append([('CONTROL','deposit:disk',{'action':'capital-flow','amount':1.}),
+                ('CLOCK','checkpoint:disk',{'service':{'large':'x'*1000000}})])
+        with self.assertRaises(sqlite3.OperationalError):self.paper.apply(rows)
+        self.assertEqual(self.paper.state,before)
+        self.paper.db.execute('PRAGMA max_page_count=100000')
+        self.paper.apply(rows);self.paper.apply(rows)
+        self.assertEqual(self.paper.state['cash'],9.)
+        self.assertEqual(self.paper.state['external_flows'],1.)
+
     def test_source_rotation_replace_failure_keeps_original_money(self):
         from daiinas.continuous_ops import rotate_source,verify_backup
         self.opened();before=self.paper.report()

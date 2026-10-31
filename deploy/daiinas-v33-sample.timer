@@ -1,0 +1,11 @@
+[Unit]
+Description=Sample DAIINAS independent-host health and paper evidence
+
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=60
+AccuracySec=1
+Unit=daiinas-v33-sample.service
+
+[Install]
+WantedBy=timers.target

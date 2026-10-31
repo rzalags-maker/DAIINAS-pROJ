@@ -402,7 +402,12 @@ class PaperLedger:
             self.db.execute('INSERT INTO checkpoint VALUES(1,?) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload',(canonical(self.state),))
             self.db.execute('COMMIT')
         except BaseException:
-            self.db.execute('ROLLBACK');self.state=previous;raise
+            # SQLITE_FULL may already have rolled the transaction back. Always
+            # restore money/cursor in memory, even if explicit rollback fails.
+            try:
+                if self.db.in_transaction:self.db.execute('ROLLBACK')
+            finally:self.state=previous
+            raise
 
     def report(self):
         s=self.state
