@@ -371,7 +371,9 @@ class Engine:
                     age=time.monotonic()-start
                     if age > max(self.stale_ms,self.trade_stale_ms)/1000 and not ready:
                         raise DataGap('Stale or missing required trade/quote/book stream')
-                    if age >= min(self.renew_seconds,reconnect_after or self.renew_seconds):
+                    smoke_renew=(reconnect_after is not None and age>=reconnect_after and verified
+                                 and self.store.get('checkpoint') is not None)
+                    if age >= self.renew_seconds or smoke_renew:
                         self.counts['renewals'] += 1
                         raise RenewConnection('Public token renewal/reconnect')
 
@@ -467,7 +469,7 @@ def main(argv=None):
     parser.add_argument('command',choices=['run','smoke'])
     parser.add_argument('--config',type=Path,default=Path('configs/kucoin.json'))
     parser.add_argument('--db',type=Path,default=Path('state/kucoin.sqlite3'))
-    parser.add_argument('--seconds',type=int,default=120)
+    parser.add_argument('--seconds',type=int,default=180)
     parser.add_argument('--reconnect-after',type=int,default=40)
     parser.add_argument('--report',type=Path,default=Path('reports/kucoin-connection.json'))
     args=parser.parse_args(argv)

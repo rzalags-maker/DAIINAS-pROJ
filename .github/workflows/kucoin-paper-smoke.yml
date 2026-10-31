@@ -30,7 +30,7 @@ jobs:
       - name: Bounded real KuCoin market and paper run with forced token renewal
         id: smoke
         continue-on-error: true
-        run: python -m daiinas.kucoin_service smoke --seconds 120 --reconnect-after 40 --db state/kucoin-smoke.sqlite3 --report reports/kucoin-actions-connection.json
+        run: python -m daiinas.kucoin_service smoke --seconds 180 --reconnect-after 40 --db state/kucoin-smoke.sqlite3 --report reports/kucoin-actions-connection.json
       - name: Publish report in job summary
         if: always()
         run: |

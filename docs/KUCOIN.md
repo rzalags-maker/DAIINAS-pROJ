@@ -13,7 +13,7 @@ Python 3.11+ on Linux, with the optional pinned WebSocket dependency:
 ```bash
 python -m pip install '.[live]'
 python -m unittest discover -s tests -v
-python -m daiinas.kucoin_service smoke --seconds 120 --reconnect-after 40 --db state/kucoin-smoke.sqlite3 --report reports/kucoin-connection.json
+python -m daiinas.kucoin_service smoke --seconds 180 --reconnect-after 40 --db state/kucoin-smoke.sqlite3 --report reports/kucoin-connection.json
 python -m daiinas.kucoin_service run --config configs/kucoin.json --db state/kucoin.sqlite3
 ```
 
@@ -104,7 +104,8 @@ Application JSON pings use the server's `pingInterval`; matching pongs are
 required within `pingTimeout`. Reconnect uses bounded exponential backoff and
 fresh subscriptions/snapshots. Public tokens are renewed by reconnecting before
 the 24-hour lifetime (default 20 hours). The smoke test forces shorter renewals
-to exercise this path. SIGTERM/interrupt cancels async tasks and closes the socket;
+only after a healthy session has created a paper checkpoint, so it can verify
+actual state reuse after reconnection. The normal 20-hour renewal is unconditional. SIGTERM/interrupt cancels async tasks and closes the socket;
 committed SQLite state remains recoverable.
 
 ## Strategy, paper decisions and persistence
@@ -164,7 +165,7 @@ No independent host is automatically provisioned by these templates.
 The smoke CLI writes an honest JSON report, exiting nonzero unless it observed
 all configured trade/quote/book channels, verified snapshot bridges, pongs,
 paper decisions and (when requested) a second healthy connection with a persisted
-checkpoint. A 120-second run is a connectivity/recovery check, not a strategy
+checkpoint. A three-minute run is a connectivity/recovery check, not a strategy
 profitability test, continuous-hosting guarantee, or production soak.
 
 `.github/workflows/kucoin-paper-smoke.yml` runs tests and a bounded real smoke on
