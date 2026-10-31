@@ -1,0 +1,38 @@
+name: Research historical validation (public archives)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/archive-research.yml
+permissions:
+  contents: read
+jobs:
+  historical-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify research engine tests
+        run: python -m unittest discover -s tests -q
+      - name: Download publisher-checksummed Binance USD-M archives
+        run: |
+          python -m daiinas download --config configs/default.json --rules-file rules/binance-usdm-2026-10-31T114852Z-five-symbols.json
+      - name: Run reproducible historical backtest with frozen public rules
+        run: |
+          python -m daiinas backtest --config configs/default.json --rules-file rules/binance-usdm-2026-10-31T114852Z-five-symbols.json --output reports/default
+      - name: Upload report and provenance (no private data)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daiinas-archive-backtest
+          if-no-files-found: ignore
+          path: |
+            reports/default.md
+            reports/default.json
+            data/manifest.json
+            rules/binance-usdm-2026-10-31T114852Z-five-symbols.json
+            rules/PROVENANCE.md
+          retention-days: 14
