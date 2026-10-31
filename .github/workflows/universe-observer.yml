@@ -1,0 +1,43 @@
+name: DAIINAS v3 public dynamic universe observation
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/v3-dynamic-observer
+    paths:
+      - daiinas/universe_observer.py
+      - daiinas/universe_rotation.py
+      - daiinas/providers/kucoin.py
+      - tests/test_universe_observer.py
+      - .github/workflows/universe-observer.yml
+permissions:
+  contents: read
+jobs:
+  dynamic-observer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install required public WebSocket client
+        run: python -m pip install '.[live]'
+      - name: Run all unit and regression tests
+        run: python -m unittest discover -s tests -v
+      - name: Capture real KuCoin dynamic contracts and synchronized streams
+        run: |
+          python -m daiinas.universe_observer \
+            --equity 8 --deep 5 --seconds 65 \
+            --db state/universe-live-smoke.sqlite3 \
+            --report reports/universe-live-smoke.json
+      - name: Preserve raw public observations and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daiinas-v3-dynamic-universe-evidence
+          if-no-files-found: ignore
+          path: |
+            reports/universe-live-smoke.json
+            state/universe-live-smoke.sqlite3*
+          retention-days: 7
