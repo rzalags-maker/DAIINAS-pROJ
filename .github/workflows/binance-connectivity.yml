@@ -1,0 +1,47 @@
+name: Binance public-data connectivity
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/binance-connectivity.yml
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Probe public Binance sources (no credentials)
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          import ssl
+          from urllib.request import Request, urlopen
+          urls = {
+            "archive_checksum": "https://data.binance.vision/data/futures/um/daily/klines/BTCUSDT/5m/BTCUSDT-5m-2025-01-01.zip.CHECKSUM",
+            "futures_rules": "https://fapi.binance.com/fapi/v1/exchangeInfo",
+            "futures_candles": "https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=5m&limit=2",
+          }
+          failures = 0
+          for name, url in urls.items():
+              try:
+                  with urlopen(Request(url, headers={"User-Agent": "DAIINAS-data-check/0.1"}), timeout=20, context=ssl.create_default_context()) as r:
+                      raw = r.read(2048)
+                      code = r.status
+                  if name == "archive_checksum":
+                      valid = len(raw.split()[0]) == 64
+                  elif name == "futures_rules":
+                      valid = raw.startswith(b'{') and b'"timezone"' in raw
+                  else:
+                      valid = raw.startswith(b'[')
+                  print(f"{name}: HTTP {code}, format {'ok' if valid else 'unexpected'}")
+                  if not valid: failures += 1
+              except Exception as exc:
+                  failures += 1
+                  print(f"{name}: FAILED {type(exc).__name__}: {exc}")
+          if failures:
+              print(f"Public-data environment check FAILED: {failures}/3")
+              raise SystemExit(1)
+          print("Public-data environment check PASSED: 3/3")
+          PY
