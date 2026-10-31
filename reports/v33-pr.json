@@ -1,0 +1,8 @@
+{
+  "status": "blocked",
+  "http_status": 403,
+  "reason": "GitHub Actions is not permitted to create or approve pull requests.",
+  "manual_compare_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/compare/daiinas-v1...feature/v33-continuous-paper",
+  "tested_commit": "25c60a1748eacc20d59eabcbec69c78950488705",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41250115273"
+}

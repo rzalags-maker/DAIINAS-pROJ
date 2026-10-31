@@ -1,0 +1,69 @@
+{
+  "status": "passed",
+  "live_orders_enabled": false,
+  "tests": {
+    "tests_run": 180,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "expected_failures": 0,
+    "unexpected_successes": 0,
+    "successful": true
+  },
+  "market_scans": 15,
+  "observed_contracts": 717,
+  "public_event_counts": {
+    "execution": 159,
+    "level2": 33822,
+    "tickerV2": 2630
+  },
+  "process_boots": [
+    "51d8fb13fea84eddaf18174e4dc36cd0",
+    "d9e543eed2ac4839a5e4670c1d852e58"
+  ],
+  "source_cursor": 36952,
+  "input_digest": "0799b7308e2e6d443df8afa17f7179bbbf5f6aeca2b14e6e0568c03751d18714",
+  "cash": 7.9786062428048465,
+  "equity_last_mark": 7.9786062428048465,
+  "fees": 0.013780399199999998,
+  "modeled_carry": 1.3579951535694444e-06,
+  "closed_summary": {
+    "count": 4,
+    "loss": 0.021393757195153455,
+    "losses": 4,
+    "profit": 0.0,
+    "wins": 0
+  },
+  "open_position": null,
+  "pending_entry": null,
+  "pending_exit": null,
+  "decision_counts": {
+    "BOOK_SNAPSHOT": 65,
+    "CLOSED": 4,
+    "EXIT_REQUEST": 4,
+    "HEALTH": 31,
+    "OPENED": 4,
+    "REJECTED": 2,
+    "REJECTED_EVENT": 184,
+    "RESOLVED": 494,
+    "SCAN": 15,
+    "SIGNAL": 6,
+    "UNRESOLVED": 524,
+    "VERIFIED_BOOK": 23
+  },
+  "replay_identical": true,
+  "backup": {
+    "source_id": "261473eb93ea48a4a27f30b55bf0143e",
+    "paper_cursor": 36952,
+    "source_max_seq": 36952,
+    "paper_input_digest": "0799b7308e2e6d443df8afa17f7179bbbf5f6aeca2b14e6e0568c03751d18714",
+    "sha256": {
+      "source.sqlite3": "582fa0a5935abc7ebb9815ef567169f32d7285a7b0866c1e26c6b88cfbe699e9",
+      "paper.sqlite3": "033e5f8327e42e2206b396cef0fce715fec504413b36aeea1f37f5dccffcb899"
+    }
+  },
+  "24h_host_gate": "BLOCKED \u2014 HOST NOT PROVISIONED",
+  "performance_gate": "Not established by bounded infrastructure smoke",
+  "tested_commit": "25c60a1748eacc20d59eabcbec69c78950488705",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41250115273"
+}

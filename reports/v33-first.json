@@ -1,0 +1,334 @@
+{
+  "status": "PAPER_ONLY",
+  "live_orders_enabled": false,
+  "strategy_validated": false,
+  "initial_capital": 8.0,
+  "cash": 7.990509956433466,
+  "equity_last_mark": 7.990509956433466,
+  "mark_status": "FLAT",
+  "realized_net_pnl": -0.009490043566533535,
+  "cash_pnl_excluding_external_flows": -0.009490043566533934,
+  "external_simulated_flows": 0.0,
+  "fees": 0.007261024799999999,
+  "entry_fees": 0.0036311807999999998,
+  "exit_fees": 0.0036298439999999993,
+  "modeled_carry": 1.0187665337777778e-06,
+  "closed_summary": {
+    "count": 2,
+    "wins": 0,
+    "losses": 2,
+    "profit": 0.0,
+    "loss": 0.009490043566533535
+  },
+  "recent_closed_positions": [
+    {
+      "contract_multiplier": 520000.0,
+      "direction": "LONG",
+      "entry_fee_usdt": 0.0015470207999999997,
+      "entry_notional_usdt": 2.5783679999999998,
+      "entry_price": 4.9584e-06,
+      "entry_provider_ms": 1793487277531,
+      "entry_received_ms": 1793487277611,
+      "entry_source_seq": 11403,
+      "exit_fee_usdt": 0.0015473639999999996,
+      "exit_price": 4.9595e-06,
+      "exit_provider_ms": 1793487336434,
+      "exit_quote": 4.9605e-06,
+      "exit_reason": "DATA_HEALTH",
+      "exit_received_ms": 1793487336507,
+      "exit_source_seq": 22792,
+      "fee_rate": 0.0006,
+      "gross_pnl_usdt": 0.0005719999999999328,
+      "holding_ms": 58896,
+      "id": "position:signal:11375:PEPEUSDTM:LONG",
+      "last_good_mark_ms": 1793487336507,
+      "margin_reserved_usdt": 0.8594559999999999,
+      "modeled_carry_usdt": 5.27276256e-07,
+      "net_pnl_usdt": -0.0025229120762560665,
+      "planned_loss_usdt": 0.01374764560000003,
+      "planned_stop_mid": 4.939501025e-06,
+      "planned_stop_quote": 4.938951025e-06,
+      "planned_target_mid": 4.991547949999999e-06,
+      "planned_target_net_usdt": 0.01327613040000024,
+      "price_tick_size": "1e-10",
+      "quantity_contracts": 1.0,
+      "risk_budget_usdt": 0.019982582171274306,
+      "rules_hash": "3c2497b23e61385ffb9eea52c0e57dabeffa27aa198baf85bee6518679a91613",
+      "signal_received_ms": 1793487277449,
+      "symbol": "PEPEUSDTM",
+      "unresolved": null
+    },
+    {
+      "contract_multiplier": 0.1,
+      "direction": "LONG",
+      "entry_fee_usdt": 0.00208416,
+      "entry_notional_usdt": 3.4736000000000002,
+      "entry_price": 0.8684,
+      "entry_provider_ms": 1793487224157,
+      "entry_received_ms": 1793487224233,
+      "entry_source_seq": 4396,
+      "exit_fee_usdt": 0.00208248,
+      "exit_price": 0.8677,
+      "exit_provider_ms": 1793487264903,
+      "exit_quote": 0.8679,
+      "exit_reason": "DATA_HEALTH",
+      "exit_received_ms": 1793487264983,
+      "exit_source_seq": 9568,
+      "fee_rate": 0.0006,
+      "gross_pnl_usdt": -0.0027999999999996916,
+      "holding_ms": 40750,
+      "id": "position:signal:4182:FILUSDTM:LONG",
+      "last_good_mark_ms": 1793487264983,
+      "margin_reserved_usdt": 1.1578666666666668,
+      "modeled_carry_usdt": 4.914902777777779e-07,
+      "net_pnl_usdt": -0.0069671314902774685,
+      "planned_loss_usdt": 0.019758959999999614,
+      "planned_stop_mid": 0.864962,
+      "planned_stop_quote": 0.864762,
+      "planned_target_mid": 0.8740759999999999,
+      "planned_target_net_usdt": 0.01701896000000033,
+      "price_tick_size": "0.0001",
+      "quantity_contracts": 40.0,
+      "risk_budget_usdt": 0.02,
+      "rules_hash": "e42ad8162254e614776af9fb73510908febd98eb2b2e5837ff48e3d165a03dd5",
+      "signal_received_ms": 1793487222353,
+      "symbol": "FILUSDTM",
+      "unresolved": null
+    }
+  ],
+  "peak": 8.0,
+  "maximum_drawdown": 0.0014590257799289574,
+  "halted": false,
+  "paused_new_entries": false,
+  "open_position": null,
+  "pending_entry": null,
+  "pending_exit": null,
+  "pins": [],
+  "source_cursor": 23782,
+  "input_digest": "6b32012a23d2489c6111be6211b0de406d253b8c96fce94bda62ba673e6240f9",
+  "counts": {
+    "SCAN": 9,
+    "HEALTH": 19,
+    "BOOK_SNAPSHOT": 37,
+    "VERIFIED_BOOK": 13,
+    "SIGNAL": 4,
+    "REJECTED": 2,
+    "OPENED": 2,
+    "UNRESOLVED": 408,
+    "RESOLVED": 384,
+    "REJECTED_EVENT": 102,
+    "EXIT_REQUEST": 2,
+    "CLOSED": 2
+  },
+  "scan": {
+    "available_ms": 1793487333984,
+    "report_time_ms": 1793487333899,
+    "watch": {
+      "blocked_new_entries": [],
+      "capacity_exhausted": false,
+      "deep_symbols": [
+        "PEPEUSDTM",
+        "PAXGUSDTM",
+        "AAVEUSDTM"
+      ],
+      "entered_at": {
+        "AAVEUSDTM": 1793487329881,
+        "PAXGUSDTM": 1793487326407,
+        "PEPEUSDTM": 1793487256096
+      },
+      "no_trade": true,
+      "pinned": [
+        "PEPEUSDTM"
+      ],
+      "reason": "Snapshot-based candidate rotation only; no strategy edge validated",
+      "time_ms": 1793487333899,
+      "watch_pool": [
+        "PEPEUSDTM",
+        "TAOUSDTM",
+        "PAXGUSDTM",
+        "DOTUSDTM",
+        "BCHUSDTM",
+        "ASTERUSDTM",
+        "NEARUSDTM",
+        "FILUSDTM",
+        "AAVEUSDTM",
+        "LINKUSDTM",
+        "SUIUSDTM",
+        "XLMUSDTM",
+        "AVAXUSDTM",
+        "ENAUSDTM",
+        "0GUSDTM",
+        "HBARUSDTM",
+        "TSLAUSDTM",
+        "ONDOUSDTM",
+        "GRAMUSDTM",
+        "ARBUSDTM"
+      ]
+    },
+    "specs": {
+      "AAVEUSDTM": {
+        "captured_ms": 1793487333899,
+        "rules": {
+          "contract_size": "0.01",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "AAVEUSDTM",
+          "tick_size": "0.01"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "PAXGUSDTM": {
+        "captured_ms": 1793487333899,
+        "rules": {
+          "contract_size": "0.001",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "PAXGUSDTM",
+          "tick_size": "0.01"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "PEPEUSDTM": {
+        "captured_ms": 1793487333899,
+        "rules": {
+          "contract_size": "520000.0",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "PEPEUSDTM",
+          "tick_size": "1e-10"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      }
+    },
+    "unavailable": []
+  },
+  "checkpoint_available_ms": 1793487342061,
+  "service": {
+    "active": [
+      "AAVEUSDTM",
+      "PAXGUSDTM",
+      "PEPEUSDTM"
+    ],
+    "boot_id": "51d8fb13fea84eddaf18174e4dc36cd0",
+    "connected": true,
+    "disk_free_bytes": 93900275712,
+    "elapsed_seconds": 149.60097986899999,
+    "feed_age_ms": {
+      "AAVEUSDTM": {
+        "execution": 1422,
+        "level2": 23,
+        "tickerV2": 1300
+      },
+      "PAXGUSDTM": {
+        "execution": 1793487341661,
+        "level2": 29,
+        "tickerV2": 3745
+      },
+      "PEPEUSDTM": {
+        "execution": 261,
+        "level2": 9,
+        "tickerV2": 136
+      }
+    },
+    "host_id": null,
+    "paper_bytes": 6073992,
+    "session_id": "17f5a5ac3a2d4b5e95db5e02603583d8",
+    "source_bytes": 56283240,
+    "stream_counts": {
+      "book_gaps": 5,
+      "book_resyncs": 18,
+      "connections": 5,
+      "market_scans": 9,
+      "pongs": 8,
+      "reconciliations": 7,
+      "reconnects": 4,
+      "retired_markets": 3,
+      "snapshots": 37,
+      "subscribe_acks": 45,
+      "unsubscribe_acks": 9
+    },
+    "unavailable": [],
+    "verified_books": [
+      "AAVEUSDTM",
+      "PAXGUSDTM",
+      "PEPEUSDTM"
+    ]
+  },
+  "stream": {
+    "connected": false,
+    "session_id": "17f5a5ac3a2d4b5e95db5e02603583d8",
+    "active": [
+      "AAVEUSDTM",
+      "PAXGUSDTM",
+      "PEPEUSDTM"
+    ],
+    "verified_books": [],
+    "feed_age_ms": {
+      "AAVEUSDTM": {
+        "execution": 1969,
+        "tickerV2": 1847,
+        "level2": 159
+      },
+      "PAXGUSDTM": {
+        "execution": 1793487342208,
+        "tickerV2": 4292,
+        "level2": 149
+      },
+      "PEPEUSDTM": {
+        "execution": 808,
+        "tickerV2": 683,
+        "level2": 287
+      }
+    },
+    "stream_counts": {
+      "market_scans": 9,
+      "connections": 5,
+      "subscribe_acks": 45,
+      "snapshots": 37,
+      "book_resyncs": 18,
+      "book_gaps": 5,
+      "reconciliations": 7,
+      "pongs": 8,
+      "unsubscribe_acks": 9,
+      "retired_markets": 3,
+      "reconnects": 4
+    },
+    "unavailable": []
+  },
+  "errors": [
+    "ConnectionError: Scheduled public token renewal",
+    "DataGap: Book restore retry limit exceeded",
+    "ConnectionError: Scheduled public token renewal",
+    "DataGap: Book restore retry limit exceeded"
+  ],
+  "fatal_error": null,
+  "elapsed_seconds": 150.148061973,
+  "boot_id": "51d8fb13fea84eddaf18174e4dc36cd0",
+  "source_path": "state/v33-source.sqlite3",
+  "paper_path": "state/v33-paper.sqlite3",
+  "observed_contracts": 717,
+  "normalized_event_counts": {
+    "level2": 21698,
+    "tickerV2": 1761,
+    "execution": 108
+  },
+  "source_code_sha256": {
+    "continuous.py": "358dba2ba4532b778255269217410739e6515ccbfbb960db4fb046adea6edee7",
+    "continuous_paper.py": "98b61bb2c96392a686fb4d584b98ecb4bc6e35b995c60cf08f14f56c7a2440dd",
+    "continuous_stream.py": "2a18e78fd5bb0d06e1e040641ee7ec3effea3f25065510d6e5436c0b29de3024",
+    "continuous_store.py": "1b7dae0af12946d7591066e08d45716e87941683542d7806be45cedfa6ba75db"
+  },
+  "24h_host_gate": "BLOCKED \u2014 HOST NOT PROVISIONED",
+  "smoke_status": "passed",
+  "tested_commit": "25c60a1748eacc20d59eabcbec69c78950488705",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41250115273"
+}
