@@ -6,7 +6,7 @@
     "BNBUSDT",
     "XRPUSDT"
   ],
-  "interval": "1m",
+  "interval": "5m",
   "strategy": {},
   "risk": {},
   "poll_seconds": 10,

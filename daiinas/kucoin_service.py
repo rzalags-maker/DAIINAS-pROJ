@@ -15,7 +15,7 @@ from .data import digest
 from .models import INTERVALS, RiskConfig, StrategyConfig
 from .flow import AggressiveTrade
 from .service import Store, Worker, canonical, now_ms, single_worker
-from .providers.kucoin import (PublicRest, DataGap, SequenceGap, MAPPING, REVERSE, TOPICS,
+from .providers.kucoin import (PublicRest, DataGap, CandleGap, SequenceGap, MAPPING, REVERSE, TOPICS,
                                OrderBook, contracts, execution, ticker, integer,
                                timestamp, token_server, klines)
 
@@ -217,13 +217,14 @@ class Engine:
             rows = await self.request('/api/v1/kline/query',{'symbol':MAPPING[symbol],
                       'granularity':self.interval//60000,'from':next_time,'to':end-1})
             self.cache.bars[(symbol,next_time,end)] = klines(rows,next_time,end,self.interval,
-                                                            float(self.rules[symbol].contract_size))
+                                                            float(self.rules[symbol].contract_size),symbol)
         if not self.ready() or self.store.get('stop',False):
             return 0
         self.cache.server_time = server_time
         self.paper_recovery = checkpoint is not None and latest > next_time
         n=self.worker.tick()
         if n:self.counts['paper_batches'] += 1
+        self.store.set('kucoin_paper_status',{'time':now_ms(),'status':'running','error':None})
         return n
 
     async def session(self, reconnect_after=None):
@@ -348,7 +349,13 @@ class Engine:
             async def paper():
                 while True:
                     if self.ready():
-                        await self.paper_once()
+                        try:
+                            await self.paper_once()
+                        except CandleGap as exc:
+                            # Quiet intervals may be absent in KuCoin candles. Do
+                            # not fabricate them or throw away a healthy socket.
+                            self.store.set('kucoin_paper_status',{'time':now_ms(),'status':'blocked','error':str(exc)})
+                            self.store.event('kucoin_paper_blocked',str(exc))
                         await asyncio.sleep(self.poll_seconds)
                     else:
                         await asyncio.sleep(.2)
@@ -430,18 +437,22 @@ class Engine:
         passed=(len(self.normalized)==len(self.symbols) and self.counts['verified_sessions'] >= (2 if require_reconnect else 1)
                 and all(all(v>0 for v in c.values()) for c in counts.values())
                 and self.counts['pongs']>0 and decisions>0 and self.counts['paper_batches']>0
+                and self.store.get('kucoin_paper_status',{}).get('status')=='running'
                 and (not require_reconnect or self.counts['checkpoint_resumes']>0))
         return {'status':'passed' if passed else 'not_verified','simulation_only':True,
                 'provider':'KuCoin Classic Futures public WebSocket','runner':'github-actions' if os.getenv('GITHUB_ACTIONS') else 'local',
                 'counts':dict(self.counts),'market_event_counts':counts,'subscription_acks':sorted(self.acked_topics),
                 'sequence_verified_symbols':sorted(self.verified_symbols),'paper_decision_batches':decisions,
-                'paper_metrics':self.store.get('metrics'),'contracts':self.normalized,
+                'paper_metrics':self.store.get('metrics'),'paper_status':self.store.get('kucoin_paper_status'),
+                'contracts':self.normalized,
                 'errors':self.errors,'reconnect_required':require_reconnect,
                 'rest_response_count':self.store.db.execute('SELECT count(*) FROM responses').fetchone()[0],
                 'rest_provenance':[{'fetched_at':t,'url':url,'sha256':sha} for t,url,sha in reversed(list(self.store.db.execute(
                     'SELECT fetched_at,url,sha256 FROM responses ORDER BY id DESC LIMIT 200')))],
                 'strategy_signals':dict(self.store.db.execute('SELECT side,count(*) FROM signals GROUP BY side').fetchall()),
                 'paper_positions':self.store.get('checkpoint',{}).get('positions',[]),
+                'paper_gap_observations':[{'time':t,'detail':detail} for t,detail in self.store.db.execute(
+                    "SELECT time,detail FROM events WHERE kind='kucoin_paper_blocked' ORDER BY id DESC LIMIT 10")],
                 'source_sha256':{str(p):digest(p.read_bytes()) for p in (Path(__file__),Path(__file__).parent/'providers'/'kucoin.py')},
                 'limitations':['Bounded connectivity/persistence check, not a profitability test or production soak.',
                   'Strategy uses KuCoin closed OHLCV via REST; WebSocket trade/quote/L2 feeds gate readiness, not order-flow signals.',

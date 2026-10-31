@@ -17,7 +17,11 @@ python -m daiinas.kucoin_service smoke --seconds 120 --reconnect-after 40 --db s
 python -m daiinas.kucoin_service run --config configs/kucoin.json --db state/kucoin.sqlite3
 ```
 
-The default live interval is 1m; 5m and 15m are also supported. Default account
+The default live interval is 5m; 1m and 15m are also supported. The first real
+1m smoke exposed missing exchange candle buckets (the service did not fabricate
+them). An incomplete candle window blocks paper accounting while the healthy
+WebSocket keeps collecting; choose an interval with a complete actual window.
+Missing buckets remain an explicit limitation at any interval. Default account
 capital remains 8 USDT. A smoke test does not increase capital or loosen risk
 limits to force trades. It can succeed with no trade opportunities; a fabricated
 signal is never introduced to meet a trade-count target.

@@ -319,6 +319,44 @@ class EngineTests(unittest.IsolatedAsyncioTestCase):
         self.assertGreater(self.engine.counts['paper_batches'],0)
         self.assertTrue(self.store.db.execute("SELECT count(*) FROM events WHERE kind='kucoin_book_gap'").fetchone()[0])
 
+    async def test_missing_candles_block_paper_but_preserve_live_socket(self):
+        self.rest.gap=True
+        self.engine.connector=lambda *args,**kwargs:FakeSocket(self.rest)
+        await self.engine.run(seconds=2.3)
+        self.assertEqual(self.engine.counts['connections'],1)
+        self.assertGreater(self.engine.counts['pongs'],0)
+        self.assertEqual(self.engine.counts['paper_batches'],0)
+        self.assertEqual(self.store.get('kucoin_paper_status')['status'],'blocked')
+        self.assertEqual(self.engine.report()['status'],'not_verified')
+        self.assertTrue(self.engine.report()['paper_gap_observations'])
+        self.assertFalse(self.engine.errors)
+
+    async def test_real_strategy_path_persists_both_sides_and_shared_margin(self):
+        original=self.rest.request
+        sweep_time=self.rest.t//60000*60000-60000
+        def with_sweeps(path,params=None):
+            data,payload,url=original(path,params)
+            if path.endswith('/query'):
+                for row in data:
+                    if row[0]==sweep_time:
+                        if params['symbol']=='XBTUSDTM':row[1:5]=[99,101,97,100]
+                        if params['symbol']=='ETHUSDTM':row[1:5]=[101,103,99,100]
+                payload=json.dumps({'code':'200000','data':data}).encode()
+            return data,payload,url
+        self.rest.request=with_sweeps
+        self.make_ready()
+        await self.engine.paper_once()
+        sides={row[0] for row in self.store.db.execute('SELECT side FROM signals')}
+        self.assertEqual(sides,{'LONG','SHORT'})
+        self.rest.t+=60000
+        with patch('daiinas.kucoin_service.now_ms',return_value=self.rest.t),patch('daiinas.service.now_ms',return_value=self.rest.t):
+            self.make_ready()
+            await self.engine.paper_once()
+        positions=self.store.get('checkpoint')['positions']
+        self.assertEqual({p['side'] for p in positions},{'LONG','SHORT'})
+        self.assertLessEqual(sum(p['margin'] for p in positions),8*.8)
+        self.assertEqual(self.store.db.execute('SELECT count(*) FROM paper_decisions').fetchone()[0],2)
+
     async def test_missing_pong_forces_reconnect(self):
         self.engine.connector=lambda *args,**kwargs:FakeSocket(self.rest,pong=False)
         await self.engine.run(seconds=2.8)

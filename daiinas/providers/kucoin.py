@@ -19,6 +19,10 @@ class DataGap(ValueError):
     """Data is not safe to use; reset the connection and rebuild books."""
 
 
+class CandleGap(DataGap):
+    """Actual REST candles are incomplete; preserve the stream and freeze paper."""
+
+
 class SequenceGap(DataGap):
     def __init__(self, expected, actual):
         super().__init__(f'Order-book sequence gap: expected {expected}, received {actual}')
@@ -124,13 +128,17 @@ def token_server(info):
     raise DataGap('No trusted public Futures WebSocket server')
 
 
-def klines(rows, start, end, interval, multiplier):
+def klines(rows, start, end, interval, multiplier, symbol=None):
     bars = [Candle(integer(r[0]), *(float(number(v)) for v in r[1:5]),
                    float(number(r[5],zero=True))*multiplier) for r in rows
             if start <= integer(r[0]) < end]
     bars.sort(key=lambda b: b.time)
-    if [b.time for b in bars] != list(range(start,end,interval)):
-        raise DataGap('Missing or duplicate KuCoin closed candles; no synthetic gap fill')
+    expected=list(range(start,end,interval))
+    actual=[b.time for b in bars]
+    if actual != expected:
+        missing=sorted(set(expected)-set(actual))
+        raise CandleGap(f'{symbol or "KuCoin"}: expected {len(expected)} closed candles, received {len(actual)}; '
+                        f'missing UTC-ms opens {missing[:10]}; no synthetic gap fill')
     return bars
 
 

@@ -95,7 +95,10 @@ class Store:
         live = self.get('kucoin_health')
         if live is not None:
             healthy = healthy and (stopped or (live.get('ready',False) and now_ms()-live.get('time',0) < 15000))
-        return {'live_market': live, 'healthy': healthy, 'stopped': stopped, 'heartbeat': beat,
+        paper_status=self.get('kucoin_paper_status')
+        if paper_status is not None and not stopped:
+            healthy=healthy and paper_status.get('status')=='running'
+        return {'paper_status':paper_status, 'live_market': live, 'healthy': healthy, 'stopped': stopped, 'heartbeat': beat,
                 'data_stale': stale, 'last_processed_open': last,
                 'metrics': self.get('metrics'), 'simulation_only': True,
                 'positions': self.get('checkpoint', {}).get('positions', [])}
