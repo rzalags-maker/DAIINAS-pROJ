@@ -169,7 +169,11 @@ profitability test, continuous-hosting guarantee, or production soak.
 
 `.github/workflows/kucoin-paper-smoke.yml` runs tests and a bounded real smoke on
 GitHub Actions, retains a database/report artifact for seven days, and commits
-only the public report if the branch has not advanced. It records the tested
+only the new public report on top of the latest branch tree, preserving concurrent
+source changes. A run-specific report is also retained under `reports/kucoin-runs/`.
+The writer uses normal fast-forward pushes and retries a concurrent update; it
+never force-pushes. Old reports are removed before each smoke so a failed test
+cannot relabel prior evidence as a new run. It records the tested
 commit and run URL. Report-only commits do not retrigger the live smoke. An
 Actions run is temporary verification, not the continuously hosted service.
 
