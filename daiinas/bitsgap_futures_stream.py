@@ -110,9 +110,14 @@ class BitsgapFuturesStream:
         except BitsgapError as exc:
             self.last_failure = exc.category
             raise
-        except Exception:
-            self.last_failure = "WS_DISCONNECTED_OR_TRANSPORT_ERROR"
-            raise BitsgapError("WS_DISCONNECTED_OR_TRANSPORT_ERROR") from None
+        except Exception as exc:
+            # Revoked/auth-failed/replayed credentials are terminal: never loop.
+            close_code = getattr(getattr(exc, "rcvd", None), "code", None)
+            if close_code is None:
+                close_code = getattr(exc, "code", None)
+            self.last_failure = ("WS_TERMINAL_AUTH_FAILURE" if close_code in (4401, 4403, 4409)
+                                 else "WS_DISCONNECTED_OR_TRANSPORT_ERROR")
+            raise BitsgapError(self.last_failure) from None
         finally:
             self.connected = False
             self.disconnects += 1
@@ -131,6 +136,8 @@ class BitsgapFuturesStream:
             except BitsgapError as exc:
                 await on_event({"event": "DISCONNECTED", "topic": "account",
                                 "category": exc.category, "funding_authorized": False})
+                if exc.category == "WS_TERMINAL_AUTH_FAILURE":
+                    return
             if not stop_event.is_set():
                 try:
                     await asyncio.wait_for(stop_event.wait(), delay)
