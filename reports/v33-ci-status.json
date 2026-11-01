@@ -1,15 +1,15 @@
 {
   "original": "success",
-  "tests": "cancelled",
-  "first": "skipped",
-  "restart": "skipped",
-  "replay": "skipped",
-  "verify": "failure",
-  "v4first": "skipped",
-  "v4restart": "skipped",
-  "v4replay": "skipped",
-  "v4verify": "failure",
-  "comparison": "skipped",
-  "tested_commit": "828ec9f0e64120c42e9e7c01b6537e4eac519de4",
-  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41281394871"
+  "tests": "success",
+  "first": "success",
+  "restart": "success",
+  "replay": "success",
+  "verify": "success",
+  "v4first": "success",
+  "v4restart": "success",
+  "v4replay": "success",
+  "v4verify": "success",
+  "comparison": "success",
+  "tested_commit": "0bc3bafdb5816967383a84c0e265b51baab7db27",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41281466283"
 }

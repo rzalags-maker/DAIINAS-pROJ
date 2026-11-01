@@ -1,7 +1,95 @@
 {
-  "status": "not_verified",
-  "error": "FileNotFoundError: [Errno 2] No such file or directory: 'reports/v4-first.json'",
+  "status": "passed",
+  "initial_capital": "100",
   "live_orders_enabled": false,
-  "tested_commit": "828ec9f0e64120c42e9e7c01b6537e4eac519de4",
-  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41281394871"
+  "strategy_validated": false,
+  "production_ready": false,
+  "initial_funding": {
+    "account_id": "paper-v4-100",
+    "account_identity": "11835fdef0f8a72e235523d5b26565c434cd66b4824c3529162e7ce660ca72c0",
+    "amount": "100",
+    "asof_source_cursor": 0,
+    "currency": "USDT",
+    "event_id": "INITIAL_FUNDING:bd0443e9883e84b3cb04e8a7e60031c3d5a6442251b17c7ebcb0a4fba9693ba6",
+    "event_type": "INITIAL_FUNDING",
+    "journal_source_id": "f6d3645dd8514823b59eaf9865312b6a",
+    "kind": "owner_confirmed_paper_scenario",
+    "policy_id": "b36770b8c3b5d842c9c85649fdddd992c80f10a5f7432a402c5b8153b9d70fb3",
+    "scope": "FUNDED_V4_PAPER_USDT_PERPETUAL",
+    "source_evidence": "Explicit hypothetical PAPER scenario; no exchange balance verified.",
+    "source_reference": "User-selected hypothetical scenario v4-smoke; not verified exchange capital",
+    "timestamp_ms": 1793491200000,
+    "verified_exchange_balance": false
+  },
+  "actual_exchange_balance_status": "NOT_CONNECTED",
+  "actual_public_events": {
+    "execution": 198,
+    "level2": 47817,
+    "tickerV2": 2801
+  },
+  "journal_records": 51104,
+  "duration_seconds": 230.3,
+  "replay_identical": true,
+  "money_reconciled_independently": true,
+  "cash": "100",
+  "executable_equity": "100",
+  "equity_last_mark": "100",
+  "net_realized_pnl": "0",
+  "fees": "0",
+  "carry": "0",
+  "ladder": {
+    "starting_total": "100",
+    "realized_net": "0",
+    "active": "50",
+    "reserve": "50",
+    "pending": "0",
+    "deficit": "0",
+    "total": "100",
+    "stage": "EXPAND",
+    "next_step": "RESERVE",
+    "committed_active": "0",
+    "slot_ceiling": 2,
+    "per_position_budget": "25",
+    "policy": {
+      "activation_total": "100",
+      "activation_reserve": "50",
+      "position_budget": "25",
+      "max_slots": 10,
+      "reserve_step": "50",
+      "active_step": "50",
+      "per_trade_planned_risk": "0.0025",
+      "aggregate_planned_risk": "0.01"
+    },
+    "live_orders_enabled": false
+  },
+  "active_risk_drawdown": 0.0,
+  "account_drawdown": 0.0,
+  "positions": [],
+  "campaigns": [],
+  "counts": {
+    "BOOK_SNAPSHOT": 37,
+    "DECISION": 2774,
+    "HEALTH": 16,
+    "INITIAL_FUNDING": 1,
+    "REJECTED_EVENT": 253,
+    "SCAN": 8,
+    "VERIFIED_BOOK": 19
+  },
+  "reason_counts": {
+    "REJECTED_EVENT:rule_version_mismatch": 253
+  },
+  "input_digest": "e0946a61ca494cfaf8e67f95edd3eeaf2bd9c18900fcfccd38605a2c834f1b6b",
+  "backup": {
+    "source_id": "f6d3645dd8514823b59eaf9865312b6a",
+    "paper_cursor": 51104,
+    "source_max_seq": 51104,
+    "paper_input_digest": "e0946a61ca494cfaf8e67f95edd3eeaf2bd9c18900fcfccd38605a2c834f1b6b",
+    "sha256": {
+      "source.sqlite3": "312ec0a6aa1c247cf162cc794cb4f1f325107c2b7e1960bf5d21280be199dd5f",
+      "paper.sqlite3": "fcf7852fb435f916fc9792a87a4979133c7a17b70b482495456600427f6b00d1"
+    }
+  },
+  "24h_host_gate": "BLOCKED \u2014 HOST NOT PROVISIONED",
+  "tested_commit": "0bc3bafdb5816967383a84c0e265b51baab7db27",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41281466283"
 }

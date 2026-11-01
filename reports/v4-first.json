@@ -1,0 +1,1143 @@
+{
+  "status": "PAPER_ONLY",
+  "engine": "v4",
+  "live_orders_enabled": false,
+  "strategy_validated": false,
+  "production_ready": false,
+  "initial_capital": "100",
+  "initial_funding": {
+    "kind": "owner_confirmed_paper_scenario",
+    "account_id": "paper-v4-100",
+    "scope": "FUNDED_V4_PAPER_USDT_PERPETUAL",
+    "currency": "USDT",
+    "amount": "100",
+    "timestamp_ms": 1793491200000,
+    "source_reference": "User-selected hypothetical scenario v4-smoke; not verified exchange capital",
+    "source_evidence": "Explicit hypothetical PAPER scenario; no exchange balance verified.",
+    "event_type": "INITIAL_FUNDING",
+    "policy_id": "b36770b8c3b5d842c9c85649fdddd992c80f10a5f7432a402c5b8153b9d70fb3",
+    "account_identity": "11835fdef0f8a72e235523d5b26565c434cd66b4824c3529162e7ce660ca72c0",
+    "journal_source_id": "f6d3645dd8514823b59eaf9865312b6a",
+    "verified_exchange_balance": false,
+    "asof_source_cursor": 0,
+    "event_id": "INITIAL_FUNDING:bd0443e9883e84b3cb04e8a7e60031c3d5a6442251b17c7ebcb0a4fba9693ba6"
+  },
+  "candle_contexts": {},
+  "session": null,
+  "venue_orders": {},
+  "strategy_version": "v46",
+  "leverage_selections": {},
+  "whole_market_pulse": {},
+  "conveyor": {},
+  "pending_paper_cash_settlements": [],
+  "entry_capacity": null,
+  "account_status": null,
+  "actual_exchange_balance_status": "NOT_CONNECTED",
+  "mode": "M3",
+  "execution_version": "v4.2-explicit-funding-decimal18-v1",
+  "money_quantum_usdt": "1E-18",
+  "evidence_policy_sha256": "b36770b8c3b5d842c9c85649fdddd992c80f10a5f7432a402c5b8153b9d70fb3",
+  "cash": "100",
+  "equity_last_mark": "100",
+  "executable_equity": "100",
+  "mark_status": "FLAT",
+  "active_equity": "50",
+  "ladder": {
+    "starting_total": "100",
+    "realized_net": "0",
+    "active": "50",
+    "reserve": "50",
+    "pending": "0",
+    "deficit": "0",
+    "total": "100",
+    "stage": "EXPAND",
+    "next_step": "RESERVE",
+    "committed_active": "0",
+    "slot_ceiling": 2,
+    "per_position_budget": "25",
+    "policy": {
+      "activation_total": "100",
+      "activation_reserve": "50",
+      "position_budget": "25",
+      "max_slots": 10,
+      "reserve_step": "50",
+      "active_step": "50",
+      "per_trade_planned_risk": "0.0025",
+      "aggregate_planned_risk": "0.01"
+    },
+    "live_orders_enabled": false
+  },
+  "capital_status": {
+    "allowed_slots": 2,
+    "open_positions": 0,
+    "free_slots": 2,
+    "excess_open_to_reduce_safely": 0,
+    "block_new_entries": false,
+    "marked_trading_budget": "50",
+    "reserve_untouched": "50",
+    "manual_safe_exit_required": false
+  },
+  "reserved_margin": "0",
+  "planned_risk": "0",
+  "realized_net_pnl": "0",
+  "fees": "0",
+  "entry_fees": "0",
+  "exit_fees": "0",
+  "modeled_carry": "0",
+  "external_simulated_flows": "0",
+  "account_maximum_drawdown": 0.0,
+  "account_peak": "100",
+  "maximum_drawdown_basis": "Active equity risk gate; total account metric is account_maximum_drawdown",
+  "maximum_drawdown": 0.0,
+  "halted": false,
+  "paused_new_entries": false,
+  "positions": [],
+  "pending_entries": [],
+  "exit_requests": {},
+  "campaigns": [],
+  "market_states": {
+    "PEPEUSDTM": {
+      "history": [
+        [
+          1793515289000,
+          4.9685e-06
+        ],
+        [
+          1793515290000,
+          4.96855e-06
+        ],
+        [
+          1793515291000,
+          4.96915e-06
+        ],
+        [
+          1793515292000,
+          4.96765e-06
+        ],
+        [
+          1793515293000,
+          4.96765e-06
+        ],
+        [
+          1793515294000,
+          4.96725e-06
+        ],
+        [
+          1793515295000,
+          4.96725e-06
+        ],
+        [
+          1793515296000,
+          4.96685e-06
+        ],
+        [
+          1793515297000,
+          4.9671e-06
+        ],
+        [
+          1793515298000,
+          4.9672000000000005e-06
+        ],
+        [
+          1793515299000,
+          4.9672000000000005e-06
+        ],
+        [
+          1793515300000,
+          4.96765e-06
+        ],
+        [
+          1793515301000,
+          4.9682999999999995e-06
+        ],
+        [
+          1793515303000,
+          4.96865e-06
+        ],
+        [
+          1793515304000,
+          4.9682999999999995e-06
+        ],
+        [
+          1793515305000,
+          4.9679500000000004e-06
+        ],
+        [
+          1793515307000,
+          4.9680000000000005e-06
+        ],
+        [
+          1793515308000,
+          4.9682999999999995e-06
+        ],
+        [
+          1793515309000,
+          4.96965e-06
+        ],
+        [
+          1793515310000,
+          4.9699e-06
+        ],
+        [
+          1793515311000,
+          4.9699e-06
+        ],
+        [
+          1793515312000,
+          4.9699e-06
+        ],
+        [
+          1793515315000,
+          4.96995e-06
+        ],
+        [
+          1793515316000,
+          4.97045e-06
+        ],
+        [
+          1793515317000,
+          4.97045e-06
+        ],
+        [
+          1793515319000,
+          4.97025e-06
+        ],
+        [
+          1793515320000,
+          4.97035e-06
+        ],
+        [
+          1793515321000,
+          4.970350000000001e-06
+        ],
+        [
+          1793515322000,
+          4.97045e-06
+        ],
+        [
+          1793515323000,
+          4.97065e-06
+        ],
+        [
+          1793515325000,
+          4.97065e-06
+        ],
+        [
+          1793515326000,
+          4.97065e-06
+        ],
+        [
+          1793515327000,
+          4.970549999999999e-06
+        ],
+        [
+          1793515328000,
+          4.970549999999999e-06
+        ],
+        [
+          1793515329000,
+          4.970549999999999e-06
+        ],
+        [
+          1793515330000,
+          4.9703e-06
+        ],
+        [
+          1793515331000,
+          4.96965e-06
+        ],
+        [
+          1793515332000,
+          4.97025e-06
+        ],
+        [
+          1793515333000,
+          4.9695500000000006e-06
+        ],
+        [
+          1793515334000,
+          4.96935e-06
+        ],
+        [
+          1793515335000,
+          4.96925e-06
+        ],
+        [
+          1793515336000,
+          4.970549999999999e-06
+        ],
+        [
+          1793515337000,
+          4.97075e-06
+        ],
+        [
+          1793515338000,
+          4.9718500000000005e-06
+        ],
+        [
+          1793515340000,
+          4.97155e-06
+        ],
+        [
+          1793515341000,
+          4.97145e-06
+        ],
+        [
+          1793515342000,
+          4.97145e-06
+        ],
+        [
+          1793515343000,
+          4.9718e-06
+        ],
+        [
+          1793515344000,
+          4.97175e-06
+        ],
+        [
+          1793515345000,
+          4.97145e-06
+        ],
+        [
+          1793515346000,
+          4.97115e-06
+        ],
+        [
+          1793515347000,
+          4.971349999999999e-06
+        ],
+        [
+          1793515348000,
+          4.97085e-06
+        ],
+        [
+          1793515349000,
+          4.971e-06
+        ],
+        [
+          1793515350000,
+          4.97085e-06
+        ],
+        [
+          1793515351000,
+          4.97085e-06
+        ],
+        [
+          1793515352000,
+          4.9711000000000006e-06
+        ],
+        [
+          1793515357000,
+          4.96965e-06
+        ],
+        [
+          1793515358000,
+          4.96915e-06
+        ],
+        [
+          1793515362000,
+          4.968999999999999e-06
+        ],
+        [
+          1793515363000,
+          4.96915e-06
+        ],
+        [
+          1793515366000,
+          4.97085e-06
+        ],
+        [
+          1793515367000,
+          4.97025e-06
+        ],
+        [
+          1793515368000,
+          4.970350000000001e-06
+        ],
+        [
+          1793515369000,
+          4.97025e-06
+        ],
+        [
+          1793515371000,
+          4.96935e-06
+        ],
+        [
+          1793515372000,
+          4.9690499999999995e-06
+        ],
+        [
+          1793515373000,
+          4.968e-06
+        ],
+        [
+          1793515374000,
+          4.9677e-06
+        ],
+        [
+          1793515376000,
+          4.9675499999999996e-06
+        ],
+        [
+          1793515377000,
+          4.9675499999999996e-06
+        ],
+        [
+          1793515378000,
+          4.968800000000001e-06
+        ],
+        [
+          1793515379000,
+          4.968800000000001e-06
+        ],
+        [
+          1793515380000,
+          4.968800000000001e-06
+        ],
+        [
+          1793515382000,
+          4.96865e-06
+        ],
+        [
+          1793515383000,
+          4.96865e-06
+        ],
+        [
+          1793515387000,
+          4.9687500000000005e-06
+        ],
+        [
+          1793515388000,
+          4.969600000000001e-06
+        ],
+        [
+          1793515389000,
+          4.96895e-06
+        ],
+        [
+          1793515390000,
+          4.9692e-06
+        ],
+        [
+          1793515391000,
+          4.9687500000000005e-06
+        ],
+        [
+          1793515392000,
+          4.96895e-06
+        ],
+        [
+          1793515393000,
+          4.96855e-06
+        ],
+        [
+          1793515395000,
+          4.96855e-06
+        ],
+        [
+          1793515396000,
+          4.9679e-06
+        ],
+        [
+          1793515397000,
+          4.96815e-06
+        ],
+        [
+          1793515398000,
+          4.9679e-06
+        ],
+        [
+          1793515399000,
+          4.9682e-06
+        ],
+        [
+          1793515400000,
+          4.96785e-06
+        ],
+        [
+          1793515401000,
+          4.96705e-06
+        ],
+        [
+          1793515402000,
+          4.9664500000000005e-06
+        ],
+        [
+          1793515403000,
+          4.96595e-06
+        ],
+        [
+          1793515407000,
+          4.96595e-06
+        ],
+        [
+          1793515408000,
+          4.96465e-06
+        ],
+        [
+          1793515409000,
+          4.96405e-06
+        ],
+        [
+          1793515410000,
+          4.96505e-06
+        ],
+        [
+          1793515411000,
+          4.96465e-06
+        ],
+        [
+          1793515412000,
+          4.9644499999999995e-06
+        ],
+        [
+          1793515413000,
+          4.9636499999999995e-06
+        ],
+        [
+          1793515414000,
+          4.96335e-06
+        ],
+        [
+          1793515417000,
+          4.96335e-06
+        ],
+        [
+          1793515423000,
+          4.96465e-06
+        ],
+        [
+          1793515425000,
+          4.96405e-06
+        ],
+        [
+          1793515426000,
+          4.9635e-06
+        ],
+        [
+          1793515427000,
+          4.96375e-06
+        ],
+        [
+          1793515428000,
+          4.9636499999999995e-06
+        ],
+        [
+          1793515429000,
+          4.96385e-06
+        ],
+        [
+          1793515430000,
+          4.96435e-06
+        ],
+        [
+          1793515431000,
+          4.96435e-06
+        ],
+        [
+          1793515432000,
+          4.96395e-06
+        ],
+        [
+          1793515434000,
+          4.96575e-06
+        ],
+        [
+          1793515435000,
+          4.96575e-06
+        ]
+      ],
+      "symbol_time_ms": 1793515435921,
+      "regime": "UNKNOWN",
+      "candidate": "UNKNOWN",
+      "candidate_since": 1793515435027,
+      "last_transition_ms": 1793515435027,
+      "momentum_bps": -0.4027426776354037,
+      "trend_bps": -5.534869678978094,
+      "trend_persistence": 0.23333333333333334,
+      "volatility_bps": 1.1220692958843204,
+      "volatility_regime": "LOW",
+      "cvd_notional": 1597.8455479999998,
+      "cvd_ratio": 0.9687005044255256,
+      "observed_print_count": 6,
+      "bbo_imbalance": 0.9865319865319865,
+      "l2_pressure": 0.9865319865319865,
+      "spread_bps": 0.20137944922764794,
+      "round_trip_cost_floor_bps": 16.201379449227645,
+      "range_amplitude_bps": 17.12553013589746,
+      "oscillations": 29,
+      "entry_bid_depth": 153400000.0,
+      "entry_ask_depth": 1040000.0,
+      "data_fresh": true,
+      "evidence_confidence": "OBSERVATIONAL_ONLY",
+      "expected_net_status": "UNSUPPORTED_UNTIL_HELD_OUT_VALIDATION",
+      "reason": "no_cost_adjusted_structure",
+      "prospective_move_minus_cost_bps": -7.638614381278915,
+      "horizons_ms": {
+        "micro": 30000,
+        "trend": 180000,
+        "volatility": 600000
+      },
+      "contract_spec": {
+        "captured_ms": 1793515420720,
+        "rules": {
+          "contract_size": "520000.0",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "PEPEUSDTM",
+          "tick_size": "1e-10"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "rules_hash": "3c2497b23e61385ffb9eea52c0e57dabeffa27aa198baf85bee6518679a91613",
+      "last_action": "NO_TRADE",
+      "last_decision_ms": 1793515435921,
+      "decision_reason": "no_cost_adjusted_observable_opportunity",
+      "hedge_evidence_supported": false
+    },
+    "TRXUSDTM": {
+      "history": [
+        [
+          1793515319000,
+          0.310635
+        ],
+        [
+          1793515331000,
+          0.310635
+        ],
+        [
+          1793515336000,
+          0.31065
+        ],
+        [
+          1793515337000,
+          0.31064
+        ],
+        [
+          1793515338000,
+          0.31064
+        ],
+        [
+          1793515339000,
+          0.310635
+        ],
+        [
+          1793515341000,
+          0.310635
+        ],
+        [
+          1793515348000,
+          0.310635
+        ],
+        [
+          1793515349000,
+          0.310635
+        ],
+        [
+          1793515350000,
+          0.31062
+        ],
+        [
+          1793515351000,
+          0.31062
+        ],
+        [
+          1793515357000,
+          0.31062
+        ],
+        [
+          1793515363000,
+          0.31062
+        ],
+        [
+          1793515366000,
+          0.31062
+        ],
+        [
+          1793515368000,
+          0.31062
+        ],
+        [
+          1793515372000,
+          0.31062
+        ],
+        [
+          1793515374000,
+          0.31062500000000004
+        ],
+        [
+          1793515378000,
+          0.31062500000000004
+        ],
+        [
+          1793515380000,
+          0.31062
+        ],
+        [
+          1793515386000,
+          0.31062
+        ],
+        [
+          1793515390000,
+          0.31062
+        ],
+        [
+          1793515391000,
+          0.31062
+        ],
+        [
+          1793515394000,
+          0.31062
+        ],
+        [
+          1793515398000,
+          0.310575
+        ],
+        [
+          1793515400000,
+          0.31057
+        ],
+        [
+          1793515401000,
+          0.31057
+        ],
+        [
+          1793515408000,
+          0.31057
+        ],
+        [
+          1793515413000,
+          0.310605
+        ],
+        [
+          1793515414000,
+          0.3106
+        ],
+        [
+          1793515425000,
+          0.310695
+        ],
+        [
+          1793515430000,
+          0.310685
+        ]
+      ],
+      "symbol_time_ms": 1793515430603,
+      "regime": "UNKNOWN",
+      "candidate": "UNKNOWN",
+      "candidate_since": 1793515425402,
+      "last_transition_ms": 1793515425402,
+      "momentum_bps": 3.702868918440405,
+      "trend_bps": 1.6096061293802144,
+      "trend_persistence": 0.13333333333333333,
+      "volatility_bps": 0.6693412976276876,
+      "volatility_regime": "LOW",
+      "cvd_notional": -31.069000000000003,
+      "cvd_ratio": -1.0,
+      "observed_print_count": 1,
+      "bbo_imbalance": 0.5,
+      "l2_pressure": 0.5,
+      "spread_bps": 0.32186941757761084,
+      "round_trip_cost_floor_bps": 16.32186941757761,
+      "range_amplitude_bps": 4.024857520044112,
+      "oscillations": 7,
+      "entry_bid_depth": 300.0,
+      "entry_ask_depth": 100.0,
+      "data_fresh": true,
+      "evidence_confidence": "OBSERVATIONAL_ONLY",
+      "expected_net_status": "UNSUPPORTED_UNTIL_HELD_OUT_VALIDATION",
+      "reason": "no_cost_adjusted_structure",
+      "prospective_move_minus_cost_bps": -12.619000499137204,
+      "horizons_ms": {
+        "micro": 30000,
+        "trend": 180000,
+        "volatility": 600000
+      },
+      "contract_spec": {
+        "captured_ms": 1793515420720,
+        "rules": {
+          "contract_size": "100.0",
+          "max_qty": "100000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "TRXUSDTM",
+          "tick_size": "1e-05"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "rules_hash": "2ded8e2173688c847de25c0cb630574786b816e19bbcec79fc3c0e3a39879cd2",
+      "last_action": "NO_TRADE",
+      "last_decision_ms": 1793515430603,
+      "decision_reason": "no_cost_adjusted_observable_opportunity",
+      "hedge_evidence_supported": false
+    },
+    "ETHUSDTM": {
+      "history": [
+        [
+          1793515421000,
+          2266.5150000000003
+        ],
+        [
+          1793515422000,
+          2266.5150000000003
+        ],
+        [
+          1793515423000,
+          2266.5950000000003
+        ],
+        [
+          1793515424000,
+          2266.5950000000003
+        ],
+        [
+          1793515425000,
+          2266.625
+        ],
+        [
+          1793515426000,
+          2266.625
+        ],
+        [
+          1793515427000,
+          2266.625
+        ],
+        [
+          1793515428000,
+          2266.625
+        ],
+        [
+          1793515429000,
+          2266.625
+        ],
+        [
+          1793515430000,
+          2266.625
+        ],
+        [
+          1793515431000,
+          2266.625
+        ],
+        [
+          1793515432000,
+          2266.615
+        ],
+        [
+          1793515433000,
+          2266.615
+        ],
+        [
+          1793515434000,
+          2266.615
+        ],
+        [
+          1793515435000,
+          2266.615
+        ],
+        [
+          1793515436000,
+          2266.615
+        ]
+      ],
+      "symbol_time_ms": 1793515436308,
+      "regime": "UNKNOWN",
+      "candidate": "UNKNOWN",
+      "candidate_since": 1793515432349,
+      "last_transition_ms": 1793515432349,
+      "momentum_bps": 0.4412059924563394,
+      "trend_bps": 0.4412059924563394,
+      "trend_persistence": 0.06666666666666667,
+      "volatility_bps": 0.09347784999851166,
+      "volatility_regime": "LOW",
+      "cvd_notional": 0,
+      "cvd_ratio": 0,
+      "observed_print_count": 0,
+      "bbo_imbalance": 0.3412322274881516,
+      "l2_pressure": 0.3412322274881516,
+      "spread_bps": 0.04411865270354044,
+      "round_trip_cost_floor_bps": 16.04411865270354,
+      "range_amplitude_bps": 0.4853265917037497,
+      "oscillations": 1,
+      "entry_bid_depth": 2.83,
+      "entry_ask_depth": 1.3900000000000001,
+      "data_fresh": true,
+      "evidence_confidence": "OBSERVATIONAL_ONLY",
+      "expected_net_status": "UNSUPPORTED_UNTIL_HELD_OUT_VALIDATION",
+      "reason": "no_cost_adjusted_structure",
+      "prospective_move_minus_cost_bps": -15.602912660247199,
+      "horizons_ms": {
+        "micro": 30000,
+        "trend": 180000,
+        "volatility": 600000
+      },
+      "contract_spec": {
+        "captured_ms": 1793515420720,
+        "rules": {
+          "contract_size": "0.01",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "ETHUSDTM",
+          "tick_size": "0.01"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "rules_hash": "3a2b30a0889ccdd8fe6c8f7efc7743e4188c47b257f61b965e0697f8e3ef4f64",
+      "last_action": "NO_TRADE",
+      "last_decision_ms": 1793515436308,
+      "decision_reason": "no_cost_adjusted_observable_opportunity",
+      "hedge_evidence_supported": false
+    }
+  },
+  "closed_summary": {
+    "count": 0,
+    "wins": 0,
+    "losses": 0,
+    "profit": "0",
+    "loss": "0"
+  },
+  "pins": [],
+  "counts": {
+    "INITIAL_FUNDING": 1,
+    "SCAN": 5,
+    "HEALTH": 8,
+    "DECISION": 1731,
+    "BOOK_SNAPSHOT": 20,
+    "VERIFIED_BOOK": 10,
+    "REJECTED_EVENT": 253
+  },
+  "reason_counts": {
+    "REJECTED_EVENT:rule_version_mismatch": 253
+  },
+  "recent_closed_positions": [],
+  "source_cursor": 33105,
+  "input_digest": "78aab9388216fb90733758d8a90bd04f8b35477033ec6e7aef9b367bab46ed01",
+  "checkpoint_available_ms": 1793515436622,
+  "scan": {
+    "available_ms": 1793515420789,
+    "report_time_ms": 1793515420720,
+    "watch": {
+      "blocked_new_entries": [],
+      "capacity_exhausted": false,
+      "deep_symbols": [
+        "ETHUSDTM",
+        "PEPEUSDTM",
+        "TRXUSDTM"
+      ],
+      "entered_at": {
+        "ETHUSDTM": 1793515420720,
+        "PEPEUSDTM": 1793515286908,
+        "TRXUSDTM": 1793515286908
+      },
+      "no_trade": true,
+      "pinned": [],
+      "reason": "Snapshot-based candidate rotation only; no strategy edge validated",
+      "time_ms": 1793515420720,
+      "watch_pool": [
+        "ETHUSDTM",
+        "PEPEUSDTM",
+        "TRXUSDTM",
+        "SOLUSDTM",
+        "XRPUSDTM",
+        "BNBUSDTM",
+        "ZECUSDTM",
+        "HYPEUSDTM",
+        "PAXGUSDTM",
+        "AAVEUSDTM",
+        "BCHUSDTM",
+        "TAOUSDTM",
+        "PENGUUSDTM",
+        "ADAUSDTM",
+        "ENAUSDTM",
+        "SUIUSDTM",
+        "FILUSDTM",
+        "NEARUSDTM",
+        "KASUSDTM",
+        "LINKUSDTM"
+      ]
+    },
+    "specs": {
+      "ETHUSDTM": {
+        "captured_ms": 1793515420720,
+        "rules": {
+          "contract_size": "0.01",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "ETHUSDTM",
+          "tick_size": "0.01"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "PEPEUSDTM": {
+        "captured_ms": 1793515420720,
+        "rules": {
+          "contract_size": "520000.0",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "PEPEUSDTM",
+          "tick_size": "1e-10"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "TRXUSDTM": {
+        "captured_ms": 1793515420720,
+        "rules": {
+          "contract_size": "100.0",
+          "max_qty": "100000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "TRXUSDTM",
+          "tick_size": "1e-05"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      }
+    },
+    "unavailable": []
+  },
+  "service": {
+    "active": [
+      "ETHUSDTM",
+      "PEPEUSDTM",
+      "TRXUSDTM"
+    ],
+    "boot_id": "c10f7bae3e9b4452aedb053a66eda17d",
+    "connected": true,
+    "disk_free_bytes": 93566083072,
+    "elapsed_seconds": 149.12739541300004,
+    "feed_age_ms": {
+      "ETHUSDTM": {
+        "execution": 1793515435748,
+        "level2": 23,
+        "tickerV2": 25
+      },
+      "PEPEUSDTM": {
+        "execution": 790,
+        "level2": 2,
+        "tickerV2": 524
+      },
+      "TRXUSDTM": {
+        "execution": 10346,
+        "level2": 50,
+        "tickerV2": 5147
+      }
+    },
+    "host_id": null,
+    "paper_bytes": 7130904,
+    "quarantined_books": {},
+    "session_id": "19f7b56f34834fb08218ba4a59b9d260",
+    "source_bytes": 56406800,
+    "stream_counts": {
+      "book_resyncs": 10,
+      "connections": 3,
+      "market_scans": 5,
+      "pongs": 9,
+      "reconciliations": 5,
+      "reconnects": 2,
+      "retired_markets": 1,
+      "snapshot_bridge_retries": 10,
+      "snapshots": 20,
+      "subscribe_acks": 30,
+      "unsubscribe_acks": 3
+    },
+    "unavailable": [],
+    "verified_books": [
+      "ETHUSDTM",
+      "PEPEUSDTM",
+      "TRXUSDTM"
+    ]
+  },
+  "unsettled_campaign_pnl": "0",
+  "stream": {
+    "connected": false,
+    "session_id": "19f7b56f34834fb08218ba4a59b9d260",
+    "active": [
+      "ETHUSDTM",
+      "PEPEUSDTM",
+      "TRXUSDTM"
+    ],
+    "verified_books": [],
+    "quarantined_books": {},
+    "feed_age_ms": {
+      "ETHUSDTM": {
+        "execution": 1793515436752,
+        "tickerV2": 444,
+        "level2": 131
+      },
+      "PEPEUSDTM": {
+        "execution": 1794,
+        "tickerV2": 833,
+        "level2": 315
+      },
+      "TRXUSDTM": {
+        "execution": 11350,
+        "tickerV2": 6151,
+        "level2": 184
+      }
+    },
+    "stream_counts": {
+      "market_scans": 5,
+      "connections": 3,
+      "subscribe_acks": 30,
+      "snapshots": 20,
+      "snapshot_bridge_retries": 10,
+      "book_resyncs": 10,
+      "reconciliations": 5,
+      "pongs": 9,
+      "unsubscribe_acks": 3,
+      "retired_markets": 1,
+      "reconnects": 2
+    },
+    "unavailable": []
+  },
+  "errors": [
+    "ConnectionError: Scheduled public token renewal",
+    "ConnectionError: Scheduled public token renewal"
+  ],
+  "fatal_error": null,
+  "elapsed_seconds": 150.13124131700005,
+  "boot_id": "c10f7bae3e9b4452aedb053a66eda17d",
+  "source_path": "state/v4-source.sqlite3",
+  "paper_path": "state/v4-paper.sqlite3",
+  "observed_contracts": 717,
+  "normalized_event_counts": {
+    "tickerV2": 1758,
+    "level2": 31045,
+    "execution": 122
+  },
+  "source_code_sha256": {
+    "continuous.py": "9a6f7596d5905f069be234af66b86ac809081fa6cdb9cb3e9cbb60ab5d6bde3e",
+    "continuous_paper.py": "e59e315bb98b534137ca2320436f4840fe2ae0a0413af1689e11f251d6dc44e8",
+    "continuous_stream.py": "826b7973c50e014f3c903a22fb1b9ec4573e958317fdb3a590a8815e0753155e",
+    "continuous_store.py": "b1fd3315da192b857af9333a830a5ad722dfac2f34b4acffc427b736e8d9b096",
+    "capital_ladder.py": "8fa1a07bac9b4675fa56e13428663ab7cec5de1eb847a722d75b804cf846f58f",
+    "portfolio_paper.py": "a91684ec3b717b573663a869600fe5885bb2822b764a2d114f7aaebb682d111f",
+    "market_intelligence.py": "5814c8d49cb13f9798529da005fde45214defdf86d9f8aae26baee6a7abe16ec",
+    "hedge_research.py": "610a0e299c2b3f9b9ad2532757279244b2f3efbec60eff1ea7cbace2c9ad2f88",
+    "funding.py": "f66c71669dbaa0d8196ae2bf39076863e833fd7150d6d50da51c2b9dd26ea4dc",
+    "account_capital.py": "0cb623f8ab65f41ce4de4e1611a74b7333f1c3405d73cb57b6987e306c5ebf3a",
+    "adaptive_execution.py": "787d0892e155797afc1c0d3400cadd29efecbb4efce2dfb0c27f598c9a5f4e08",
+    "position_conveyor.py": "841d3f955bf16b253f1bf2237c7b227d49a99647f359ac4af05fa5b7f1b93017",
+    "market_pulse.py": "598ba7f4f99c6f9d45481cb931bf776882d17adfc4b066cf8936e65bc3326857",
+    "paper_session.py": "fdc62137d808cd3fe9e4c12ca057ec599b9508cfae4aaab3d903734f6e4b1340",
+    "execution_boundary.py": "322d2b1d9fb4fcb075e740e8962f14b9f6ce5b682b40fe98fd053ae60ce44377",
+    "candle_context.py": "d1f6c600ac2da995355d15cb44eddc2385176cfb064e311e539abf8b880cbd39"
+  },
+  "24h_host_gate": "BLOCKED \u2014 HOST NOT PROVISIONED",
+  "smoke_status": "passed",
+  "tested_commit": "0bc3bafdb5816967383a84c0e265b51baab7db27",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41281466283"
+}
