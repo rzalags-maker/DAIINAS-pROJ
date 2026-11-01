@@ -107,7 +107,8 @@ class BitsgapFuturesStream:
             _fail("WS_UNVERIFIED_TOPIC_FRAME")
         if set(message) - {"ok", "topic", "params", "value", "mes"}:
             _fail("WS_UNVERIFIED_TOPIC_FRAME")
-        if "mes" in message and not isinstance(message["mes"], str):
+        if ("mes" in message and message["mes"] is not None
+                and not isinstance(message["mes"], str)):
             _fail("WS_UNVERIFIED_TOPIC_FRAME")
         value = message["value"]
         if topic == "balance":
