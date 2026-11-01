@@ -44,7 +44,7 @@ def status(source_path,paper_path):
     now=time.time_ns()//1_000_000;service=state.get('service',{})
     age=now-state['now_ms'];pos=state['position']
     portfolio_positions=list(state.get('positions',{}).values())
-    unresolved=any(p.get('unresolved') for p in portfolio_positions)
+    unresolved=any(p.get('unresolved') or p.get('protection',{}).get('state','MODELED_ACKED')!='MODELED_ACKED' for p in portfolio_positions)
     active=service.get('active',[]);verified=service.get('verified_books',[])
     feed_ages=service.get('feed_age_ms',{})
     fresh_feeds=bool(active) and all(0<=feed_ages.get(sym,{}).get(k,10**12)+max(age,0)<=2000
@@ -54,9 +54,14 @@ def status(source_path,paper_path):
     account_status=None
     if 'account_capital' in state:
         from .account_capital import capital_status
-        account_status=capital_status({**state['account_capital'],'ladder':state['ladder']},now_ms=now,local_count=len(portfolio_positions)+len(state.get('pending_entries',{})),
+        fees=sum((Decimal(p['entry_fee_usdt']) for p in state.get('pending_entries',{}).values()),Decimal(0))
+        if state.get('paper_cash_model'):
+            fees+=max(Decimal(0),Decimal(state['account_capital']['cash'])-Decimal(state['account_capital']['unallocated'])-Decimal(state['cash']))
+        else:fees+=sum((Decimal(p['entry_fee_usdt']) for p in portfolio_positions if 'protection' in p),Decimal(0))
+        account_status=capital_status({**state['account_capital'],'ladder':state['ladder']},now_ms=now,local_count=len(portfolio_positions)+len(state.get('pending_entries',{})),local_fees=fees,
             local_margin=sum((Decimal(p['margin_reserved_usdt']) for p in portfolio_positions+list(state.get('pending_entries',{}).values())),Decimal(0)),
             local_risk=sum((Decimal(p.get('current_planned_loss_usdt',p['planned_loss_usdt'])) for p in portfolio_positions+list(state.get('pending_entries',{}).values())),Decimal(0)))
+        if state.get('paper_cash_model'):account_status.update(effective_active_after_paper_marks=state['active_equity'],paper_equity_with_exit_costs=state['last_equity'],position_scope='Local virtual positions; MOCK cash snapshot, not real KuCoin positions')
         healthy=healthy and account_status['ready_for_paper']
     return {'account_status':account_status,'healthy':healthy,'live_orders_enabled':False,'checkpoint_age_ms':age,
             'market_feeds_fresh':fresh_feeds,'unprocessed_records':seq-state['cursor'],'paused_new_entries':state['paused'],

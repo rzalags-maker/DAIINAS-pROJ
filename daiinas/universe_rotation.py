@@ -43,7 +43,7 @@ def select(report, *, now_ms, previous=(), entered_at=None, pinned=(),
             raise ValueError('Duplicate universe candidate')
         if not item.get('eligible') or item.get('liquidity_score_not_alpha') is None:
             raise ValueError('Invalid shortlisted candidate')
-        ranked[sym] = float(item['liquidity_score_not_alpha'])
+        ranked[sym] = float(item.get('selection_score',item['liquidity_score_not_alpha']))
     pinned = sorted(set(pinned))
     if len(pinned) > policy.deep_slots:
         raise CapacityError('Open-position pins exceed depth subscription capacity')

@@ -109,7 +109,14 @@ class ContinuousObserver(Observer):
             removals=self.active-desired
             # Add first whenever possible; unprotected removals never remove pins.
             if len(self.active|additions)>20:
-                raise DataGap('Temporary subscription capacity exhausted; new entries blocked')
+                # Release only obsolete, unpinned observation streams. Recheck
+                # durable pins after each awaited ACK before releasing another.
+                for sym in sorted(removals):
+                    if len(self.active|additions)<=20:break
+                    if sym in (await self.pipeline.report())['pins']:continue
+                    await self.retire_stream(ws,sym)
+                removals-=self.retired
+                if len(self.active|additions)>20:raise DataGap('Provider capacity exhausted by pinned risks')
             changed=[s for s in self.active&desired if s in self.books and self.books[s].rule!=self.contracts[s]]
             for sym in changed:
                 self.snapshotting.add(sym);self.snapshot_buffers[sym]=[]
@@ -127,14 +134,16 @@ class ContinuousObserver(Observer):
                 # A ledger transition could have pinned this symbol while ACKs
                 # were pending. Recheck before ANY unsubscribe.
                 if sym in (await self.pipeline.report())['pins']:continue
-                await self.command(ws,sym,'unsubscribe')
-                self.active.discard(sym);self.retired.add(sym)
-                self.books.pop(sym,None);self.snapshot_buffers.pop(sym,None)
-                self.snapshotting.discard(sym)
-                for key in list(self.sequences):
-                    if key[0]==sym:self.sequences.pop(key,None);self.last_event_times.pop(key,None)
-                self.stream_stats['retired_markets']+=1
+                await self.retire_stream(ws,sym)
             self.stream_stats['reconciliations']+=1
+
+    async def retire_stream(self,ws,sym):
+        await self.command(ws,sym,'unsubscribe')
+        self.active.discard(sym);self.retired.add(sym)
+        self.books.pop(sym,None);self.snapshot_buffers.pop(sym,None);self.snapshotting.discard(sym)
+        for key in list(self.sequences):
+            if key[0]==sym:self.sequences.pop(key,None);self.last_event_times.pop(key,None)
+        self.stream_stats['retired_markets']+=1
 
     async def restore_book(self,symbol):
         self.snapshotting.add(symbol)

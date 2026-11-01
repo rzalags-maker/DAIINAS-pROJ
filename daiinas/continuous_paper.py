@@ -479,14 +479,22 @@ class Pipeline:
         if len({r['symbol'] for r in rows})!=len(rows):raise ValueError('Duplicate public contract identity')
         equity=self.ledger.observation_equity()
         if equity>0:
-            report=scan(rows,ticks,now_ms=captured,equity=equity,policy=universe_policy)
+            report=scan(rows,ticks,now_ms=captured,equity=equity,policy=replace(universe_policy,leverage=1,assumed_stop_bps=50) if getattr(self.ledger,'v47',lambda:False)() else universe_policy)
         else:
             report={'time_ms':captured,'capital_usdt':equity,'contracts_observed':len(rows),
                     'preflight_eligible':0,'selected_for_deeper_observation':[],
                     'audit':[],'status':'HALTED_NONPOSITIVE_EQUITY'}
+        v47=getattr(self.ledger,'v47',lambda:False)()
+        if v47 and equity>0:
+            from .market_pulse import rank_pulse
+            last_scan=self.source.db.execute("SELECT payload FROM journal WHERE kind='SCAN' ORDER BY seq DESC LIMIT 1").fetchone()
+            previous_pulse=json.loads(last_scan[0])['report'].get('whole_market_pulse',{}).get('markets',{}) if last_scan else {}
+            report=rank_pulse(report,rows,ticks,now=captured,previous=previous_pulse)
         prior=self.ledger.state['scan'] or {}
         previous=prior.get('watch',{})
-        watch=pinned_selection(report,previous,self.ledger.pins(),rotation)
+        pins_now=self.ledger.pins()
+        observation_rotation=replace(rotation,deep_slots=min(20,len(pins_now)+rotation.deep_slots)) if v47 else rotation
+        watch=pinned_selection(report,previous,pins_now,observation_rotation)
         raw={r['symbol']:r for r in rows};specs={};unavailable=[]
         for sym in watch['deep_symbols']:
             row=raw.get(sym)
@@ -500,12 +508,14 @@ class Pipeline:
                     if not math.isfinite(floor) or floor<0:raise ValueError('Invalid additional notional floor')
                     rule=replace(rule,min_notional=str(row['minNotional']))
                 fee=float(row['takerFeeRate'])
+                if v47 and (not math.isfinite(float(row['maxLeverage'])) or float(row['maxLeverage'])<1 or not math.isfinite(float(row['initialMargin'])) or not 0<float(row['initialMargin'])<=1):raise ValueError('Unverified per-contract leverage/margin bounds')
                 if (not math.isfinite(fee) or not 0<=fee<.1 or
-                    self.ledger.policy.leverage>float(row['maxLeverage']) or
-                    self.ledger.policy.leverage*float(row['initialMargin'])>1.000001):
+                    (1 if v47 else self.ledger.policy.leverage)>float(row['maxLeverage']) or
+                    (1 if v47 else self.ledger.policy.leverage)*float(row['initialMargin'])>1.000001):
                     raise ValueError('Invalid public leverage/fee limits')
                 specs[sym]={'rules':asdict(rule),'taker_fee_rate':fee,'captured_ms':captured,
                             'source':'KuCoin public contracts/active'}
+                if v47:specs[sym].update(max_leverage=str(min(float(row['maxLeverage']),1/float(row['initialMargin']),5)),margin_mode='ISOLATED',capability_source='MOCK_ISOLATED_PAPER_PUBLIC_CONTRACT_LIMITS')
             except (ValueError,KeyError,TypeError):
                 unavailable.append(sym)
                 if sym in prior.get('specs',{}):specs[sym]=prior['specs'][sym]
@@ -531,6 +541,9 @@ class Pipeline:
         """
         from .account_capital import NotConnectedAdapter
         from uuid import uuid4
+        if adapter is None and getattr(self.ledger,'v47',lambda:False)() and self.ledger.portfolio.paper_settlement:
+            await self.append([('CONTROL','paper-heartbeat:'+uuid4().hex,{'action':'paper-account-heartbeat'})])
+            return
         try:
             snapshot=await asyncio.wait_for(asyncio.to_thread((adapter or NotConnectedAdapter()).snapshot),timeout=5)
             packet={'action':'account-disconnected'} if snapshot is None else {'action':'account-snapshot','snapshot':snapshot.payload()}

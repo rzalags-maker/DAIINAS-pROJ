@@ -201,3 +201,18 @@ python scripts/verify_v46_account.py --output-dir /tmp/daiinas-v46-proof
 ```
 
 This command is synthetic account validation, not a real-account or market-return test.
+
+## v4.7 adaptive PAPER conveyor
+
+The opt-in v4.7 profile evaluates x1–x5 per position, ranks the full public Futures
+universe, manages modeled protection/partial fills/net targets, and reconciles
+paid costs and completed campaigns in the same v4.6 capital ledger.
+
+```sh
+python -m daiinas.v47 --capital 200 --account-id paper-v47-200 --output /tmp/v47-paper.json
+python -m daiinas.continuous run --config /tmp/v47-paper.json --source-db state/v47-source.sqlite3 --paper-db state/v47-paper.sqlite3
+python scripts/verify_v47.py --output-dir /tmp/v47-proof
+```
+
+Capital is an **explicit MOCK scenario**. Actual account remains NOT_CONNECTED;
+live orders remain disabled. [Execution, assumptions and deployment dependencies](docs/V47_IMPLEMENTATION.md).

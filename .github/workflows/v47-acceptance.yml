@@ -1,0 +1,71 @@
+name: v4.7 public market and modeled account conveyor
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/v4-ladder-integration]
+    paths:
+      - 'daiinas/*.py'
+      - 'tests/test_v47_conveyor.py'
+      - 'scripts/verify_v47*.py'
+      - '.github/workflows/v47-acceptance.yml'
+permissions:
+  contents: write
+concurrency:
+  group: v47-paper-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  public-paper:
+    if: github.ref == 'refs/heads/feature/v4-ladder-integration'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install '.[live]'
+      - name: Explicit synthetic account and lifecycle proof
+        run: python scripts/verify_v47.py --output-dir state/v47-synthetic
+      - name: Fresh named MOCK account configuration; no private credentials
+        run: |
+          mkdir -p state/v47-public
+          python -m daiinas.v47 --capital 200 --account-id "CI-v47-${GITHUB_RUN_ID}" --output state/v47-public/config.json
+      - name: Real public market, full catalog, bounded streams and renewal
+        run: python -m daiinas.continuous run --config state/v47-public/config.json --seconds 80 --renew-seconds 35 --source-db state/v47-public/source.sqlite3 --paper-db state/v47-public/paper.sqlite3 --report state/v47-public/first.json > state/v47-public/first.log
+      - name: Restart the exact same paper account and source
+        run: python -m daiinas.continuous run --config state/v47-public/config.json --seconds 50 --renew-seconds 20 --source-db state/v47-public/source.sqlite3 --paper-db state/v47-public/paper.sqlite3 --report state/v47-public/restart.json > state/v47-public/restart.log
+      - name: Replay all same-source public and modeled-account events
+        run: python -m daiinas.continuous replay --config state/v47-public/config.json --source-db state/v47-public/source.sqlite3 --paper-db state/v47-public/replay.sqlite3 --report state/v47-public/replay.json > state/v47-public/replay.log
+      - name: Independent cash, fees, source, capacity and replay verification
+        run: python scripts/verify_v47_public.py --root state/v47-public
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v47-public-and-synthetic-paper-evidence
+          path: |
+            state/v47-public/
+            state/v47-synthetic/
+          retention-days: 14
+      - name: Preserve successful evidence on the latest branch without changing source
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          export GIT_INDEX_FILE="$RUNNER_TEMP/v47-evidence-index"
+          for attempt in 1 2 3; do
+            git fetch origin "$BRANCH"
+            latest="$(git rev-parse FETCH_HEAD)"
+            git read-tree "$latest"
+            for name in first restart replay validation; do
+              path="state/v47-public/$name.json"
+              blob="$(git hash-object -w "$path")"
+              git update-index --add --cacheinfo "100644,$blob,reports/v47-runs/$GITHUB_RUN_ID/$name.json"
+            done
+            blob="$(git hash-object -w state/v47-synthetic/status.json)"
+            git update-index --add --cacheinfo "100644,$blob,reports/v47-runs/$GITHUB_RUN_ID/synthetic.json"
+            tree="$(git write-tree)"
+            commit="$(git commit-tree "$tree" -p "$latest" -m 'Record verified v4.7 public and modeled-account conveyor evidence')"
+            if git push origin "$commit:refs/heads/$BRANCH"; then exit 0; fi
+          done
+          exit 1

@@ -15,6 +15,7 @@ from .shadow_flow import observe,ShadowPolicy
 from .paper_audit import position_costs
 from .funding import validate_funding,snapshot_funding
 from .account_capital import FuturesAccountSnapshot,initial_account_state,reconcile,capital_status,VERSION as ACCOUNT_VERSION
+from .position_conveyor import ConveyorMixin
 from .market_intelligence import update as update_market,correlation,supported_hedge
 
 D=lambda v:dec(str(v))
@@ -41,10 +42,19 @@ class PortfolioPolicy:
     cooldown_ms: int=30000
     allow_research_expansion: bool=False
     account_driven: bool=False
+    strategy_version: str='v46'
+    paper_settlement: bool=False
+    stop_gap_bps: str='5'
 
     def __post_init__(self):
         if not isinstance(self.initial_capital,str):raise ValueError('Opening capital must be an exact decimal string')
         validate_funding(self.funding,self.initial_capital)
+        if self.strategy_version not in ('v46','v47') or type(self.paper_settlement) is not bool:raise ValueError('Invalid strategy version')
+        if self.strategy_version=='v47' and (self.mode not in ('M0','M1','M3') or self.decision_model!='adaptive'):raise ValueError('v4.7 supports directional/adaptive PAPER; legacy hedge/pressure controls remain v4.6')
+        if self.strategy_version=='v47' and (not self.account_driven or self.funding.get('kind')!='mock_futures_snapshot'):
+            raise ValueError('v4.7 requires an explicit reconciled MOCK Futures scope; private connector remains disabled')
+        if self.paper_settlement and self.strategy_version!='v47':raise ValueError('Modeled settlement requires explicit v4.7')
+        if not 0<=D(self.stop_gap_bps)<=50:raise ValueError('Invalid gap allowance')
         if type(self.account_driven) is not bool:raise ValueError('Explicit account-driven mode required')
         if self.funding.get('kind')=='mock_futures_snapshot' and not self.account_driven:raise ValueError('Account snapshots require account-driven sizing')
         if self.decision_model not in ('adaptive','pressure') or D(self.initial_capital)<=0 or self.mode not in ('M0','M1','M2','M3'):raise ValueError('Invalid portfolio scenario')
@@ -52,10 +62,11 @@ class PortfolioPolicy:
                 or isinstance(self.cooldown_ms,bool) or not isinstance(self.correlation_min_samples,int)
                 or not 0<self.correlation_limit<1 or self.correlation_min_samples<4 or self.cooldown_ms<100):raise ValueError('Invalid evidence guards')
         if not 0<D(self.correlated_risk_fraction)<=D('.01'):raise ValueError('Concentration risk too large')
+        if self.strategy_version=='v47' and (D(self.campaign_loss_fraction)>D('.005') or D(self.campaign_target_fraction)!=D('.02') or D(self.correlated_risk_fraction)>D('.005')):raise ValueError('v4.7 cannot loosen financial caps or change the 2% net target')
         if not 0<D(self.campaign_loss_fraction)<=D('.01') or not 0<D(self.campaign_target_fraction)<=D('.1'):raise ValueError('Invalid campaign assumptions')
 
 
-class PortfolioLedger(PaperLedger):
+class PortfolioLedger(ConveyorMixin,PaperLedger):
     def __init__(self,path,source_id,policy=None,shadow=ShadowPolicy(),*,portfolio=None):
         if not isinstance(portfolio,PortfolioPolicy) and (not isinstance(portfolio,dict) or 'initial_capital' not in portfolio or 'funding' not in portfolio):
             raise ValueError('Explicit user-selected PAPER capital and typed funding source required; no v4 default')
@@ -110,6 +121,7 @@ class PortfolioLedger(PaperLedger):
             account=initial_account_state(self.portfolio.initial_capital,self.portfolio.funding['account_id'])
             account.pop('ladder')
             self.state['account_capital']=account
+        if self.v47() and self.portfolio.paper_settlement:self.state['paper_cash_model']=True
         try:self.invariant()
         except (AssertionError,ValueError) as exc:
             self.close();raise ValueError('Initial funding/checkpoint conflict; startup halted without re-seeding') from exc
@@ -126,19 +138,36 @@ class PortfolioLedger(PaperLedger):
         policy=PaperPolicy(initial_capital_usdt=float(snapshot.settled_cash),leverage=float(snapshot.leverage),stop_bps=50)
         return cls(path,source_id,policy,portfolio=portfolio)
 
+    def v47(self):return self.portfolio.strategy_version=='v47'
+
     def account_context(self):
         return {**self.state['account_capital'],'ladder':self.state['ladder']}
 
     def account_limits(self):
         if not self.portfolio.account_driven:return None
-        return capital_status(self.account_context(),now_ms=self.state['now_ms'],
-                              local_margin=self.reserved(),local_risk=self.planned(),local_count=len(self.state['positions'])+len(self.state['pending_entries']),
-                              local_fees=sum((D(p['entry_fee_usdt']) for p in self.state['pending_entries'].values()),ZERO))
+        s=self.state
+        fees=sum((D(p['entry_fee_usdt']) for p in s['pending_entries'].values()),ZERO)
+        if self.v47():
+            if self.portfolio.paper_settlement:
+                fees+=max(ZERO,D(s['account_capital']['cash'])-D(s['account_capital']['unallocated'])-D(s['cash']))
+            else:fees+=sum((D(p['entry_fee_usdt']) for p in s['positions'].values()),ZERO)
+        limits=capital_status(self.account_context(),now_ms=s['now_ms'],local_margin=self.reserved(),
+                              local_risk=self.planned(),local_count=len(s['positions'])+len(s['pending_entries']),local_fees=fees)
+        if self.v47():
+            limits.update(effective_active_after_paper_marks=str(max(ZERO,D(limits['active_budget'])+self.paper_overlay_loss())),
+                paper_equity_with_exit_costs=s['last_equity'],paper_margin_reserved=str(self.reserved()),
+                position_scope='Local virtual positions; snapshot is MOCK cash/external scope, not real KuCoin positions')
+        return limits
 
     def profile_payload(self):
         result=asdict(self.portfolio)
+        if result['strategy_version']=='v46':
+            for key in ('strategy_version','paper_settlement','stop_gap_bps'):result.pop(key)
         if not result['account_driven']:result.pop('account_driven')
         else:result['account_policy_version']=ACCOUNT_VERSION
+        if self.v47():
+            from .adaptive_execution import VERSION
+            result['strategy_execution_version']=VERSION
         return result
 
     def evidence_policy_hash(self):
@@ -170,7 +199,7 @@ class PortfolioLedger(PaperLedger):
     def request(self,key,reason):
         p=self.state['positions'].get(key)
         if not p:return
-        priority={'STOP':0,'ACCOUNT_HALT':1,'PORTFOLIO_RISK_CAP':1,'CAMPAIGN_STOP':1,'UNMATCHED_HEDGE':1,'CONTRACT_CHANGED':1,'CAPITAL_REDUCTION':2,
+        priority={'STOP':0,'ACCOUNT_HALT':1,'PORTFOLIO_RISK_CAP':1,'CAMPAIGN_STOP':1,'UNMATCHED_HEDGE':1,'CONTRACT_CHANGED':1,'PROTECTION_FAILURE':0,'CAPITAL_REDUCTION':2,
                   'TARGET':3,'CAMPAIGN_TARGET':3,'REGIME_EXIT':4,'TIME':5,'DATA_HEALTH':6}
         old=self.state['exit_requests'].get(key)
         if old and priority.get(old['reason'],7)<=priority.get(reason,7):return
@@ -198,6 +227,7 @@ class PortfolioLedger(PaperLedger):
                         reserved_margin='0',open_planned_risk='0',unresolved_legs=[])
         self.db.execute('INSERT INTO campaign_records VALUES (?,?)',(campaign['id'],canonical(campaign)))
         self.state['campaigns'].pop(campaign['id'],None)
+        if self.v47() and self.portfolio.paper_settlement:self.queue_paper_settlement(campaign)
         self.audit('CAMPAIGN_SETTLED',campaign_id=campaign['id'],net_pnl=str(net),ladder=ladder.snapshot())
 
     def invariant(self):
@@ -226,10 +256,11 @@ class PortfolioLedger(PaperLedger):
         for key,p in sorted(s['positions'].items()):
             sym=p['symbol'];q=s['quotes'].get(sym);spec=self.spec(sym)
             data=self.executable_quote(sym,q) if q and self.valid_quote(q,now) else None
-            valid=bool(spec and digest(spec['rules'])==p['rules_hash'] and data and
+            rules_valid=bool(spec and digest(spec['rules'])==p['rules_hash'] and (not self.v47() or D(p['leverage'])<=D(spec.get('max_leverage','0')) and spec.get('margin_mode')=='ISOLATED'))
+            valid=bool(rules_valid and data and
                 D(data['bid_base_size' if p['direction']=='LONG' else 'ask_base_size'])>=D(p['quantity_contracts'])*D(p['contract_multiplier']))
             if not valid:
-                all_valid=False;reason='missing_or_changed_rules' if not spec or digest(spec['rules'])!=p['rules_hash'] else 'unverified_stale_or_insufficient_depth'
+                all_valid=False;reason='missing_or_changed_rules' if not rules_valid else 'unverified_stale_or_insufficient_depth'
                 self.unresolved_leg(key,reason)
                 if reason=='missing_or_changed_rules':self.request(key,'CONTRACT_CHANGED')
                 elif now-p.get('last_good_mark_ms',p['entry_received_ms'])>self.policy.max_quote_age_ms:self.request(key,'DATA_HEALTH')
@@ -247,14 +278,19 @@ class PortfolioLedger(PaperLedger):
                 half=(D(q['ask'])-D(q['bid']))/2
                 stop=D(p['planned_stop_mid'])+(-half if p['direction']=='LONG' else half)
                 if stop>0:
+                    if self.v47():stop*=1+(-1 if p['direction']=='LONG' else 1)*D(self.portfolio.stop_gap_bps)/10000
                     horizon=max(now,p['entry_received_ms']+self.policy.maximum_holding_ms)
                     stop_money=self.close_math(p,{'bid':str(stop),'ask':str(stop)},horizon,spec)
                     p['current_planned_loss_usdt']=str(max(ZERO,-stop_money['net']))
             if now-p['entry_received_ms']>=self.policy.maximum_holding_ms:self.request(key,'TIME')
         entryfees=sum((D(p['entry_fee_usdt']) for p in s['positions'].values()),ZERO)
         # Closed winner proceeds remain unallocated until the WHOLE campaign settles.
-        active_equity=ladder.active+(min(ZERO,D(s['realized'])-entryfees+marks) if self.portfolio.account_driven else self.unsettled()-entryfees+marks)
-        s['active_equity']=str(active_equity);s['marked_unrealized']=str(marks)
+        s['marked_unrealized']=str(marks)
+        if self.v47() and self.portfolio.paper_settlement:
+            active_equity=D(self.account_limits()['active_budget'])+self.paper_overlay_loss()
+        elif self.portfolio.account_driven:active_equity=ladder.active+min(ZERO,D(s['realized'])-entryfees+marks)
+        else:active_equity=ladder.active+self.unsettled()-entryfees+marks
+        s['active_equity']=str(active_equity)
         s['last_equity']=str(D(s['cash'])+marks);s['equity_verified']=all_valid
         account_peak=max(D('.000000001'),D(s.get('account_peak',self.portfolio.initial_capital))+D(s.get('account_flow_adjustment','0')),D(s['last_equity']))
         s['account_peak']=str(account_peak);s['account_flow_adjustment']='0'
@@ -269,7 +305,7 @@ class PortfolioLedger(PaperLedger):
         limits=self.account_limits()
         if limits:
             actual=self.ladder()
-            paper_loss=min(ZERO,D(s['last_equity'])-D(self.portfolio.initial_capital)-D(s['quarantined_flows']))
+            paper_loss=self.paper_overlay_loss()
             account_loss=min(ZERO,D(limits['active_budget'])-actual.active)
             actual.mark_to_market(str(account_loss),len(s['positions'])+len(s['pending_entries']))
             self.save_ladder(actual)
@@ -322,7 +358,7 @@ class PortfolioLedger(PaperLedger):
     def close_math(self,p,q,now,spec):
         # Reuse audited adverse side/tick execution; independently keep money Decimal.
         numeric={k:float(p[k]) for k in ('quantity_contracts','contract_multiplier','entry_price','entry_fee_usdt','entry_notional_usdt')}
-        model=finish_position({**p,**numeric,'fee_rate':float(max(D(spec['taker_fee_rate']),D(self.policy.minimum_taker_fee_rate)))},q,now,'MODEL',self.policy)
+        model=finish_position({**p,**numeric,'fee_rate':float(max(D(spec['taker_fee_rate']),D(self.policy.minimum_taker_fee_rate)))},q,now,'MODEL',replace(self.policy,leverage=float(p.get('leverage',self.policy.leverage))))
         units=D(p['quantity_contracts'])*D(p['contract_multiplier']);exit_price=D(model['exit_price'])
         gross=money((1 if p['direction']=='LONG' else -1)*(exit_price-D(p['entry_price']))*units)
         fee=money(exit_price*units*max(D(spec['taker_fee_rate']),D(self.policy.minimum_taker_fee_rate)),cost=True)
@@ -345,14 +381,14 @@ class PortfolioLedger(PaperLedger):
             if not limits['ready_for_paper']:return None,'account_'+limits['connector_status']
             snap=s['account_capital']['snapshot']
             count+=len(snap['positions'])+len(snap['orders'])
-            if D(self.policy.leverage)!=D(snap['leverage']) or not 1<=D(self.policy.leverage)<=2 or self.policy.stop_bps!=50:
+            if not self.v47() and (D(self.policy.leverage)!=D(snap['leverage']) or not 1<=D(self.policy.leverage)<=2 or self.policy.stop_bps!=50):
                 return None,'unconfirmed_v45_leverage_or_price_stop'
             # Snapshot ladder owns account allocation. Paper P&L remains separate;
             # losses/costs can only tighten, never promote real account capital.
             ladder=self.ladder()
         effective=max(ZERO,min(ladder.active,D(s['active_equity'])))
         if limits:
-            paper_loss=min(ZERO,D(s['last_equity'])-D(self.portfolio.initial_capital)-D(s['quarantined_flows']))
+            paper_loss=self.paper_overlay_loss()
             effective=max(ZERO,D(limits['active_budget'])+paper_loss)
         allowed=s['capital_status'].get('allowed_slots',0)
         if s['halted'] or s['paused'] or not s['equity_verified']:return None,'account_halt_pause_or_unverified_exposure'
@@ -389,6 +425,19 @@ class PortfolioLedger(PaperLedger):
         margin=min(margin,max(ZERO,(effective if limits else ladder.active+self.unsettled())-sum((D(p['entry_fee_usdt']) for p in s['positions'].values()),ZERO)-self.reserved()-holds))
         rules,fee=self.rules(sym)
         market=s['market_states'].get(sym,{})
+        if self.v47():
+            from .adaptive_execution import select_leverage
+            maximum=spec.get('max_leverage')
+            if maximum is None or spec.get('margin_mode')!='ISOLATED':return None,'missing_per_instrument_execution_capability'
+            selection=select_leverage(rules=rules,quote=data,side=side,allocation=nominal,
+                margin_budget=margin,risk_budget=budget,fee_rate=max(D(fee),D(self.policy.minimum_taker_fee_rate)),
+                market=market,max_leverage=min(D(maximum),D(5)),slippage_bps=self.policy.adverse_slippage_bps,
+                stop_gap_bps=self.portfolio.stop_gap_bps,carry_rate=str(self.policy.modeled_carry_8h_rate),
+                horizon_ms=self.policy.maximum_holding_ms,target_fraction=self.portfolio.campaign_target_fraction,
+                campaign_loss_fraction=self.portfolio.campaign_loss_fraction)
+            s.setdefault('leverage_selections',{})[sym]=selection.payload()
+            self.audit('LEVERAGE_SELECTION',symbol=sym,positionSide=side,**selection.payload())
+            return (dict(selection.selected),None) if selection.selected else (None,selection.reason)
         effective_policy=replace(self.policy,stop_bps=max(self.policy.stop_bps,min(500,2*market.get('volatility_bps',0))),
             target_bps=max(self.policy.target_bps,min(1000,4*market.get('volatility_bps',0))))
         if limits:effective_policy=replace(effective_policy,stop_bps=50)
@@ -493,6 +542,7 @@ class PortfolioLedger(PaperLedger):
                 slippage_bps=self.policy.adverse_slippage_bps,book_max_age=self.shadow.max_book_age_ms)
             s['market_states'][sym].update(contract_spec=spec,rules_hash=digest(spec['rules']))
         data=self.executable_quote(sym,q);spec=self.spec(sym)
+        if self.v47():return self.fill_conveyor(sym,q,spec,data)
         depth={side:D(data[side+'_base_size']) if data else ZERO for side in ('bid','ask')}
         for key,p in sorted(list(s['positions'].items())):
             if p['symbol']!=sym:continue
@@ -584,6 +634,7 @@ class PortfolioLedger(PaperLedger):
         open_legs={k:p for k,p in s['positions'].items() if p['symbol']==sym}
         pending=any(p['symbol']==sym for p in s['pending_entries'].values())
         evidence=supported_hedge(s['evidence'].get(sym),now,self.evidence_policy_hash())
+        if self.v47():return self.choose_conveyor(sym,q)
         if self.portfolio.decision_model=='pressure':
             self.choose_pressure(sym,q)
             action='MAINTAIN' if open_legs or pending else 'NO_TRADE';reason='legacy_pressure_research_control'
@@ -626,10 +677,14 @@ class PortfolioLedger(PaperLedger):
 
     def portfolio_event(self,kind,p,available):
         s=self.state
+        if self.v47() and self.portfolio.paper_settlement:self.flush_paper_settlement()
         for key,v in list(s['pending_entries'].items()):
             if available-v['signal_ms']>self.policy.entry_ttl_ms:self.cancel(key,'entry_ttl')
         if kind=='SCAN':
             s['scan']=Timeline.scan(p,available)
+            if self.v47():
+                pulse=p['report'].get('whole_market_pulse',{})
+                s['whole_market_pulse']={**pulse,'markets':{symbol:{k:v for k,v in record.items() if k!='history'} for symbol,record in pulse.get('markets',{}).items()}}
             protected=set(s['scan']['watch']['deep_symbols'])|set(self.pins())
             for name in ('books','quotes','trades','episodes','last_print','market_states'):
                 s[name]={k:v for k,v in s[name].items() if k in protected}
@@ -650,7 +705,16 @@ class PortfolioLedger(PaperLedger):
             if 'service' in p:s['service']=p['service']
         elif kind=='CONTROL':
             action=p.get('action')
-            if action=='account-snapshot' and self.portfolio.account_driven:
+            if action=='paper-account-heartbeat' and self.v47() and self.portfolio.paper_settlement:
+                snap=s['account_capital']['snapshot'] or self.portfolio.funding['snapshot']
+                if (s['account_capital']['snapshot'] is None or available>snap['timestamp_ms']) and not s.get('paper_settlements'):self.apply_model_snapshot(snap)
+            elif action=='protection-failure' and self.v47():
+                key=p.get('position_key')
+                if key in s['positions']:
+                    s['positions'][key]['protection']['state']='FAILED';self.request(key,'PROTECTION_FAILURE')
+                    self.audit('PROTECTION_FAILURE',position_id=s['positions'][key]['id'],exchange_ack=False)
+                else:self.audit('CONTROL_REJECTED',reason='unknown_protection_position')
+            elif action=='account-snapshot' and self.portfolio.account_driven:
                 try:
                     snapshot=FuturesAccountSnapshot(**p['snapshot'])
                     owned_ids={v['id'] for v in s['positions'].values()}
@@ -706,11 +770,11 @@ class PortfolioLedger(PaperLedger):
         return True
 
     def report(self):
-        s=self.state;ladder=self.ladder();positions=list(s['positions'].values())
+        s=self.state;ladder=self.ladder();positions=[s['positions'][k] for k in sorted(s['positions'])] if self.v47() else list(s['positions'].values())
         limits=self.account_limits()
         return {'status':'PAPER_ONLY','engine':'v4','live_orders_enabled':False,'strategy_validated':False,'production_ready':False,
             'initial_capital':self.portfolio.initial_capital,'initial_funding':s['initial_funding'],
-            'entry_capacity':s.get('last_entry_capacity'),'account_status':limits,'actual_exchange_balance_status':'NOT_CONNECTED','mode':self.portfolio.mode,
+            'strategy_version':self.portfolio.strategy_version,'leverage_selections':s.get('leverage_selections',{}),'whole_market_pulse':s.get('whole_market_pulse',{}),'conveyor':s.get('conveyor',{}),'pending_paper_cash_settlements':s.get('paper_settlements',[]),'entry_capacity':s.get('last_entry_capacity'),'account_status':limits,'actual_exchange_balance_status':'NOT_CONNECTED','mode':self.portfolio.mode,
             'execution_version':EXECUTION_VERSION,'money_quantum_usdt':str(MONEY_QUANTUM),'evidence_policy_sha256':self.evidence_policy_hash(),'cash':s['cash'],
             'equity_last_mark':s['last_equity'],'executable_equity':s['last_equity'] if s['equity_verified'] else None,
             'mark_status':s['mark_status'],'active_equity':s['active_equity'],'ladder':ladder.snapshot(),

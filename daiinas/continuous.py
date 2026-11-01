@@ -144,7 +144,7 @@ async def service(args,config,paper,shadow,*,account_adapter=None):
                        'normalized_event_counts':dict(observer.stats),
                        'source_code_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in
                            [Path(__file__),Path(__file__).with_name('continuous_paper.py'),Path(__file__).with_name('continuous_stream.py'),Path(__file__).with_name('continuous_store.py')]+
-                           ([Path(__file__).with_name(n+'.py') for n in ('capital_ladder','portfolio_paper','market_intelligence','hedge_research','funding','account_capital')] if config.get('engine')=='v4' else [])}})
+                           ([Path(__file__).with_name(n+'.py') for n in ('capital_ladder','portfolio_paper','market_intelligence','hedge_research','funding','account_capital','adaptive_execution','position_conveyor','market_pulse')] if config.get('engine')=='v4' else [])}})
         result['24h_host_gate']='PENDING — HOST ACCEPTANCE NOT RUN' if args.host_id else 'BLOCKED — HOST NOT PROVISIONED'
         if args.seconds:
             stats=observer.stream_stats
@@ -180,6 +180,7 @@ def main(argv=None):
     a=p.parse_args(argv)
     path_config,path_paper,path_shadow=settings(a.config)
     prefix='v4-'+str(path_config['portfolio']['initial_capital']) if path_config.get('engine')=='v4' else 'v33'
+    if path_config.get('portfolio',{}).get('strategy_version')=='v47':prefix='v47-'+str(path_config['portfolio']['initial_capital'])+'-'+digest(path_config['portfolio']['funding']['account_id'])[:8]
     if a.source_db is None:a.source_db=Path('state')/(prefix+'-source.sqlite3')
     if a.paper_db is None:a.paper_db=Path('state')/(prefix+'-paper.sqlite3')
     if a.source_db.resolve()==a.paper_db.resolve():p.error('Independent source/paper databases required')
