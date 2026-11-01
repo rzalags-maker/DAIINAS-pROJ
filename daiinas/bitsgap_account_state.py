@@ -345,6 +345,11 @@ class AccountState:
                 else:
                     count, mode, margin = self.observer._positions(
                         value, settings=topic == "positions_settings")
+                    # Live Bitsgap conf_enums labels the one-way Futures mode
+                    # ONEWAY; Model A/AccountState use the canonical ONE_WAY.
+                    # Unknown labels must remain rejected rather than guessed.
+                    if mode == "ONEWAY":
+                        mode = "ONE_WAY"
                     if mode not in ("ONE_WAY", "HEDGE", "UNVERIFIED") or margin not in ("CROSS", "ISOLATED", "UNVERIFIED"):
                         raise ValueError()
                     normalized = {"count": count, "position_mode": mode, "margin_mode": margin}
