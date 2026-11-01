@@ -39,6 +39,8 @@ jobs:
           echo "ONE_TIME_OBSERVE=STARTED"
           python -B - <<'PY'
           import os
+          import json
+          from daiinas.bitsgap_readonly import _post
           from daiinas.bitsgap_futures_observe import BitsgapFuturesObserver
           from daiinas.bitsgap_readonly import BitsgapError
           safe = {
@@ -52,7 +54,23 @@ jobs:
               'INCONSISTENT_POSITION_MODES', 'INCONSISTENT_MARGIN_MODES',
           }
           try:
-              client = BitsgapFuturesObserver(os.environ.get('BITSGAP_PRIVATE_KEY_PEM'))
+              def shape_only_transport(url, body, headers):
+                  # Do not log body, signature, headers, URLs, response content or account fields.
+                  req_topic = json.loads(body).get('topic')
+                  raw = _post(url, body, headers)
+                  try:
+                      obj = json.loads(raw)
+                      flags = ','.join(x for x in ('data','ok','topic','value','error','mes')
+                                       if isinstance(obj,dict) and x in obj)
+                      print('SAFE_ENVELOPE=' + (req_topic if req_topic in ('manual','conf_enums','balance','orders','positions','positions_settings') else 'UNKNOWN')
+                            + ';SHAPE=' + ('DICT' if isinstance(obj,dict) else 'OTHER')
+                            + ';KNOWN_FIELDS=' + (flags or 'NONE')
+                            + ';FIELD_COUNT=' + str(len(obj) if isinstance(obj,dict) else 0))
+                  except Exception:
+                      print('SAFE_ENVELOPE=NON_JSON_OR_UNVERIFIED')
+                  return raw
+              client = BitsgapFuturesObserver(os.environ.get('BITSGAP_PRIVATE_KEY_PEM'),
+                                              transport=shape_only_transport)
               client.discover()
               print('FUTURES_CATALOG=PASS')
           except BitsgapError as exc:
