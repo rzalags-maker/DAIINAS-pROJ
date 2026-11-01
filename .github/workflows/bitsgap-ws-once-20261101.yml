@@ -1,5 +1,5 @@
 name: One-time bounded Bitsgap Futures WS observation
-# Bounded validation after observed optional mes+value topic payload, no raw data
+# Bounded diagnosis of message-field type only; no values/IDs/logging
 
 on:
   push:
