@@ -1,0 +1,979 @@
+{
+  "status": "PASS_PAPER_INFRASTRUCTURE_AND_REGRESSIONS_NOT_ECONOMIC_VALIDATION",
+  "implementation_commit": "e443ddc0cc287fcd1c87bf13515a7532d3b49114",
+  "baseline_preserved": 271,
+  "regression_tests": 298,
+  "local_tests": {
+    "3.12": {
+      "tests": 298,
+      "seconds": 46.463,
+      "status": "PASS",
+      "log_sha256": "82e89c1e9573455da0990b7c695bbd61cb0202858449eaf86f3f3593fa7afe1f"
+    },
+    "3.13": {
+      "tests": 298,
+      "seconds": 47.636,
+      "status": "PASS",
+      "log_sha256": "e9c99c80d27bdcc3ac1ed806bcbf7c8c99616590ff0d3792ce9882c111fa1bc6"
+    }
+  },
+  "python_matrix_run": 41277153242,
+  "public_run": 41277153258,
+  "preserved_v4_run": 41277153230,
+  "earlier_failed_public_runs": [
+    41276729611,
+    41276938484
+  ],
+  "actual_exchange_account": "NOT_CONNECTED",
+  "private_api_enabled": false,
+  "live_orders_enabled": false,
+  "strategy_validated": false,
+  "five_hour_real_host_acceptance": "NOT_RUN_VIRTUAL_CLOCK_TESTED_ONLY",
+  "model_a_sha256": "8fa1a07bac9b4675fa56e13428663ab7cec5de1eb847a722d75b804cf846f58f",
+  "deployment_dependencies": [
+    "An on-demand supervised host with durable single-writer SQLite storage, verified session runtime, backups and recovery. No requirement to trade 24/7.",
+    "Authenticated operator control with actual worker acknowledgement and alert routing; chat commands are not connected.",
+    "Separately authorized General-only read-only KuCoin account/collateral/free-margin, positions/orders/fills/fees/funding and per-contract capability reconciliation; UTA unsupported.",
+    "Authenticated exchange-native TP/SL and order lifecycle verification is not implemented or activated. The current gateway is inert and native receipts MOCK only.",
+    "Longer chronological/out-of-sample cost/latency/funding and liquidation/economic validation; no profitable-edge claim. Same-token hedging remains unproven and disabled for this v4.7 route.",
+    "Repository Actions PR creation permission remains blocked by the recorded GitHub 403 policy; no stable merge authorized."
+  ],
+  "python_matrix_status": "PASS_3.11_3.12_3.13",
+  "public_validation": {
+    "status": "PASS",
+    "evidence_kind": "REAL_PUBLIC_KUCOIN_MARKET_WITH_EXPLICIT_MOCK_PAPER_ACCOUNT",
+    "tested_commit": "e443ddc0cc287fcd1c87bf13515a7532d3b49114",
+    "actual_account": "NOT_CONNECTED",
+    "live_orders_enabled": false,
+    "strategy_validated": false,
+    "production_ready": false,
+    "public_event_counts": {
+      "execution": 133,
+      "level2": 37549,
+      "tickerV2": 2049
+    },
+    "duration_seconds": 130.571,
+    "observed_contracts": 717,
+    "source_cursor": 40053,
+    "input_digest": "7dbe3dc4ee2301f55b945c979c98b85ea61c820f1e7c3c0fcf26cd2db95856c1",
+    "initial_funding": {
+      "kind": "mock_futures_snapshot",
+      "account_id": "CI-v47-41277153258",
+      "scope": "CLASSIC_FUTURES",
+      "currency": "USDT",
+      "amount": "200",
+      "timestamp_ms": 1793511015855,
+      "opening_equity": "200",
+      "initial_usable_margin": "200",
+      "source_reference": "explicit-v47-paper-origin",
+      "source_digest": "78a077aba0a2425bd55f12502463d529c00ba563b41b86a04dd9c707f31c002d",
+      "source_evidence": "MOCK Futures account; not authenticated KuCoin",
+      "snapshot": {
+        "exchange": "KUCOIN",
+        "account_id": "CI-v47-41277153258",
+        "account_mode": "CLASSIC_FUTURES",
+        "settlement_currency": "USDT",
+        "snapshot_id": "explicit-v47-paper-origin",
+        "timestamp_ms": 1793511015855,
+        "complete": true,
+        "transport_validated": true,
+        "signature_validated": true,
+        "source_kind": "MOCK",
+        "settled_cash": "200",
+        "equity": "200",
+        "free_margin": "200",
+        "position_margin": "0",
+        "order_margin": "0",
+        "unrealized_pnl": "0",
+        "liabilities": "0",
+        "restricted_collateral": "0",
+        "margin_mode": "ISOLATED",
+        "leverage": "2",
+        "orders": [],
+        "positions": [],
+        "cash_events": [],
+        "source_digest": "78a077aba0a2425bd55f12502463d529c00ba563b41b86a04dd9c707f31c002d"
+      },
+      "event_type": "INITIAL_FUNDING",
+      "policy_id": "e1e0708aee16a65587a9c4b0357ebb45c5e384649849e7f3a675d3f76d66caf8",
+      "account_identity": "8169175474753c6159336f232d6d2194373b16674edc35569ad75c1a29f454e0",
+      "journal_source_id": "81cb5dc4de974f2a92c0a4a1b221728e",
+      "verified_exchange_balance": false,
+      "asof_source_cursor": 0,
+      "event_id": "INITIAL_FUNDING:e3e8009b649791cbca6b6a5073ee704621009ae55513475c0b8c414ae9371b27"
+    },
+    "cash": "200",
+    "realized_net_pnl": "0",
+    "fees": "0",
+    "modeled_carry": "0",
+    "maximum_drawdown": 0.0,
+    "closed_summary": {
+      "count": 0,
+      "wins": 0,
+      "losses": 0,
+      "profit": "0",
+      "loss": "0"
+    },
+    "open_positions": [],
+    "pending_entries": [],
+    "exit_requests": {},
+    "selected_leverages": [],
+    "decision_counts": {
+      "INITIAL_FUNDING": 1,
+      "ACCOUNT_RECONCILED": 123,
+      "MODELED_ACCOUNT_ONLY": 123,
+      "SESSION_STARTED": 2,
+      "SCAN": 6,
+      "HEALTH": 17,
+      "DECISION": 1858,
+      "BOOK_SNAPSHOT": 50,
+      "VERIFIED_BOOK": 24,
+      "REJECTED_QUOTE": 191,
+      "SESSION_STOPPED": 2
+    },
+    "reason_counts": {
+      "REJECTED_QUOTE:invalid_or_stale": 191
+    },
+    "account_status": {
+      "account_policy_version": "v4.6-unified-win-gated-account-v2",
+      "opening_funding": "200",
+      "current_futures_equity": "200",
+      "current_settled_cash": "200",
+      "actual_free_margin": "200",
+      "active_budget": "150",
+      "reserve": "50",
+      "pending": "0",
+      "locked": "0",
+      "unallocated_external": "0",
+      "risk_budget": "1.50",
+      "per_leg_risk_budget": "0.3750",
+      "marginal_margin": "150",
+      "allowed_slots": 6,
+      "deficit": "0",
+      "allocation_stage": "EXPAND",
+      "earned_early_ports": 1,
+      "funded_slot_ceiling": 6,
+      "risk_allowed_slot_ceiling": null,
+      "open_and_pending_slots": 0,
+      "capacity_basis": "Per-instrument minimum lot/full-cost risk checked at entry",
+      "closed_campaign_ids": [],
+      "unsettled_campaign_net": "0",
+      "connector_status": "RECONCILED_MOCK",
+      "reason": null,
+      "orders_enabled": false,
+      "ready_for_paper": true,
+      "source_kind": "MOCK",
+      "authenticated_account_connected": false,
+      "observed_unreconciled": null,
+      "account_drawdown": "0",
+      "halted": false,
+      "snapshot_id": "PAPER-MODELED:40048:heartbeat",
+      "effective_active_after_paper_marks": "150",
+      "paper_equity_with_exit_costs": "200",
+      "paper_margin_reserved": "0",
+      "position_scope": "Local virtual positions; snapshot is MOCK cash/external scope, not real KuCoin positions"
+    },
+    "conveyor": {
+      "decisions": 1858,
+      "entries": 0,
+      "partial_entries": 0,
+      "partial_exits": 0,
+      "last_decision_ms": 1793511146331,
+      "last_selected": null,
+      "ranked_candidates": [],
+      "last_reason": "no_qualified_candidate"
+    },
+    "errors": [
+      "ConnectionError: Scheduled public token renewal",
+      "ConnectionError: Scheduled public token renewal",
+      "ConnectionError: Scheduled public token renewal",
+      "ConnectionError: Scheduled public token renewal"
+    ],
+    "replay_identical": true,
+    "cash_independently_reconciled": true,
+    "backup": {
+      "source_id": "81cb5dc4de974f2a92c0a4a1b221728e",
+      "paper_cursor": 40053,
+      "source_max_seq": 40053,
+      "paper_input_digest": "7dbe3dc4ee2301f55b945c979c98b85ea61c820f1e7c3c0fcf26cd2db95856c1",
+      "sha256": {
+        "source.sqlite3": "287131fe54d8472f026b0bb0b2c5f989eb3537874f137824a67e7812b2af07c8",
+        "paper.sqlite3": "acd5a6e99d0078ed8469160835a71fb8ebb918327e8922e30ac7eb18659c26fc"
+      }
+    },
+    "out_of_sample_status": "SHORT_INFRASTRUCTURE_SMOKE_NOT_ECONOMIC_VALIDATION",
+    "24h_host_gate": "NOT_RUN_HOST_NOT_PROVISIONED",
+    "report_sha256": {
+      "state/v47-public/first.json": "6c71c5dfaf6d441cc77f29e1d2f63082337502e03c8fc03d59e4bbf284182ebf",
+      "state/v47-public/restart.json": "301955b2e43b8ed874d9866ce6b50d81a9e068a6e13e99f06f8c136591670c46",
+      "state/v47-public/replay.json": "b5299bc525664a32bed3f9eab1803fe6ddeca0faef3e29350fd01f6487e93879"
+    }
+  },
+  "public_report_sha256": {
+    "first.json": "6c71c5dfaf6d441cc77f29e1d2f63082337502e03c8fc03d59e4bbf284182ebf",
+    "replay.json": "b5299bc525664a32bed3f9eab1803fe6ddeca0faef3e29350fd01f6487e93879",
+    "restart.json": "301955b2e43b8ed874d9866ce6b50d81a9e068a6e13e99f06f8c136591670c46",
+    "synthetic.json": "4e5555487dff426ae3366855953bf8948eaf1f743303cb7db5bbe7120f085691",
+    "validation.json": "6dae6557c1601fe0f1a6406103290b04b6ea9da952c0010ca2bdd4610faf55dd"
+  },
+  "preserved_v4_run_status": "SUCCESS_ALL_11_STAGES",
+  "synthetic_scenarios": {
+    "net_target": {
+      "cash": "60.532583999266593750",
+      "realized_net_pnl": "0.532583999266593750",
+      "fees": "0.021615840000000000",
+      "carry": "1.60733406250E-7",
+      "maximum_drawdown": 0.0005529372570885416,
+      "closed_summary": {
+        "count": 1,
+        "loss": "0",
+        "losses": 0,
+        "profit": "0.532583999266593750",
+        "wins": 1
+      },
+      "open_positions": 0,
+      "leverage": [],
+      "account_status": {
+        "account_policy_version": "v4.6-unified-win-gated-account-v2",
+        "opening_funding": "60",
+        "current_futures_equity": "60.532583999266593750",
+        "current_settled_cash": "60.532583999266593750",
+        "actual_free_margin": "60.532583999266593750",
+        "active_budget": "60.532583999266593750",
+        "reserve": "0",
+        "pending": "0",
+        "locked": "0",
+        "unallocated_external": "0",
+        "risk_budget": "0.60532583999266593750",
+        "per_leg_risk_budget": "0.1513314599981664843750",
+        "marginal_margin": "60.532583999266593750",
+        "allowed_slots": 2,
+        "deficit": "0",
+        "allocation_stage": "BOOTSTRAP",
+        "earned_early_ports": 2,
+        "funded_slot_ceiling": null,
+        "risk_allowed_slot_ceiling": null,
+        "open_and_pending_slots": 0,
+        "capacity_basis": "Per-instrument minimum lot/full-cost risk checked at entry",
+        "closed_campaign_ids": [
+          "campaign:signal:148:UPUSDTM:LONG"
+        ],
+        "unsettled_campaign_net": "0",
+        "connector_status": "RECONCILED_MOCK",
+        "reason": null,
+        "orders_enabled": false,
+        "ready_for_paper": true,
+        "source_kind": "MOCK",
+        "authenticated_account_connected": false,
+        "observed_unreconciled": null,
+        "account_drawdown": "0",
+        "halted": false,
+        "snapshot_id": "PAPER-MODELED:176:paper-cash:00000000000000000176:campaign:signal:148:UPUSDTM:LONG:exit",
+        "effective_active_after_paper_marks": "60.532583999266593750",
+        "paper_equity_with_exit_costs": "60.532583999266593750",
+        "paper_margin_reserved": "0",
+        "position_scope": "Local virtual positions; snapshot is MOCK cash/external scope, not real KuCoin positions"
+      },
+      "counts": {
+        "ACCOUNT_RECONCILED": 20,
+        "CAMPAIGN_SETTLED": 1,
+        "CLOSED": 1,
+        "DECISION": 53,
+        "EARLY_WIN_PORT": 1,
+        "EXIT_REQUEST": 1,
+        "INITIAL_FUNDING": 1,
+        "LEVERAGE_SELECTION": 2,
+        "MODELED_ACCOUNT_ONLY": 19,
+        "MODELED_CASH_COMPONENT": 1,
+        "OPENED": 1,
+        "PROTECTION_MODELED_ACK": 1,
+        "REALIZED_NET_TRADE": 1,
+        "RESOLVED": 3,
+        "SCAN": 1,
+        "SESSION_STARTED": 1,
+        "SIGNAL": 1,
+        "UNRESOLVED": 3,
+        "VERIFIED_BOOK": 1
+      },
+      "conveyor": {
+        "decisions": 53,
+        "entries": 1,
+        "last_decision_ms": 16810,
+        "last_reason": "no_qualified_candidate",
+        "last_selected": null,
+        "partial_entries": 0,
+        "partial_exits": 0,
+        "ranked_candidates": []
+      },
+      "initial_funding_count": 1,
+      "replay_identical": true,
+      "backup": {
+        "source_id": "44a3329a5d44407daa2147eb3007d7c9",
+        "paper_cursor": 176,
+        "source_max_seq": 176,
+        "paper_input_digest": "29203b2f30db7a5c08949ef4deaaeddc71878d80928beaa897fbc6f5c4522b60",
+        "sha256": {
+          "source.sqlite3": "0d65e94e5f1794e74190e220550cd967ad3e48585ed468562a3809ca70746d2b",
+          "paper.sqlite3": "f7d5d2972af14a73b8b45c7f0c8045acd76611c3954abbeeff66b5af7596561d"
+        }
+      }
+    },
+    "partial_stop_loss": {
+      "cash": "59.868282808398885416",
+      "realized_net_pnl": "-0.131717191601114584",
+      "fees": "0.021217020000000000",
+      "carry": "1.71601114584E-7",
+      "maximum_drawdown": 0.002195286526685243,
+      "closed_summary": {
+        "count": 1,
+        "loss": "0.131717191601114584",
+        "losses": 1,
+        "profit": "0",
+        "wins": 0
+      },
+      "open_positions": 0,
+      "leverage": [],
+      "account_status": {
+        "account_policy_version": "v4.6-unified-win-gated-account-v2",
+        "opening_funding": "60",
+        "current_futures_equity": "59.868282808398885416",
+        "current_settled_cash": "59.868282808398885416",
+        "actual_free_margin": "59.868282808398885416",
+        "active_budget": "59.868282808398885416",
+        "reserve": "0",
+        "pending": "0",
+        "locked": "0",
+        "unallocated_external": "0",
+        "risk_budget": "0.59868282808398885416",
+        "per_leg_risk_budget": "0.1496707070209972135400",
+        "marginal_margin": "59.868282808398885416",
+        "allowed_slots": 1,
+        "deficit": "0E-18",
+        "allocation_stage": "BOOTSTRAP",
+        "earned_early_ports": 1,
+        "funded_slot_ceiling": null,
+        "risk_allowed_slot_ceiling": null,
+        "open_and_pending_slots": 0,
+        "capacity_basis": "Per-instrument minimum lot/full-cost risk checked at entry",
+        "closed_campaign_ids": [
+          "campaign:signal:148:UPUSDTM:LONG"
+        ],
+        "unsettled_campaign_net": "0",
+        "connector_status": "RECONCILED_MOCK",
+        "reason": null,
+        "orders_enabled": false,
+        "ready_for_paper": true,
+        "source_kind": "MOCK",
+        "authenticated_account_connected": false,
+        "observed_unreconciled": null,
+        "account_drawdown": "0.002195286526685243066666666667",
+        "halted": false,
+        "snapshot_id": "PAPER-MODELED:178:paper-cash:00000000000000000178:campaign:signal:148:UPUSDTM:LONG:exit",
+        "effective_active_after_paper_marks": "59.868282808398885416",
+        "paper_equity_with_exit_costs": "59.868282808398885416",
+        "paper_margin_reserved": "0",
+        "position_scope": "Local virtual positions; snapshot is MOCK cash/external scope, not real KuCoin positions"
+      },
+      "counts": {
+        "ACCOUNT_RECONCILED": 21,
+        "CAMPAIGN_SETTLED": 1,
+        "CLOSED": 1,
+        "DECISION": 54,
+        "EXIT_REQUEST": 1,
+        "INITIAL_FUNDING": 1,
+        "LEVERAGE_SELECTION": 2,
+        "MODELED_ACCOUNT_ONLY": 20,
+        "MODELED_CASH_COMPONENT": 2,
+        "OPENED": 1,
+        "PARTIAL_EXIT": 1,
+        "PROTECTION_MODELED_ACK": 1,
+        "REALIZED_NET_TRADE": 1,
+        "RESOLVED": 2,
+        "SCAN": 1,
+        "SESSION_STARTED": 1,
+        "SIGNAL": 1,
+        "UNRESOLVED": 3,
+        "VERIFIED_BOOK": 1
+      },
+      "conveyor": {
+        "decisions": 54,
+        "entries": 1,
+        "last_decision_ms": 17010,
+        "last_reason": "no_qualified_candidate",
+        "last_selected": null,
+        "partial_entries": 0,
+        "partial_exits": 1,
+        "ranked_candidates": []
+      },
+      "initial_funding_count": 1,
+      "replay_identical": true,
+      "backup": {
+        "source_id": "4c8f279519c34a7687f0367d4d804234",
+        "paper_cursor": 178,
+        "source_max_seq": 178,
+        "paper_input_digest": "5614ab491e6f788b0abc69557a7b3fb247d00abe0a79dfc75bb97fa7d636ddea",
+        "sha256": {
+          "source.sqlite3": "7e043f703b66b4d1b211d0071dda125bfedfb30cf533171f1761b09bd600c2e0",
+          "paper.sqlite3": "5a1a208a914881cf3623f8cc12f6ddc4f0aa770bdb9d730e6307144d0ecfb894"
+        }
+      }
+    },
+    "ten_positions": {
+      "cash": "399.874804000000000000",
+      "realized_net_pnl": "0",
+      "fees": "0.125196000000000000",
+      "carry": "0",
+      "maximum_drawdown": 0.0013010306273425927,
+      "closed_summary": {
+        "count": 0,
+        "loss": "0",
+        "losses": 0,
+        "profit": "0",
+        "wins": 0
+      },
+      "open_positions": 10,
+      "leverage": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "account_status": {
+        "account_policy_version": "v4.6-unified-win-gated-account-v2",
+        "opening_funding": "400",
+        "current_futures_equity": "399.874804000000000000",
+        "current_settled_cash": "399.874804000000000000",
+        "actual_free_margin": "399.874804000000000000",
+        "active_budget": "299.874804000000000000",
+        "reserve": "100",
+        "pending": "0",
+        "locked": "0",
+        "unallocated_external": "0",
+        "risk_budget": "1.52902283375000000000",
+        "per_leg_risk_budget": "0.7496870100000000000000",
+        "marginal_margin": "91.214804000000000000",
+        "allowed_slots": 10,
+        "deficit": "0",
+        "allocation_stage": "SCALE",
+        "earned_early_ports": 1,
+        "funded_slot_ceiling": 10,
+        "risk_allowed_slot_ceiling": null,
+        "open_and_pending_slots": 10,
+        "capacity_basis": "Per-instrument minimum lot/full-cost risk checked at entry",
+        "closed_campaign_ids": [],
+        "unsettled_campaign_net": "-0.125196000000000000",
+        "connector_status": "RECONCILED_MOCK",
+        "reason": null,
+        "orders_enabled": false,
+        "ready_for_paper": true,
+        "source_kind": "MOCK",
+        "authenticated_account_connected": false,
+        "observed_unreconciled": null,
+        "account_drawdown": "0.000417320000000000",
+        "halted": false,
+        "snapshot_id": "PAPER-MODELED:1557:heartbeat",
+        "effective_active_after_paper_marks": "299.609690811797222218",
+        "paper_equity_with_exit_costs": "399.609690811797222218",
+        "paper_margin_reserved": "208.6600",
+        "position_scope": "Local virtual positions; snapshot is MOCK cash/external scope, not real KuCoin positions"
+      },
+      "counts": {
+        "ACCOUNT_RECONCILED": 36,
+        "DECISION": 550,
+        "INITIAL_FUNDING": 1,
+        "LEVERAGE_SELECTION": 20,
+        "MODELED_ACCOUNT_ONLY": 35,
+        "MODELED_CASH_COMPONENT": 10,
+        "OPENED": 10,
+        "PROTECTION_MODELED_ACK": 10,
+        "SCAN": 1,
+        "SESSION_STARTED": 1,
+        "SIGNAL": 10,
+        "VERIFIED_BOOK": 10
+      },
+      "conveyor": {
+        "decisions": 550,
+        "entries": 10,
+        "last_decision_ms": 16840,
+        "last_reason": "no_qualified_candidate",
+        "last_selected": null,
+        "partial_entries": 0,
+        "partial_exits": 0,
+        "ranked_candidates": []
+      },
+      "initial_funding_count": 1,
+      "replay_identical": true,
+      "backup": {
+        "source_id": "0c362e8f37a147c1b65748b724341fcd",
+        "paper_cursor": 1577,
+        "source_max_seq": 1577,
+        "paper_input_digest": "8889a0999bf226a068015bfee76db927eb29ae8c478c7889b641b683e625fb64",
+        "sha256": {
+          "source.sqlite3": "f312d4ec6199f03866b3930399fffadb7c43c8ffd00407dbe8cc503305046483",
+          "paper.sqlite3": "b2257dc32728d15d53d8030393e6cc0120cfa6022df0de43e5f7edb0e396cbe4"
+        }
+      }
+    },
+    "x5": {
+      "cash": "59.991236280000000000",
+      "realized_net_pnl": "0",
+      "fees": "0.008763720000000000",
+      "carry": "0",
+      "maximum_drawdown": 0.00045536009407291664,
+      "closed_summary": {
+        "count": 0,
+        "loss": "0",
+        "losses": 0,
+        "profit": "0",
+        "wins": 0
+      },
+      "open_positions": 1,
+      "leverage": [
+        5
+      ],
+      "account_status": {
+        "account_policy_version": "v4.6-unified-win-gated-account-v2",
+        "opening_funding": "60",
+        "current_futures_equity": "59.991236280000000000",
+        "current_settled_cash": "59.991236280000000000",
+        "actual_free_margin": "2.991236280000000000",
+        "active_budget": "59.991236280000000000",
+        "reserve": "0",
+        "pending": "0",
+        "locked": "0",
+        "unallocated_external": "0",
+        "risk_budget": "0.49703159836250000000",
+        "per_leg_risk_budget": "0.1499780907000000000000",
+        "marginal_margin": "0.069996280000000000",
+        "allowed_slots": 1,
+        "deficit": "0",
+        "allocation_stage": "BOOTSTRAP",
+        "earned_early_ports": 1,
+        "funded_slot_ceiling": null,
+        "risk_allowed_slot_ceiling": null,
+        "open_and_pending_slots": 1,
+        "capacity_basis": "Per-instrument minimum lot/full-cost risk checked at entry",
+        "closed_campaign_ids": [],
+        "unsettled_campaign_net": "-0.008763720000000000",
+        "connector_status": "RECONCILED_MOCK",
+        "reason": null,
+        "orders_enabled": false,
+        "ready_for_paper": true,
+        "source_kind": "MOCK",
+        "authenticated_account_connected": false,
+        "observed_unreconciled": null,
+        "account_drawdown": "0.000146062000000000",
+        "halted": false,
+        "snapshot_id": "PAPER-MODELED:173:heartbeat",
+        "effective_active_after_paper_marks": "59.991236280000000000",
+        "paper_equity_with_exit_costs": "60.104199320244687500",
+        "paper_margin_reserved": "2.92124",
+        "position_scope": "Local virtual positions; snapshot is MOCK cash/external scope, not real KuCoin positions"
+      },
+      "counts": {
+        "ACCOUNT_RECONCILED": 20,
+        "DECISION": 54,
+        "INITIAL_FUNDING": 1,
+        "LEVERAGE_SELECTION": 2,
+        "MODELED_ACCOUNT_ONLY": 19,
+        "MODELED_CASH_COMPONENT": 1,
+        "OPENED": 1,
+        "PROTECTION_MODELED_ACK": 1,
+        "RESOLVED": 3,
+        "SCAN": 1,
+        "SESSION_STARTED": 1,
+        "SIGNAL": 1,
+        "UNRESOLVED": 3,
+        "VERIFIED_BOOK": 1
+      },
+      "conveyor": {
+        "decisions": 54,
+        "entries": 1,
+        "last_decision_ms": 17350,
+        "last_reason": "no_qualified_candidate",
+        "last_selected": null,
+        "partial_entries": 0,
+        "partial_exits": 0,
+        "ranked_candidates": []
+      },
+      "initial_funding_count": 1,
+      "replay_identical": true,
+      "backup": {
+        "source_id": "f402ad3c56264335bc9bb958b130596d",
+        "paper_cursor": 182,
+        "source_max_seq": 182,
+        "paper_input_digest": "53f0e041ad07ffce295ab5e3e06b24a7ccb165faf013b34d87b9644024e541f1",
+        "sha256": {
+          "source.sqlite3": "8baafc2b04c9aa2c586ad06471e4ec65d73bc2d0c1b96e9fe40403f911828b40",
+          "paper.sqlite3": "313bde3578abc1bdc9fb235b77069cdff07088ea00b803c03555d4e9e2447646"
+        }
+      }
+    },
+    "partial_ioc": {
+      "cash": "60.062656941090187500",
+      "realized_net_pnl": "0.062656941090187500",
+      "fees": "0.002543040000000000",
+      "carry": "1.8909812500E-8",
+      "maximum_drawdown": 6.505144201041667e-05,
+      "closed_summary": {
+        "count": 1,
+        "loss": "0",
+        "losses": 0,
+        "profit": "0.062656941090187500",
+        "wins": 1
+      },
+      "open_positions": 0,
+      "leverage": [],
+      "account_status": {
+        "account_policy_version": "v4.6-unified-win-gated-account-v2",
+        "opening_funding": "60",
+        "current_futures_equity": "60.062656941090187500",
+        "current_settled_cash": "60.062656941090187500",
+        "actual_free_margin": "60.062656941090187500",
+        "active_budget": "60.062656941090187500",
+        "reserve": "0",
+        "pending": "0",
+        "locked": "0",
+        "unallocated_external": "0",
+        "risk_budget": "0.60062656941090187500",
+        "per_leg_risk_budget": "0.1501566423527254687500",
+        "marginal_margin": "60.062656941090187500",
+        "allowed_slots": 2,
+        "deficit": "0",
+        "allocation_stage": "BOOTSTRAP",
+        "earned_early_ports": 2,
+        "funded_slot_ceiling": null,
+        "risk_allowed_slot_ceiling": null,
+        "open_and_pending_slots": 0,
+        "capacity_basis": "Per-instrument minimum lot/full-cost risk checked at entry",
+        "closed_campaign_ids": [
+          "campaign:signal:148:UPUSDTM:LONG"
+        ],
+        "unsettled_campaign_net": "0",
+        "connector_status": "RECONCILED_MOCK",
+        "reason": null,
+        "orders_enabled": false,
+        "ready_for_paper": true,
+        "source_kind": "MOCK",
+        "authenticated_account_connected": false,
+        "observed_unreconciled": null,
+        "account_drawdown": "0",
+        "halted": false,
+        "snapshot_id": "PAPER-MODELED:176:paper-cash:00000000000000000176:campaign:signal:148:UPUSDTM:LONG:exit",
+        "effective_active_after_paper_marks": "60.062656941090187500",
+        "paper_equity_with_exit_costs": "60.062656941090187500",
+        "paper_margin_reserved": "0",
+        "position_scope": "Local virtual positions; snapshot is MOCK cash/external scope, not real KuCoin positions"
+      },
+      "counts": {
+        "ACCOUNT_RECONCILED": 20,
+        "CAMPAIGN_SETTLED": 1,
+        "CLOSED": 1,
+        "DECISION": 53,
+        "EARLY_WIN_PORT": 1,
+        "EXIT_REQUEST": 1,
+        "INITIAL_FUNDING": 1,
+        "LEVERAGE_SELECTION": 2,
+        "MODELED_ACCOUNT_ONLY": 19,
+        "MODELED_CASH_COMPONENT": 1,
+        "OPENED": 1,
+        "PARTIAL_ENTRY_IOC": 1,
+        "PROTECTION_MODELED_ACK": 1,
+        "REALIZED_NET_TRADE": 1,
+        "RESOLVED": 3,
+        "SCAN": 1,
+        "SESSION_STARTED": 1,
+        "SIGNAL": 1,
+        "UNRESOLVED": 3,
+        "VERIFIED_BOOK": 1
+      },
+      "conveyor": {
+        "decisions": 53,
+        "entries": 1,
+        "last_decision_ms": 16810,
+        "last_reason": "no_qualified_candidate",
+        "last_selected": null,
+        "partial_entries": 1,
+        "partial_exits": 0,
+        "ranked_candidates": []
+      },
+      "initial_funding_count": 1,
+      "replay_identical": true,
+      "backup": {
+        "source_id": "e09f07e32a704a9e9da1550c5a109fad",
+        "paper_cursor": 176,
+        "source_max_seq": 176,
+        "paper_input_digest": "31d265c9d41a6734a068df697c98f74e2e9da99bc3825a11387f87e2ce8c0468",
+        "sha256": {
+          "source.sqlite3": "93606f8780db69e32ebd9fa1ae0a7b8ccb5da0e30ed08565640a5497ea3b8fe8",
+          "paper.sqlite3": "d10ba8ec5d1af7687b77399ccd3c3422ece5d77302d933dc7c041529394110fc"
+        }
+      }
+    }
+  },
+  "public_session_status": {
+    "first": {
+      "state": "STOPPED_FLAT",
+      "stream_counts": {
+        "market_scans": 3,
+        "connections": 3,
+        "subscribe_acks": 42,
+        "snapshots": 25,
+        "snapshot_bridge_retries": 12,
+        "book_resyncs": 13,
+        "reconciliations": 2,
+        "pongs": 4,
+        "reconnects": 2
+      },
+      "quarantined_books": {}
+    },
+    "restart": {
+      "state": "STOPPED_FLAT",
+      "stream_counts": {
+        "market_scans": 3,
+        "connections": 3,
+        "subscribe_acks": 36,
+        "snapshots": 25,
+        "snapshot_bridge_retries": 13,
+        "book_resyncs": 12,
+        "book_gaps": 1,
+        "reconciliations": 2,
+        "pongs": 2,
+        "reconnects": 2
+      },
+      "quarantined_books": {}
+    }
+  },
+  "static_source_checks": {
+    "capital_ladder_and_risk_unchanged_from_v46": true,
+    "v46_source_commit": "377eb34959d5caec824890160679aeb5b63da2d2"
+  },
+  "python_matrix_jobs": [
+    {
+      "job_id": "124761554382",
+      "url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41277153242/job/124761554382",
+      "steps": [
+        {
+          "name": "All preserved and account-driven regression tests",
+          "conclusion": "success"
+        },
+        {
+          "name": "Reproducible MOCK account cycles and restart/replay proof",
+          "conclusion": "success"
+        },
+        {
+          "name": "v4.7 synthetic leverage and position-conveyor proof",
+          "conclusion": "success"
+        }
+      ],
+      "page_sha256": "026cd4224eb3ec67159dee533db45fa8e9a5d80da5a036b03686154f5b196e80",
+      "python_version": "3.12"
+    },
+    {
+      "job_id": "124761554541",
+      "url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41277153242/job/124761554541",
+      "steps": [
+        {
+          "name": "All preserved and account-driven regression tests",
+          "conclusion": "success"
+        },
+        {
+          "name": "Reproducible MOCK account cycles and restart/replay proof",
+          "conclusion": "success"
+        },
+        {
+          "name": "v4.7 synthetic leverage and position-conveyor proof",
+          "conclusion": "success"
+        }
+      ],
+      "page_sha256": "0e8a9e3d390681ce0c5661916d804baf06b8cbdf052102f6210b6f672a1c2765",
+      "python_version": "3.11"
+    },
+    {
+      "job_id": "124761554612",
+      "url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41277153242/job/124761554612",
+      "steps": [
+        {
+          "name": "All preserved and account-driven regression tests",
+          "conclusion": "success"
+        },
+        {
+          "name": "Reproducible MOCK account cycles and restart/replay proof",
+          "conclusion": "success"
+        },
+        {
+          "name": "v4.7 synthetic leverage and position-conveyor proof",
+          "conclusion": "success"
+        }
+      ],
+      "page_sha256": "de2d315c440863def035551b040bd82e53d473f63c70325f1447f51b0dcaeb1d",
+      "python_version": "3.13"
+    }
+  ],
+  "stable_branch": {
+    "name": "daiinas-v1",
+    "sha": "8587154e67a47c7924c133b1ef859ff675a9a50e",
+    "unchanged": true
+  },
+  "preserved_v4_stage_outcomes": {
+    "original": "success",
+    "tests": "success",
+    "first": "success",
+    "restart": "success",
+    "replay": "success",
+    "verify": "success",
+    "v4first": "success",
+    "v4restart": "success",
+    "v4replay": "success",
+    "v4verify": "success",
+    "comparison": "success",
+    "tested_commit": "e443ddc0cc287fcd1c87bf13515a7532d3b49114",
+    "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41277153230"
+  },
+  "preserved_v4_tests": {
+    "tests_run": 298,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "expected_failures": 0,
+    "unexpected_successes": 0,
+    "successful": true,
+    "tested_commit": "e443ddc0cc287fcd1c87bf13515a7532d3b49114",
+    "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41277153230"
+  },
+  "preserved_v4_validation": {
+    "status": "passed",
+    "initial_capital": "100",
+    "live_orders_enabled": false,
+    "strategy_validated": false,
+    "production_ready": false,
+    "initial_funding": {
+      "account_id": "paper-v4-100",
+      "account_identity": "0a3e893b9469d7adc2dc53721e9410e772a65b250eec1d1aea78f84b7e7bf33b",
+      "amount": "100",
+      "asof_source_cursor": 0,
+      "currency": "USDT",
+      "event_id": "INITIAL_FUNDING:807e9be646527ec04530de0ee55b7dd01f2ba3b22fecfb491c51e09e2047e040",
+      "event_type": "INITIAL_FUNDING",
+      "journal_source_id": "5a29014b0d064094ae3ddc48b784ca26",
+      "kind": "owner_confirmed_paper_scenario",
+      "policy_id": "b36770b8c3b5d842c9c85649fdddd992c80f10a5f7432a402c5b8153b9d70fb3",
+      "scope": "FUNDED_V4_PAPER_USDT_PERPETUAL",
+      "source_evidence": "Explicit hypothetical PAPER scenario; no exchange balance verified.",
+      "source_reference": "User-selected hypothetical scenario v4-smoke; not verified exchange capital",
+      "timestamp_ms": 1793491200000,
+      "verified_exchange_balance": false
+    },
+    "actual_exchange_balance_status": "NOT_CONNECTED",
+    "actual_public_events": {
+      "execution": 91,
+      "level2": 70732,
+      "tickerV2": 5176
+    },
+    "journal_records": 76292,
+    "duration_seconds": 230.227,
+    "replay_identical": true,
+    "money_reconciled_independently": true,
+    "cash": "100",
+    "executable_equity": "100",
+    "equity_last_mark": "100",
+    "net_realized_pnl": "0",
+    "fees": "0",
+    "carry": "0",
+    "ladder": {
+      "starting_total": "100",
+      "realized_net": "0",
+      "active": "50",
+      "reserve": "50",
+      "pending": "0",
+      "deficit": "0",
+      "total": "100",
+      "stage": "EXPAND",
+      "next_step": "RESERVE",
+      "committed_active": "0",
+      "slot_ceiling": 2,
+      "per_position_budget": "25",
+      "policy": {
+        "activation_total": "100",
+        "activation_reserve": "50",
+        "position_budget": "25",
+        "max_slots": 10,
+        "reserve_step": "50",
+        "active_step": "50",
+        "per_trade_planned_risk": "0.0025",
+        "aggregate_planned_risk": "0.01"
+      },
+      "live_orders_enabled": false
+    },
+    "active_risk_drawdown": 0.0,
+    "account_drawdown": 0.0,
+    "positions": [],
+    "campaigns": [],
+    "counts": {
+      "BOOK_SNAPSHOT": 38,
+      "DECISION": 5125,
+      "HEALTH": 16,
+      "INITIAL_FUNDING": 1,
+      "REJECTED_EVENT": 202,
+      "SCAN": 9,
+      "VERIFIED_BOOK": 21
+    },
+    "reason_counts": {
+      "REJECTED_EVENT:rule_version_mismatch": 202
+    },
+    "input_digest": "352895386c1467e098fa786b85ef2e758ede8ea8511837704f4709cea76428d0",
+    "backup": {
+      "source_id": "5a29014b0d064094ae3ddc48b784ca26",
+      "paper_cursor": 76292,
+      "source_max_seq": 76292,
+      "paper_input_digest": "352895386c1467e098fa786b85ef2e758ede8ea8511837704f4709cea76428d0",
+      "sha256": {
+        "source.sqlite3": "32911fb626fb16fc1ecf54a0e8437bdfdbe702b59983311b89c9df37d536f6d2",
+        "paper.sqlite3": "d8b71650e4e0c5f9a5611fd38c2543630c2169d80cd0a789ba571d18c18e44d6"
+      }
+    },
+    "24h_host_gate": "BLOCKED \u2014 HOST NOT PROVISIONED",
+    "tested_commit": "e443ddc0cc287fcd1c87bf13515a7532d3b49114",
+    "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41277153230"
+  },
+  "separate_legacy_8_usdt_result": {
+    "cash": 7.976412794754511,
+    "realized_net_pnl": -0.02358720524548885,
+    "fees": 0.016682568,
+    "modeled_carry": 6.372454891805554e-07,
+    "maximum_drawdown": 0.002948400655686134,
+    "closed_summary": {
+      "count": 5,
+      "loss": 0.02358720524548885,
+      "losses": 5,
+      "profit": 0.0,
+      "wins": 0
+    },
+    "open_position": null,
+    "input_digest": "7c955c686f64533b9300ac73ab1831f99efc421d30321bddb114bfee6fa1bb7a"
+  },
+  "preserved_v4_evidence_sha256": {
+    "pr.json": "4545aa1e3d6dba0478cd2843777a794e5f5b273e1eaaa866f8abc6128ffa7a7b",
+    "v4-restart.json": "088fedf3fa5f83e1883d14bf7a85d1ae05fdbac6bae5b00b3689bc7aed0c1dfc",
+    "acceptance.json": "80e8daffbff05acad103818b52d9d6dcfa6f685d61000c0d48c8c6e8ed6ac07f",
+    "first.json": "22ab69fdd0a5078e68c74e7218c639799b477171ba658b192f34a1960f2194c8",
+    "original-artifact.json": "d6b71edbafe54903c63e9207278ac155ce4aec42d12f1ba90e8147eb0bceff8e",
+    "replay.json": "9e1cc5a607d5ab31864fa6f6b697f04599c7105afdddad210edfff4c11833064",
+    "tests.json": "bd64cedd84cd3438f3e41b4149b2860b519a701860c61b95d695a9c85426c762",
+    "V41_HEDGE_COMPARISON.json": "b33f43bae0d32631a0aabe87a9625cf945c53ad1aef2af5d8685412e4052e606",
+    "host-pricing.json": "00f993ab620f74322eea48f7278f1e3e674d680323d5779feabd2d668f025281",
+    "restart.json": "70a1eadce42531cc9f940ad7d6b1720d2eae7db292233c8770493d53b3b70e68",
+    "risk-audit.json": "a40526b248340816f5ff1a6f57b380a859e10ced6fe56b5d42df6987fe3855b6",
+    "v4-replay.json": "761bdc6dcbdafbe18e7b51fea80ee5f0273971e38293a305645b5f20af7a2b32",
+    "ci-status.json": "d601f4905b966c8b517ea61e74c7a9885a0b2d9b28b50d2228c60342e67f6844",
+    "original-parity.json": "0e1bed270ce1fb06e1fffbc07c80f60d48eb9e78d263ed6db8ce4c2ee2799e9f",
+    "v4-validation.json": "d8bfd5b0e6e79b00af528d71a8f09b93f0c5e8c036c250f1c48778da2808ae82",
+    "v4-first.json": "5bfd8ecf329dc2ccd85cefa1b4d2689693aaac6ccaa6b87a7459e41463f94f75"
+  }
+}
