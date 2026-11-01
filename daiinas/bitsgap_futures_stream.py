@@ -29,14 +29,47 @@ def _parse_json(raw):
         _fail("WS_BAD_FRAME")
 
 
+def _safe_envelope_shape(value):
+    """Only bounded, fixed vocabulary; never logs remote values or private keys."""
+    if isinstance(value, list):
+        return {"kind": "ARRAY", "size_band": "EMPTY" if not value else "NONEMPTY"}
+    if not isinstance(value, dict):
+        return {"kind": "OTHER"}
+    allowed = ("type", "ok", "topic", "params", "value", "mes", "subs",
+               "sid", "error", "code", "status")
+    return {
+        "kind": "OBJECT",
+        "known_fields": [key for key in allowed if key in value],
+        "other_field_count": sum(1 for key in value if key not in allowed),
+        "topic_class": ("ACCOUNT" if value.get("topic") in _SUBS else
+                        "OTHER" if isinstance(value.get("topic"), str) else "NONE"),
+        "ok_class": ("TRUE" if value.get("ok") is True else
+                     "FALSE" if value.get("ok") is False else "MISSING_OR_OTHER"),
+        "params_class": ("OBJECT" if isinstance(value.get("params"), dict) else
+                         "MISSING_OR_OTHER"),
+        "message_class": ("ABSENT" if "mes" not in value else
+                          "NULL" if value["mes"] is None else
+                          "STRING" if isinstance(value["mes"], str) else
+                          "OBJECT" if isinstance(value["mes"], dict) else
+                          "ARRAY" if isinstance(value["mes"], list) else "OTHER"),
+        "value_class": ("NULL" if "value" in value and value["value"] is None else
+                        "OBJECT" if isinstance(value.get("value"), dict) else
+                        "ARRAY" if isinstance(value.get("value"), list) else
+                        "OTHER" if "value" in value else "ABSENT"),
+    }
+
+
 class BitsgapFuturesStream:
     def __init__(self, observer: BitsgapFuturesObserver):
         self.observer = observer
         self.connected = False
+        self.authenticated = False
         self.last_rest_observation = None
         self.updates = 0
         self.disconnects = 0
         self.last_failure = None
+        self.last_frame_shape = None
+        self.unscoped_control_responses = 0
 
     def auth_frame(self, *, ts=None, nonce=None):
         timestamp = int(time.time()) if ts is None else ts
@@ -51,19 +84,31 @@ class BitsgapFuturesStream:
                 "nonce":token, "signature":signed}
 
     def _ingest(self, message):
-        if (not isinstance(message, dict) or message.get("ok") is not True
-                or message.get("topic") not in _SUBS):
+        if not isinstance(message, dict) or message.get("topic") not in _SUBS:
             _fail("WS_UNVERIFIED_TOPIC_FRAME")
         params = message.get("params")
         if (not isinstance(params, dict) or set(params) != {"em"}
                 or type(params["em"]) is not int or params["em"] != self.observer._futures_em):
             _fail("WS_FOREIGN_EXCHANGE_SCOPE")
         topic = message["topic"]
+        if message.get("ok") is False:
+            # Some subscriptions are absent when the exchange has no data.
+            # Never claim a negative acknowledgment means zero orders/positions.
+            return {"topic": topic, "event": "SUBSCRIPTION_REJECTED",
+                    "funding_authorized": False}
+        if message.get("ok") is not True:
+            _fail("WS_UNVERIFIED_TOPIC_FRAME")
+        if "value" in message and message["value"] is None:
+            return {"topic": topic, "event": "PROVIDER_NO_DATA",
+                    "funding_authorized": False}
         if "value" not in message:
             if message.get("mes") == "subscribed" and set(message) <= {"ok", "topic", "params", "mes"}:
                 return {"topic": topic, "event": "SUBSCRIBED", "funding_authorized": False}
             _fail("WS_UNVERIFIED_TOPIC_FRAME")
-        if set(message) - {"ok", "topic", "params", "value"}:
+        if set(message) - {"ok", "topic", "params", "value", "mes"}:
+            _fail("WS_UNVERIFIED_TOPIC_FRAME")
+        if ("mes" in message and message["mes"] is not None
+                and not isinstance(message["mes"], str)):
             _fail("WS_UNVERIFIED_TOPIC_FRAME")
         value = message["value"]
         if topic == "balance":
@@ -83,9 +128,12 @@ class BitsgapFuturesStream:
         if self.observer._futures_em is None:
             _fail("FUTURES_DISCOVERY_REQUIRED")
         self.connected = False
+        self.authenticated = False
         # Snapshot-before-subscribe is NOT atomic with WS. It cannot release a
         # funded slot, and reconciliation must re-snapshot on every reconnect.
-        self.last_rest_observation = await asyncio.to_thread(self.observer.snapshot)
+        # REST orders/positions may literally be null. This must not prevent the
+        # independent WS investigation of those same topics.
+        self.last_rest_observation = await asyncio.to_thread(self.observer.wallet_observation)
         try:
             async with connect("wss://stream.bitsgap.com/") as ws:
                 await ws.send(json.dumps(self.auth_frame(), separators=(",", ":")))
@@ -93,6 +141,7 @@ class BitsgapFuturesStream:
                 if (not isinstance(auth, dict) or auth.get("type") != "auth_ok"
                         or not isinstance(auth.get("sid"), (str, int)) or type(auth.get("sid")) is bool):
                     _fail("WS_AUTH_UNVERIFIED")
+                self.authenticated = True
                 subscribe = [{"topic": topic, "params": {"em": self.observer._futures_em}, "subs": True}
                              for topic in _SUBS]
                 await ws.send(json.dumps(subscribe, separators=(",", ":")))
@@ -102,7 +151,22 @@ class BitsgapFuturesStream:
                     frame = _parse_json(await ws.recv())
                     messages = frame if isinstance(frame, list) else [frame]
                     for msg in messages:
-                        event = self._ingest(msg)
+                        try:
+                            # Bitsgap may acknowledge a batch with {ok, mes} and
+                            # no topic. This is NOT a scoped subscription ACK.
+                            if (isinstance(msg, dict) and set(msg) == {"ok", "mes"}
+                                    and type(msg["ok"]) is bool
+                                    and isinstance(msg["mes"], str)):
+                                if not msg["ok"]:
+                                    _fail("WS_UNSCOPED_REJECTION")
+                                self.unscoped_control_responses += 1
+                                event = {"topic": "account", "event": "UNSCOPED_OK_RESPONSE",
+                                         "funding_authorized": False}
+                            else:
+                                event = self._ingest(msg)
+                        except BitsgapError:
+                            self.last_frame_shape = _safe_envelope_shape(msg)
+                            raise
                         await on_event(event)
                         processed += 1
                         if max_messages is not None and processed >= max_messages:

@@ -132,3 +132,84 @@ Codex agent operating on an older checkout MUST read the top P0 status in
 old Spot-only `_spot_em` solution as though Futures read access did not exist.
 A Codex sandbox without Bitsgap keys or network does not block authenticated
 status checking by the existing GitHub Actions deployment.
+
+
+## WS investigation of orders / positions with actual REST null (2026-11-01)
+
+**Observed:** signed Bitsgap REST `orders` and `positions` each returned JSON
+`null`; the same authenticated account's `balance` and `positions_settings`
+validated. An existing flaw in `BitsgapFuturesStream.watch_once` was that it
+called the strict `snapshot()` **before WS authentication**. Consequently,
+those null REST results prevented even attempting the WS subscriptions.
+This is now changed to `wallet_observation()`, which records the unknown
+scopes without letting unknown positions become zero. The WS handshake and
+subscriptions can proceed independently.
+
+The official provider's trading topic documentation says: **if the
+exchange has no data (e.g. no open orders), there may be no subscription**.
+This is a plausible reason for both null data and silent WS topics, but
+**not a verified zero-exposure conclusion**. REST null could also reflect
+an account-scope mismatch or inaccessible records. A bounded WS test
+distinguishes signed `auth_ok`, subscription acknowledgment, a valid
+value update, a provider-null update, a rejected topic, and no event
+within the observation window. None of these infer a flat account.
+
+Authenticated bounded probe:
+`python -m daiinas.bitsgap_futures_ws_probe`.
+It uses the secure `BITSGAP_PRIVATE_KEY_PEM` environment variable,
+allows only signed authorization and `balance` / `orders` /
+`positions` / `positions_settings` `subs:true` messages, then
+prints fixed redacted status labels; it never prints amounts, account/order
+identifiers, server message text or session IDs. Bounded observation
+is **not** an autonomous session or a trading command.
+
+**Acceptance:** authenticated WS connection may be PASS while a topic
+remains `NO_EVENT_WITHIN_WINDOW` or `PROVIDER_NO_DATA`.
+Order/position `UNVERIFIED` blocks all Model A live funding and orders.
+The only valid next escalation is a source-supported account exposure
+reconciliation, not a fabricated zero or an order placed for testing.
+
+Provider primary source:
+https://github.com/Bitsgap/bitsgap-api-docs/blob/main/docs/topics/trading.md
+and https://github.com/Bitsgap/bitsgap-api-docs/blob/main/docs/ws/README.md.
+
+
+### Live authenticated WebSocket verification — 2026-11-01 18:34 UTC
+
+[GitHub Actions run 41337235142](https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41337235142)
+used the existing Bitsgap GitHub secret and the bounded **read-only**
+`daiinas.bitsgap_futures_ws_probe` (8 seconds of observation). It
+returned the following real, sanitized statuses:
+
+| Scope | Authenticated result |
+| --- | --- |
+| WS Ed25519 authorization | `PASS` |
+| REST Futures USDT balance | `VALIDATED` |
+| WS `balance` | `VALIDATED_UPDATE` |
+| WS `positions_settings` | `VALIDATED_UPDATE` |
+| WS `orders` | `PROVIDER_NO_DATA` |
+| WS `positions` | `PROVIDER_NO_DATA` |
+| All new-entry and capital authorization | `DISABLED / NOT RECONCILED` |
+
+**Root cause of former parser failures:** (1) strict REST snapshot was
+required before WS connection, but `orders`/`positions` returned
+`null`; (2) the provider sends an `{ok,mes}` unscoped control message
+without `topic`; (3) a scoped `{ok,topic,params,value,mes}` message
+has `mes:null`. The observer now correctly classifies these protocol
+frames while still validating account-topic values and foreign scope.
+No raw signed auth frames, account amounts, order IDs, positions, or
+server free-text messages were logged.
+
+**Interpretation:** `PROVIDER_NO_DATA` means the documented API did
+not supply an order/position list **at this observation time**. It is
+consistent with the provider's statement that no data on an exchange
+(e.g. no open orders) may prevent a subscription, but it is NOT a
+confirmed `cnt=0` venue snapshot. The operator terminal can contain
+information not exposed via the current API read. Account risk and
+position reconciliation must keep unknown scope `UNVERIFIED`, not zero,
+until an independently verified positions/orders reconciliation exists.
+
+**Next acceptance:** independently correlate Bitsgap terminal display and
+API data under the same account and current session, and determine
+whether exchange data is genuinely empty versus filtered/missing.
+Do not open a live trade just to create test data.

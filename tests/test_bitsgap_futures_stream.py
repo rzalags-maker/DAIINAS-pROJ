@@ -54,6 +54,92 @@ class StreamTests(unittest.IsolatedAsyncioTestCase):
 
     async def _record(self, events, event):events.append(event)
 
+    async def test_rest_null_exposure_does_not_block_ws_subscription(self):
+        # Exact observed production anomaly: REST orders and positions JSON null.
+        self.w.orders = None
+        self.w.positions = None
+        ws=FakeWS([{"type":"auth_ok","sid":"synthetic"},
+                   {"ok":True,"topic":"orders","params":{"em":72},"value":None},
+                   {"ok":True,"topic":"positions","params":{"em":72},"mes":"subscribed"},
+                   {"ok":False,"topic":"positions_settings","params":{"em":72},"mes":"no data"}])
+        events=[]
+        await self.stream.watch_once(lambda url:ws,on_event=lambda e:self._record(events,e),max_messages=3)
+        self.assertTrue(self.stream.authenticated)
+        self.assertEqual([x["event"] for x in events],
+                         ["PROVIDER_NO_DATA","SUBSCRIBED","SUBSCRIPTION_REJECTED"])
+        self.assertTrue(all(not x["funding_authorized"] for x in events))
+        self.assertEqual(self.stream.last_rest_observation.orders_reason, "PROVIDER_NULL_RESPONSE")
+        self.assertEqual(self.stream.last_rest_observation.positions_reason, "PROVIDER_NULL_RESPONSE")
+        self.assertEqual(len(ws.sent),2)
+        self.assertTrue(all(x["subs"] is True for x in ws.sent[1]))
+        self.assertNotIn("61.07",json.dumps(events))
+
+    async def test_foreign_and_unknown_topic_rejected_before_event_classification(self):
+        for msg in (
+                {"ok":False,"topic":"orders","params":{"em":71},"mes":"no data"},
+                {"ok":True,"topic":"order_place","params":{"em":72},"value":None}):
+            with self.assertRaisesRegex(BitsgapError,"WS_FOREIGN_EXCHANGE_SCOPE|WS_UNVERIFIED_TOPIC_FRAME"):
+                self.stream._ingest(msg)
+
+    async def test_rejected_ws_envelope_diagnostic_never_prints_remote_values(self):
+        from daiinas.bitsgap_futures_stream import _safe_envelope_shape
+        details = _safe_envelope_shape({"ok":True, "topic":"orders",
+                    "params":{"em":72,"account_id":"PRIVATE_ACCOUNT_ID"},
+                    "value":{"USDT":"PRIVATE_BALANCE"},
+                    "secret_key_PRIVATE":"PRIVATE_SESSION"})
+        raw = json.dumps(details)
+        self.assertEqual(details["topic_class"], "ACCOUNT")
+        self.assertEqual(details["params_class"], "OBJECT")
+        self.assertEqual(details["value_class"], "OBJECT")
+        self.assertEqual(details["other_field_count"], 1)
+        for forbidden in ("PRIVATE_ACCOUNT_ID","PRIVATE_BALANCE","PRIVATE_SESSION",
+                          "secret_key_PRIVATE","72", "USDT"):
+            self.assertNotIn(forbidden, raw)
+
+    async def test_real_unscoped_control_response_is_not_counted_as_topic_data(self):
+        self.w.orders = None
+        self.w.positions = None
+        ws = FakeWS([{"type":"auth_ok","sid":"SENSITIVE"},
+                     {"ok":True,"mes":"server-control-message-with-private-text"},
+                     {"ok":True,"topic":"balance","params":{"em":72},
+                      "value":self.w.balance}])
+        events=[]
+        await self.stream.watch_once(lambda _:ws, on_event=lambda e:self._record(events,e),
+                                     max_messages=2)
+        self.assertEqual([e["event"] for e in events],
+                         ["UNSCOPED_OK_RESPONSE","VALIDATED_UPDATE"])
+        self.assertEqual(self.stream.unscoped_control_responses, 1)
+        self.assertFalse(events[0]["funding_authorized"])
+        self.assertNotIn("server-control-message",json.dumps(events))
+        self.assertNotIn("SENSITIVE",json.dumps(events))
+
+    async def test_unscoped_negative_response_does_not_authorize_subscription(self):
+        ws=FakeWS([{"type":"auth_ok","sid":"SENSITIVE"},
+                   {"ok":False,"mes":"hidden remote denial"}])
+        with self.assertRaisesRegex(BitsgapError,"WS_UNSCOPED_REJECTION"):
+            await self.stream.watch_once(lambda _:ws,
+                                         on_event=lambda e:self._record([],e),max_messages=1)
+        self.assertEqual(self.stream.unscoped_control_responses,0)
+        self.assertEqual(self.stream.last_frame_shape["topic_class"],"NONE")
+
+    async def test_topic_value_with_optional_messaging_field_is_validated(self):
+        event = self.stream._ingest({"ok": True, "topic": "balance",
+                  "params":{"em":72}, "value":self.w.balance,
+                  "mes":"SENSITIVE_PROVIDER_MESSAGE_DO_NOT_ECHO"})
+        self.assertEqual(event["event"], "VALIDATED_UPDATE")
+        self.assertEqual(event["topic"], "balance")
+        self.assertNotIn("SENSITIVE_PROVIDER_MESSAGE", json.dumps(event))
+        with self.assertRaisesRegex(BitsgapError, "WS_UNVERIFIED_TOPIC_FRAME"):
+            self.stream._ingest({"ok": True, "topic": "balance",
+                   "params":{"em":72}, "value":self.w.balance,
+                   "mes": {"private":"SECRET"}})
+
+    async def test_real_ws_topic_payload_with_nullable_message_metadata(self):
+        event = self.stream._ingest({"ok": True, "topic": "balance",
+                  "params":{"em":72}, "value":self.w.balance, "mes":None})
+        self.assertEqual(event["event"],"VALIDATED_UPDATE")
+        self.assertEqual(event["record_count"],1)
+        self.assertFalse(event["funding_authorized"])
     async def test_foreign_exchange_event_is_denied(self):
         ws=FakeWS([{"type":"auth_ok","sid":"ok"},
                    {"ok":True,"topic":"balance","params":{"em":71},"value":self.w.balance}])
