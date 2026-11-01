@@ -60,7 +60,7 @@ def _safe_envelope_shape(value):
 
 
 class BitsgapFuturesStream:
-    def __init__(self, observer: BitsgapFuturesObserver):
+    def __init__(self, observer: BitsgapFuturesObserver, *, observation_sink=None, connection_sink=None):
         self.observer = observer
         self.connected = False
         self.authenticated = False
@@ -70,6 +70,19 @@ class BitsgapFuturesStream:
         self.last_failure = None
         self.last_frame_shape = None
         self.unscoped_control_responses = 0
+        self.observation_sink = observation_sink
+        self.connection_sink = connection_sink
+
+    def _observe_value(self, topic, value, quality="VALIDATED"):
+        if self.observation_sink is not None:
+            now = self.observer._clock_ms()
+            self.observation_sink(topic=topic, value=value, source="WS",
+                market_id=self.observer._futures_em, started_ms=now,
+                received_ms=now, quality=quality)
+
+    def _connection(self, state):
+        if self.connection_sink is not None:
+            self.connection_sink(state)
 
     def auth_frame(self, *, ts=None, nonce=None):
         timestamp = int(time.time()) if ts is None else ts
@@ -94,11 +107,13 @@ class BitsgapFuturesStream:
         if message.get("ok") is False:
             # Some subscriptions are absent when the exchange has no data.
             # Never claim a negative acknowledgment means zero orders/positions.
+            self._observe_value(topic, None, "UNVERIFIED")
             return {"topic": topic, "event": "SUBSCRIPTION_REJECTED",
                     "funding_authorized": False}
         if message.get("ok") is not True:
             _fail("WS_UNVERIFIED_TOPIC_FRAME")
         if "value" in message and message["value"] is None:
+            self._observe_value(topic, None, "PROVIDER_NO_DATA")
             return {"topic": topic, "event": "PROVIDER_NO_DATA",
                     "funding_authorized": False}
         if "value" not in message:
@@ -119,6 +134,7 @@ class BitsgapFuturesStream:
         else:
             count, _, _ = self.observer._positions(value, settings=(topic == "positions_settings"))
         self.updates += 1
+        self._observe_value(topic, value)
         # Raw private data never moves from the validation boundary to events/logs.
         return {"topic": topic, "event": "VALIDATED_UPDATE", "record_count": count,
                 "funding_authorized": False}
@@ -129,6 +145,7 @@ class BitsgapFuturesStream:
             _fail("FUTURES_DISCOVERY_REQUIRED")
         self.connected = False
         self.authenticated = False
+        self._connection("CONNECTING")
         # Snapshot-before-subscribe is NOT atomic with WS. It cannot release a
         # funded slot, and reconciliation must re-snapshot on every reconnect.
         # REST orders/positions may literally be null. This must not prevent the
@@ -144,8 +161,16 @@ class BitsgapFuturesStream:
                 self.authenticated = True
                 subscribe = [{"topic": topic, "params": {"em": self.observer._futures_em}, "subs": True}
                              for topic in _SUBS]
+                if self.observer.request_budget is not None:
+                    await asyncio.to_thread(self.observer.request_budget.acquire, _SUBS)
                 await ws.send(json.dumps(subscribe, separators=(",", ":")))
                 self.connected = True
+                self._connection("SUBSCRIBED")
+                if self.observation_sink is not None:
+                    # Additional REST window after subscribe, not an atomic
+                    # snapshot. Buffered WS values still require comparison.
+                    await asyncio.to_thread(self.observer.wallet_observation)
+                    self._connection("REST_RESYNC_COMPLETE")
                 processed = 0
                 while max_messages is None or processed < max_messages:
                     frame = _parse_json(await ws.recv())
@@ -185,6 +210,7 @@ class BitsgapFuturesStream:
         finally:
             self.connected = False
             self.disconnects += 1
+            self._connection("DISCONNECTED")
 
     async def observe_forever(self, connect, *, on_event, stop_event, delay_seconds=1):
         """Reconnect with a fresh REST read + signed WS session each time.
