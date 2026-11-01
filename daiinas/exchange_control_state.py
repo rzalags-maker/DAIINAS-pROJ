@@ -47,6 +47,7 @@ class ExchangeMirror:
     buffered_events: list = field(default_factory=list)
     alert_reasons: list = field(default_factory=list)
     snapshot_ts_ms: int = 0
+    scope_snapshot_ts_ms: dict = field(default_factory=dict)
     last_event_ts_ms: int = 0
     operator_pause: bool = True
 
@@ -70,6 +71,7 @@ class ExchangeMirror:
         self.buffered_events.clear()
         self.alert_reasons.clear()
         self.snapshot_ts_ms = 0
+        self.scope_snapshot_ts_ms.clear()
         self.last_event_ts_ms = 0
         self.operator_pause = True
 
@@ -114,6 +116,7 @@ class ExchangeMirror:
             target[key] = item
         setattr(self, scope, target)
         self.completed_scopes.add(scope)
+        self.scope_snapshot_ts_ms[scope] = ts
         self.snapshot_ts_ms = max(self.snapshot_ts_ms, ts)
 
     def classify(self, obj):
@@ -152,6 +155,10 @@ class ExchangeMirror:
         rid = required_string(obj.get('id'), 'record id')
         observed = self._timestamp(event['timestamp_ms'])
         target = getattr(self, scope)
+        # A complete REST page may already include a WS event; never resurrect
+        # an order absent from a newer complete scope snapshot.
+        if observed <= self.scope_snapshot_ts_ms.get(scope, 0):
+            return
         previous = target.get(rid)
         if previous and observed < previous['_observed_ms']:
             return
