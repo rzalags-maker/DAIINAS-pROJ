@@ -305,6 +305,7 @@ p.apply(src.after(p.state['cursor']))
 
     def test_owner_indefinite_session_does_not_auto_expire_at_five_hours(self):
         self.start('60',symbols=('UPUSDTM',),session_duration_ms=0)
+        self.train()  # first CLOCK/market evidence arms the saved session
         s=self.paper.state
         self.assertEqual(s['session']['duration_ms'],0)
         self.assertIsNone(s['session']['expires_ms'])
