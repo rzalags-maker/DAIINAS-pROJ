@@ -85,7 +85,10 @@ slippage are included in the full-cost plan, and gaps can exceed it.
 
 - **M0:** NO_TRADE, unchanged trading balance (external quarantined flows separate).
 - **M1:** per-symbol directional-only hypothesis, same financial controls.
-- **M2:** explicit symmetric hedge negative control when the observed RANGE and
+- **M2:** symmetric matched-lot hedge control only in RANGE, never a directional
+  fallback in UP/DOWN. A failed second entry requests a later executable exit of
+  its unmatched first leg; failed matching is not relabeled successful hedging.
+  This explicit negative control runs when the observed RANGE and
   capital/contract/risk/depth guards permit. It is not a deployment recommendation.
 - **M3:** adaptive directional or flat; opposite leg only after an as-of held-out
   evidence certificate meets the strict guard. Defaults contain no such evidence.

@@ -27,7 +27,7 @@ Position/pending symbols become durable pins, up to ten gross legs. No collector
 backtester or legacy account was rebuilt.
 
 New owned SQLite role: `v4-paper-portfolio`, with immutable source/policy/schema
-and execution-version identity (`v4.1-decimal18-v1`). Prototype v4 account files
+and execution-version identity (`v4.1-decimal18-v2`). Prototype v4 account files
 from earlier execution versions are refused; replay their public sources into a
 new account file instead of deleting identity or silently migrating money. A v3.3 file is rejected, never migrated or reset. Legacy `v33-paper-ledger`
 and Binance backtests remain available. New 8/60/100 scenarios have separate

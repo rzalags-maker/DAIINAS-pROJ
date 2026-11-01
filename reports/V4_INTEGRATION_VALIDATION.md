@@ -29,7 +29,7 @@ rollback, implicit account migration or rebuilding the public collector/backtest
 | Hedge | One direction -> conditional second leg plus explicit symmetric control | Zero gross ideal pair / negative costs; winner-loser trap; bidirectional path; integrated unfilled losing residual; no premature rung | Current genuine held-out advantage UNSUPPORTED; M3 does not manufacture a certificate |
 | Operations | Existing writer/collector/backup reused | Async pipeline/preflight pins, restart/replay, idempotence, backup; isolated hardened v4 units statically checked | Independent >=24h host BLOCKED; no remote deployment/alerts sent |
 
-Local complete suite: **240 tests passed**, preserving 200 audit-lineage tests,
+Local complete suite: **242 tests passed**, preserving 200 audit-lineage tests,
 15 original Ladder tests, and owner timing fix. Tests explicitly label synthetic
 fixtures. The actual SIGKILL test kills after OPENED/fee but before checkpoint,
 then recovers one position/fee from the already-committed source record. A separate
