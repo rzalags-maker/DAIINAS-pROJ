@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 import sqlite3
 import sys
-from decimal import Decimal
+from decimal import Decimal,ROUND_FLOOR
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from daiinas.continuous_ops import backup_pair
 D=lambda x:Decimal(str(x))
@@ -24,7 +24,7 @@ def verify():
     gross=fees=carry=net=D(0)
     for p in trades:
         units=D(p['quantity_contracts'])*D(p['contract_multiplier'])
-        g=(1 if p['direction']=='LONG' else -1)*(D(p['exit_price'])-D(p['entry_price']))*units
+        g=((1 if p['direction']=='LONG' else -1)*(D(p['exit_price'])-D(p['entry_price']))*units).quantize(D('0.000000000000000001'),rounding=ROUND_FLOOR)
         assert g==D(p['gross_pnl_usdt'])
         n=g-D(p['entry_fee_usdt'])-D(p['exit_fee_usdt'])-D(p['modeled_carry_usdt'])
         assert n==D(p['net_pnl_usdt'])

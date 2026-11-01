@@ -11,6 +11,7 @@ WorkingDirectory=/opt/daiinas
 Environment=PYTHONDONTWRITEBYTECODE=1
 ExecStart=/opt/daiinas/.venv/bin/python -m daiinas.continuous run --config /opt/daiinas/configs/v4-100.json --source-db /var/lib/daiinas-v4-100/source.sqlite3 --paper-db /var/lib/daiinas-v4-100/paper.sqlite3 --report /var/lib/daiinas-v4-100/last-run.json
 StateDirectory=daiinas-v4-100
+StateDirectoryMode=0700
 UMask=0077
 Restart=on-failure
 RestartSec=15

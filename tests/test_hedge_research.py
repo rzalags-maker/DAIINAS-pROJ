@@ -78,3 +78,13 @@ class HedgeNegativeControls(unittest.TestCase):
             self.assertGreater(D(r['net_campaign_mark']),0)
             self.assertLess(D(r['net_campaign_mark']),D('.94'))
             self.assertLess(D(r['return_on_campaign_allocation']),D('.02'))
+
+class ExactMoneyTests(unittest.TestCase):
+    def test_repeating_carry_reconciles_cash_and_allocation_exactly(self):
+        from daiinas.portfolio_paper import money
+        e1=D('.0057471');e2=D('.005457');exitfee=D('.0027465');gross=D('.013613')
+        carry=money(D(10822)/D(288000000000),cost=True)
+        cash=D(100)-e1-e2+gross-exitfee-carry
+        net=gross-e1-exitfee-carry
+        self.assertEqual(cash,D(50)+(D(50)+net)-e2)
+        self.assertGreaterEqual(carry,D(10822)/D(288000000000))

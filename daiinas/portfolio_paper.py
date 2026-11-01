@@ -17,6 +17,12 @@ from .market_intelligence import update as update_market,correlation,supported_h
 
 D=lambda v:dec(str(v))
 ZERO=D(0)
+MONEY_QUANTUM=D('0.000000000000000001')
+EXECUTION_VERSION='v4.1-decimal18-v1'
+
+def money(value,*,cost=False):
+    # Conservative fixed ledger precision avoids association-dependent repeating carry.
+    return D(value).quantize(MONEY_QUANTUM,rounding=ROUND_CEILING if cost else ROUND_FLOOR)
 
 
 @dataclass(frozen=True)
@@ -45,7 +51,7 @@ class PortfolioLedger(PaperLedger):
     def __init__(self,path,source_id,policy=PaperPolicy(),shadow=ShadowPolicy(),*,portfolio=None):
         self.portfolio=portfolio if isinstance(portfolio,PortfolioPolicy) else PortfolioPolicy(**(portfolio or {}))
         if D(policy.initial_capital_usdt)!=D(self.portfolio.initial_capital):raise ValueError('Explicit initial-capital policy mismatch')
-        super().__init__(path,source_id,policy,shadow,_profile=asdict(self.portfolio))
+        super().__init__(path,source_id,policy,shadow,_profile={**asdict(self.portfolio),'execution_version':EXECUTION_VERSION})
         self.db.executescript("""CREATE TABLE IF NOT EXISTS campaign_records(id TEXT PRIMARY KEY,payload TEXT NOT NULL);
             CREATE TRIGGER IF NOT EXISTS campaign_no_update BEFORE UPDATE ON campaign_records BEGIN SELECT RAISE(ABORT,'Immutable campaign'); END;
             CREATE TRIGGER IF NOT EXISTS campaign_no_delete BEFORE DELETE ON campaign_records BEGIN SELECT RAISE(ABORT,'Immutable campaign'); END;""")
@@ -60,6 +66,9 @@ class PortfolioLedger(PaperLedger):
                 last_active_base=active,capital_status={},marked_unrealized='0',equity_verified=True,
                 account_peak=self.portfolio.initial_capital,account_flow_adjustment='0',account_max_drawdown=0.,
                 closed_summary={'count':0,'wins':0,'losses':0,'profit':'0','loss':'0'})
+
+    def evidence_policy_hash(self):
+        return digest({'portfolio':asdict(self.portfolio),'paper':asdict(self.policy),'shadow':asdict(self.shadow),'execution_version':EXECUTION_VERSION})
 
     def ladder(self):return CapitalLadder.restore(self.state['ladder'])
     def save_ladder(self,ladder):self.state['ladder']=ladder.export_state()
@@ -195,9 +204,9 @@ class PortfolioLedger(PaperLedger):
         numeric={k:float(p[k]) for k in ('quantity_contracts','contract_multiplier','entry_price','entry_fee_usdt','entry_notional_usdt')}
         model=finish_position({**p,**numeric,'fee_rate':float(max(D(spec['taker_fee_rate']),D(self.policy.minimum_taker_fee_rate)))},q,now,'MODEL',self.policy)
         units=D(p['quantity_contracts'])*D(p['contract_multiplier']);exit_price=D(model['exit_price'])
-        gross=(1 if p['direction']=='LONG' else -1)*(exit_price-D(p['entry_price']))*units
-        fee=exit_price*units*max(D(spec['taker_fee_rate']),D(self.policy.minimum_taker_fee_rate))
-        carry=D(p['entry_notional_usdt'])*D(self.policy.modeled_carry_8h_rate)*D(max(0,now-p['entry_received_ms']))/D(28800000)
+        gross=money((1 if p['direction']=='LONG' else -1)*(exit_price-D(p['entry_price']))*units)
+        fee=money(exit_price*units*max(D(spec['taker_fee_rate']),D(self.policy.minimum_taker_fee_rate)),cost=True)
+        carry=money(D(p['entry_notional_usdt'])*D(self.policy.modeled_carry_8h_rate)*D(max(0,now-p['entry_received_ms']))/D(28800000),cost=True)
         return {'exit_price':str(exit_price),'gross':gross,'exit_fee':fee,'carry':carry,
                 'net_after_exit_only':gross-fee-carry,'net':gross-fee-carry-D(p['entry_fee_usdt'])}
 
@@ -248,19 +257,28 @@ class PortfolioLedger(PaperLedger):
         plan,reason=size_for_quote(equity=float(effective),peak=float(D(s['peak'])),quote=data,direction=side,
             rules=rules,observed_fee=fee,policy=effective_policy,risk_budget_usdt=float(budget),margin_budget_usdt=float(margin))
         if not plan:return None,reason
-        # Carry at the maximum modelled hold is reserved within planned risk.
-        unit_loss=D(plan['planned_loss_usdt'])/D(plan['quantity_contracts'])
-        unit_carry=D(plan['entry_notional_usdt'])/D(plan['quantity_contracts'])*D(self.policy.modeled_carry_8h_rate)*D(self.policy.maximum_holding_ms)/D(28800000)
-        quantity=rules.quantity(float(budget/(unit_loss+unit_carry)))
-        quantity=min(quantity,plan['quantity_contracts'])
-        if not rules.valid(quantity,plan['entry_price']):return None,'minimum_lot_exceeds_full_cost_risk'
-        factor=D(quantity)/D(plan['quantity_contracts'])
-        for field in ('entry_fee_usdt','planned_target_net_usdt','planned_loss_usdt','margin_reserved_usdt','entry_notional_usdt'):
-            plan[field]=str(D(plan[field])*factor)
-        plan['quantity_contracts']=str(D(quantity));plan['risk_budget_usdt']=str(budget)
-        plan['planned_loss_usdt']=str(D(plan['planned_loss_usdt'])+unit_carry*D(quantity))
-        plan['entry_notional_usdt']=str(D(plan['entry_price'])*D(quantity)*D(plan['contract_multiplier']))
-        plan['entry_fee_usdt']=str(D(plan['entry_notional_usdt'])*max(D(fee),D(self.policy.minimum_taker_fee_rate)))
+        # Final admission uses exact Decimal costs at the SAME adverse tick model.
+        # The legacy helper proposes a conservative lot; it never owns v4 money.
+        entry=D(plan['entry_price']);unit=D(plan['contract_multiplier']);fee_rate=max(D(fee),D(self.policy.minimum_taker_fee_rate))
+        one={**plan,'quantity_contracts':'1','entry_notional_usdt':str(entry*unit),
+             'entry_fee_usdt':str(money(entry*unit*fee_rate,cost=True)),'entry_received_ms':s['now_ms']}
+        horizon=s['now_ms']+self.policy.maximum_holding_ms
+        stop=plan['planned_stop_quote']
+        unit_loss=-self.close_math(one,{'bid':stop,'ask':stop},horizon,spec)['net']
+        half=(D(q['ask'])-D(q['bid']))/2
+        target=D(plan['planned_target_mid'])+(-half if side=='LONG' else half)
+        unit_gain=self.close_math(one,{'bid':str(target),'ask':str(target)},horizon,spec)['net']
+        if unit_loss<=0 or unit_gain<=0:return None,'full_cost_stop_or_target_infeasible'
+        step=D(rules.step_size)
+        margin_one=entry*unit*(1/D(self.policy.leverage)+2*fee_rate)
+        quantity=min(D(plan['quantity_contracts']),
+                     (budget/unit_loss/step).to_integral_value(rounding=ROUND_FLOOR)*step,
+                     (margin/margin_one/step).to_integral_value(rounding=ROUND_FLOOR)*step)
+        if not rules.valid(float(quantity),float(entry)) or quantity<=0:return None,'minimum_lot_exceeds_full_cost_risk'
+        plan.update(quantity_contracts=str(quantity),risk_budget_usdt=str(budget),
+            planned_loss_usdt=str(unit_loss*quantity),planned_target_net_usdt=str(unit_gain*quantity),
+            entry_notional_usdt=str(entry*unit*quantity),entry_fee_usdt=str(money(entry*unit*quantity*fee_rate,cost=True)),
+            margin_reserved_usdt=str(entry*unit*quantity/D(self.policy.leverage)))
         if D(plan['planned_target_net_usdt'])<D(self.policy.minimum_net_target_usdt):return None,'target_net_below_budget_after_full_cost_sizing'
         plan['allocation_budget_usdt']=str(nominal)
         return plan,None
@@ -384,7 +402,7 @@ class PortfolioLedger(PaperLedger):
         action='NO_TRADE';reason=m.get('reason','missing_per_symbol_state')
         open_legs={k:p for k,p in s['positions'].items() if p['symbol']==sym}
         pending=any(p['symbol']==sym for p in s['pending_entries'].values())
-        evidence=supported_hedge(s['evidence'].get(sym),now,digest(asdict(self.portfolio)))
+        evidence=supported_hedge(s['evidence'].get(sym),now,self.evidence_policy_hash())
         if self.portfolio.decision_model=='pressure':
             self.choose_pressure(sym,q)
             action='MAINTAIN' if open_legs or pending else 'NO_TRADE';reason='legacy_pressure_research_control'
@@ -453,11 +471,11 @@ class PortfolioLedger(PaperLedger):
             if action in ('pause','resume'):s['paused']=action=='pause';self.audit('CONTROL',operator_action=action)
             elif action=='capital-flow':
                 amount=D(p['amount'])
-                if D(s['quarantined_flows'])+amount<0:self.audit('CONTROL_REJECTED',reason='external_flows_quarantined_not_ladder_profit')
+                if amount!=money(amount) or D(s['quarantined_flows'])+amount<0:self.audit('CONTROL_REJECTED',reason='external_flows_quarantined_not_ladder_profit')
                 else:self.add('quarantined_flows',amount);self.add('cash',amount);self.add('account_flow_adjustment',amount);self.audit('CONTROL',operator_action=action,amount=str(amount))
             elif action=='install-research-evidence':
                 record=p.get('evidence',{});sym=p.get('symbol')
-                if sym and supported_hedge(record,available,digest(asdict(self.portfolio))):
+                if sym and supported_hedge(record,available,self.evidence_policy_hash()):
                     s['evidence'][sym]=record;self.audit('CONTROL',operator_action=action,symbol=sym,evidence_sha256=digest(record))
                 else:self.audit('CONTROL_REJECTED',reason='unsupported_or_future_held_out_evidence')
             elif action=='reset-halt' and not s['positions'] and not s['pending_entries'] and len(p.get('review_note',''))>=8 and self.ladder().active>0:
@@ -487,7 +505,8 @@ class PortfolioLedger(PaperLedger):
     def report(self):
         s=self.state;ladder=self.ladder();positions=list(s['positions'].values())
         return {'status':'PAPER_ONLY','engine':'v4','live_orders_enabled':False,'strategy_validated':False,'production_ready':False,
-            'initial_capital':self.portfolio.initial_capital,'mode':self.portfolio.mode,'cash':s['cash'],
+            'initial_capital':self.portfolio.initial_capital,'mode':self.portfolio.mode,
+            'execution_version':EXECUTION_VERSION,'money_quantum_usdt':str(MONEY_QUANTUM),'evidence_policy_sha256':self.evidence_policy_hash(),'cash':s['cash'],
             'equity_last_mark':s['last_equity'],'executable_equity':s['last_equity'] if s['equity_verified'] else None,
             'mark_status':s['mark_status'],'active_equity':s['active_equity'],'ladder':ladder.snapshot(),
             'capital_status':s['capital_status'],'reserved_margin':str(self.reserved()),'planned_risk':str(self.planned()),
