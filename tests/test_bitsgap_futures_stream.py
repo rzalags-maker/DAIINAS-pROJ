@@ -96,6 +96,32 @@ class StreamTests(unittest.IsolatedAsyncioTestCase):
                           "secret_key_PRIVATE","72", "USDT"):
             self.assertNotIn(forbidden, raw)
 
+    async def test_real_unscoped_control_response_is_not_counted_as_topic_data(self):
+        self.w.orders = None
+        self.w.positions = None
+        ws = FakeWS([{"type":"auth_ok","sid":"SENSITIVE"},
+                     {"ok":True,"mes":"server-control-message-with-private-text"},
+                     {"ok":True,"topic":"balance","params":{"em":72},
+                      "value":self.w.balance}])
+        events=[]
+        await self.stream.watch_once(lambda _:ws, on_event=lambda e:self._record(events,e),
+                                     max_messages=2)
+        self.assertEqual([e["event"] for e in events],
+                         ["UNSCOPED_OK_RESPONSE","VALIDATED_UPDATE"])
+        self.assertEqual(self.stream.unscoped_control_responses, 1)
+        self.assertFalse(events[0]["funding_authorized"])
+        self.assertNotIn("server-control-message",json.dumps(events))
+        self.assertNotIn("SENSITIVE",json.dumps(events))
+
+    async def test_unscoped_negative_response_does_not_authorize_subscription(self):
+        ws=FakeWS([{"type":"auth_ok","sid":"SENSITIVE"},
+                   {"ok":False,"mes":"hidden remote denial"}])
+        with self.assertRaisesRegex(BitsgapError,"WS_UNSCOPED_REJECTION"):
+            await self.stream.watch_once(lambda _:ws,
+                                         on_event=lambda e:self._record([],e),max_messages=1)
+        self.assertEqual(self.stream.unscoped_control_responses,0)
+        self.assertEqual(self.stream.last_frame_shape["topic_class"],"NONE")
+
     async def test_foreign_exchange_event_is_denied(self):
         ws=FakeWS([{"type":"auth_ok","sid":"ok"},
                    {"ok":True,"topic":"balance","params":{"em":71},"value":self.w.balance}])
