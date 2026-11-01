@@ -1,0 +1,1358 @@
+{
+  "status": "PAPER_ONLY",
+  "engine": "v4",
+  "live_orders_enabled": false,
+  "strategy_validated": false,
+  "production_ready": false,
+  "initial_capital": "100",
+  "initial_funding": {
+    "account_id": "paper-v4-100",
+    "account_identity": "be97169d60c3c3582ec543b68cde7171160a3ee974e9d7c7607768d68f43ab06",
+    "amount": "100",
+    "asof_source_cursor": 0,
+    "currency": "USDT",
+    "event_id": "INITIAL_FUNDING:16acc8ec9c24757dd136ddab475783a7d9382ee8399fa3e4a675d36a3509e11d",
+    "event_type": "INITIAL_FUNDING",
+    "journal_source_id": "5358a0e27da7484d8eb2e656ec0aaa5a",
+    "kind": "owner_confirmed_paper_scenario",
+    "policy_id": "b36770b8c3b5d842c9c85649fdddd992c80f10a5f7432a402c5b8153b9d70fb3",
+    "scope": "FUNDED_V4_PAPER_USDT_PERPETUAL",
+    "source_evidence": "Explicit hypothetical PAPER scenario; no exchange balance verified.",
+    "source_reference": "User-selected hypothetical scenario v4-smoke; not verified exchange capital",
+    "timestamp_ms": 1793491200000,
+    "verified_exchange_balance": false
+  },
+  "actual_exchange_balance_status": "NOT_CONNECTED",
+  "mode": "M3",
+  "execution_version": "v4.2-explicit-funding-decimal18-v1",
+  "money_quantum_usdt": "1E-18",
+  "evidence_policy_sha256": "b36770b8c3b5d842c9c85649fdddd992c80f10a5f7432a402c5b8153b9d70fb3",
+  "cash": "100",
+  "equity_last_mark": "100",
+  "executable_equity": "100",
+  "mark_status": "FLAT",
+  "active_equity": "50",
+  "ladder": {
+    "starting_total": "100",
+    "realized_net": "0",
+    "active": "50",
+    "reserve": "50",
+    "pending": "0",
+    "deficit": "0",
+    "total": "100",
+    "stage": "EXPAND",
+    "next_step": "RESERVE",
+    "committed_active": "0",
+    "slot_ceiling": 2,
+    "per_position_budget": "25",
+    "policy": {
+      "activation_total": "100",
+      "activation_reserve": "50",
+      "position_budget": "25",
+      "max_slots": 10,
+      "reserve_step": "50",
+      "active_step": "50",
+      "per_trade_planned_risk": "0.0025",
+      "aggregate_planned_risk": "0.01"
+    },
+    "live_orders_enabled": false
+  },
+  "capital_status": {
+    "allowed_slots": 2,
+    "open_positions": 0,
+    "free_slots": 2,
+    "excess_open_to_reduce_safely": 0,
+    "block_new_entries": false,
+    "marked_trading_budget": "50",
+    "reserve_untouched": "50",
+    "manual_safe_exit_required": false
+  },
+  "reserved_margin": "0",
+  "planned_risk": "0",
+  "realized_net_pnl": "0",
+  "fees": "0",
+  "entry_fees": "0",
+  "exit_fees": "0",
+  "modeled_carry": "0",
+  "external_simulated_flows": "0",
+  "account_maximum_drawdown": 0.0,
+  "account_peak": "100",
+  "maximum_drawdown_basis": "Active equity risk gate; total account metric is account_maximum_drawdown",
+  "maximum_drawdown": 0.0,
+  "halted": false,
+  "paused_new_entries": false,
+  "positions": [],
+  "pending_entries": [],
+  "exit_requests": {},
+  "campaigns": [],
+  "market_states": {
+    "SOLUSDTM": {
+      "bbo_imbalance": -0.38699007717750833,
+      "candidate": "UNKNOWN",
+      "candidate_since": 1793503183171,
+      "contract_spec": {
+        "captured_ms": 1793503180418,
+        "rules": {
+          "contract_size": "0.1",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "SOLUSDTM",
+          "tick_size": "0.001"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "cvd_notional": 0,
+      "cvd_ratio": 0,
+      "data_fresh": true,
+      "decision_reason": "no_cost_adjusted_observable_opportunity",
+      "entry_ask_depth": 62.900000000000006,
+      "entry_bid_depth": 27.8,
+      "evidence_confidence": "OBSERVATIONAL_ONLY",
+      "expected_net_status": "UNSUPPORTED_UNTIL_HELD_OUT_VALIDATION",
+      "hedge_evidence_supported": false,
+      "history": [
+        [
+          1793502958000,
+          95.5565
+        ],
+        [
+          1793502967000,
+          95.5565
+        ],
+        [
+          1793502968000,
+          95.55850000000001
+        ],
+        [
+          1793502969000,
+          95.55850000000001
+        ],
+        [
+          1793502970000,
+          95.5635
+        ],
+        [
+          1793502971000,
+          95.5635
+        ],
+        [
+          1793502972000,
+          95.5635
+        ],
+        [
+          1793502973000,
+          95.5655
+        ],
+        [
+          1793502974000,
+          95.5575
+        ],
+        [
+          1793502975000,
+          95.5575
+        ],
+        [
+          1793502976000,
+          95.5485
+        ],
+        [
+          1793502977000,
+          95.5485
+        ],
+        [
+          1793502979000,
+          95.5485
+        ],
+        [
+          1793502980000,
+          95.5545
+        ],
+        [
+          1793502981000,
+          95.5545
+        ],
+        [
+          1793502982000,
+          95.5545
+        ],
+        [
+          1793502984000,
+          95.5545
+        ],
+        [
+          1793502985000,
+          95.5545
+        ],
+        [
+          1793502986000,
+          95.5545
+        ],
+        [
+          1793502987000,
+          95.5545
+        ],
+        [
+          1793502988000,
+          95.5545
+        ],
+        [
+          1793502989000,
+          95.5545
+        ],
+        [
+          1793502990000,
+          95.5545
+        ],
+        [
+          1793502991000,
+          95.5545
+        ],
+        [
+          1793502992000,
+          95.5545
+        ],
+        [
+          1793502994000,
+          95.5545
+        ],
+        [
+          1793502995000,
+          95.5545
+        ],
+        [
+          1793502997000,
+          95.5545
+        ],
+        [
+          1793502998000,
+          95.5545
+        ],
+        [
+          1793502999000,
+          95.5545
+        ],
+        [
+          1793503000000,
+          95.5545
+        ],
+        [
+          1793503001000,
+          95.5545
+        ],
+        [
+          1793503002000,
+          95.5545
+        ],
+        [
+          1793503003000,
+          95.5545
+        ],
+        [
+          1793503004000,
+          95.5545
+        ],
+        [
+          1793503005000,
+          95.5545
+        ],
+        [
+          1793503006000,
+          95.5545
+        ],
+        [
+          1793503007000,
+          95.5545
+        ],
+        [
+          1793503008000,
+          95.5545
+        ],
+        [
+          1793503009000,
+          95.5545
+        ],
+        [
+          1793503010000,
+          95.5175
+        ],
+        [
+          1793503011000,
+          95.5205
+        ],
+        [
+          1793503012000,
+          95.5205
+        ],
+        [
+          1793503013000,
+          95.5205
+        ],
+        [
+          1793503014000,
+          95.5205
+        ],
+        [
+          1793503015000,
+          95.5205
+        ],
+        [
+          1793503016000,
+          95.5205
+        ],
+        [
+          1793503017000,
+          95.5205
+        ],
+        [
+          1793503018000,
+          95.5205
+        ],
+        [
+          1793503019000,
+          95.5205
+        ],
+        [
+          1793503021000,
+          95.5205
+        ],
+        [
+          1793503022000,
+          95.5205
+        ],
+        [
+          1793503023000,
+          95.5205
+        ],
+        [
+          1793503024000,
+          95.5205
+        ],
+        [
+          1793503025000,
+          95.5205
+        ],
+        [
+          1793503026000,
+          95.5205
+        ],
+        [
+          1793503027000,
+          95.5205
+        ],
+        [
+          1793503028000,
+          95.5205
+        ],
+        [
+          1793503029000,
+          95.5205
+        ],
+        [
+          1793503030000,
+          95.5205
+        ],
+        [
+          1793503039000,
+          95.5025
+        ],
+        [
+          1793503040000,
+          95.5025
+        ],
+        [
+          1793503041000,
+          95.5025
+        ],
+        [
+          1793503042000,
+          95.5025
+        ],
+        [
+          1793503043000,
+          95.5025
+        ],
+        [
+          1793503044000,
+          95.5025
+        ],
+        [
+          1793503045000,
+          95.5025
+        ],
+        [
+          1793503046000,
+          95.5025
+        ],
+        [
+          1793503047000,
+          95.5025
+        ],
+        [
+          1793503048000,
+          95.5025
+        ],
+        [
+          1793503049000,
+          95.5025
+        ],
+        [
+          1793503051000,
+          95.5025
+        ],
+        [
+          1793503052000,
+          95.5025
+        ],
+        [
+          1793503053000,
+          95.5025
+        ],
+        [
+          1793503054000,
+          95.5025
+        ],
+        [
+          1793503056000,
+          95.5025
+        ],
+        [
+          1793503057000,
+          95.5025
+        ],
+        [
+          1793503059000,
+          95.5025
+        ],
+        [
+          1793503060000,
+          95.5025
+        ],
+        [
+          1793503061000,
+          95.5025
+        ],
+        [
+          1793503062000,
+          95.5025
+        ],
+        [
+          1793503063000,
+          95.5025
+        ],
+        [
+          1793503064000,
+          95.5025
+        ],
+        [
+          1793503067000,
+          95.5025
+        ],
+        [
+          1793503068000,
+          95.5025
+        ],
+        [
+          1793503070000,
+          95.5025
+        ],
+        [
+          1793503071000,
+          95.5025
+        ],
+        [
+          1793503072000,
+          95.5025
+        ],
+        [
+          1793503073000,
+          95.5025
+        ],
+        [
+          1793503074000,
+          95.5025
+        ],
+        [
+          1793503076000,
+          95.5025
+        ],
+        [
+          1793503077000,
+          95.5025
+        ],
+        [
+          1793503078000,
+          95.5025
+        ],
+        [
+          1793503079000,
+          95.5025
+        ],
+        [
+          1793503081000,
+          95.5025
+        ],
+        [
+          1793503082000,
+          95.5025
+        ],
+        [
+          1793503083000,
+          95.5025
+        ],
+        [
+          1793503084000,
+          95.5025
+        ],
+        [
+          1793503086000,
+          95.5025
+        ],
+        [
+          1793503087000,
+          95.5025
+        ],
+        [
+          1793503088000,
+          95.5025
+        ],
+        [
+          1793503089000,
+          95.5025
+        ],
+        [
+          1793503090000,
+          95.5025
+        ],
+        [
+          1793503091000,
+          95.5025
+        ],
+        [
+          1793503092000,
+          95.5025
+        ],
+        [
+          1793503093000,
+          95.5025
+        ],
+        [
+          1793503094000,
+          95.5025
+        ],
+        [
+          1793503095000,
+          95.5025
+        ],
+        [
+          1793503097000,
+          95.5025
+        ],
+        [
+          1793503098000,
+          95.5025
+        ],
+        [
+          1793503099000,
+          95.5025
+        ],
+        [
+          1793503108000,
+          95.5025
+        ],
+        [
+          1793503109000,
+          95.5025
+        ],
+        [
+          1793503110000,
+          95.5025
+        ],
+        [
+          1793503111000,
+          95.5025
+        ],
+        [
+          1793503113000,
+          95.5025
+        ],
+        [
+          1793503114000,
+          95.5025
+        ],
+        [
+          1793503115000,
+          95.5025
+        ],
+        [
+          1793503116000,
+          95.5025
+        ],
+        [
+          1793503117000,
+          95.5025
+        ],
+        [
+          1793503118000,
+          95.5025
+        ],
+        [
+          1793503119000,
+          95.5025
+        ],
+        [
+          1793503120000,
+          95.5025
+        ],
+        [
+          1793503121000,
+          95.5025
+        ],
+        [
+          1793503122000,
+          95.5025
+        ],
+        [
+          1793503123000,
+          95.5025
+        ],
+        [
+          1793503124000,
+          95.5025
+        ],
+        [
+          1793503125000,
+          95.5025
+        ],
+        [
+          1793503126000,
+          95.5025
+        ],
+        [
+          1793503127000,
+          95.5025
+        ],
+        [
+          1793503129000,
+          95.5025
+        ],
+        [
+          1793503130000,
+          95.5025
+        ],
+        [
+          1793503133000,
+          95.5025
+        ],
+        [
+          1793503134000,
+          95.5025
+        ],
+        [
+          1793503135000,
+          95.5025
+        ],
+        [
+          1793503136000,
+          95.49549999999999
+        ],
+        [
+          1793503137000,
+          95.49549999999999
+        ],
+        [
+          1793503138000,
+          95.49549999999999
+        ],
+        [
+          1793503139000,
+          95.49549999999999
+        ],
+        [
+          1793503140000,
+          95.49549999999999
+        ],
+        [
+          1793503141000,
+          95.49549999999999
+        ],
+        [
+          1793503145000,
+          95.5365
+        ],
+        [
+          1793503146000,
+          95.5365
+        ],
+        [
+          1793503147000,
+          95.5365
+        ],
+        [
+          1793503148000,
+          95.5365
+        ],
+        [
+          1793503149000,
+          95.5365
+        ],
+        [
+          1793503150000,
+          95.5365
+        ],
+        [
+          1793503151000,
+          95.5365
+        ],
+        [
+          1793503152000,
+          95.5365
+        ],
+        [
+          1793503153000,
+          95.5255
+        ],
+        [
+          1793503154000,
+          95.5135
+        ],
+        [
+          1793503155000,
+          95.5135
+        ],
+        [
+          1793503156000,
+          95.5095
+        ],
+        [
+          1793503157000,
+          95.5095
+        ],
+        [
+          1793503159000,
+          95.5095
+        ],
+        [
+          1793503160000,
+          95.5095
+        ],
+        [
+          1793503161000,
+          95.5095
+        ],
+        [
+          1793503162000,
+          95.5095
+        ],
+        [
+          1793503163000,
+          95.5005
+        ],
+        [
+          1793503164000,
+          95.5005
+        ],
+        [
+          1793503165000,
+          95.4925
+        ],
+        [
+          1793503166000,
+          95.4925
+        ],
+        [
+          1793503167000,
+          95.4925
+        ],
+        [
+          1793503168000,
+          95.4925
+        ],
+        [
+          1793503169000,
+          95.4925
+        ],
+        [
+          1793503170000,
+          95.51050000000001
+        ],
+        [
+          1793503171000,
+          95.51050000000001
+        ],
+        [
+          1793503172000,
+          95.51050000000001
+        ],
+        [
+          1793503173000,
+          95.51050000000001
+        ],
+        [
+          1793503174000,
+          95.51050000000001
+        ],
+        [
+          1793503175000,
+          95.51050000000001
+        ],
+        [
+          1793503176000,
+          95.51050000000001
+        ],
+        [
+          1793503177000,
+          95.51050000000001
+        ],
+        [
+          1793503178000,
+          95.51050000000001
+        ],
+        [
+          1793503182000,
+          95.51050000000001
+        ],
+        [
+          1793503183000,
+          95.51050000000001
+        ],
+        [
+          1793503184000,
+          95.51050000000001
+        ],
+        [
+          1793503185000,
+          95.51050000000001
+        ],
+        [
+          1793503186000,
+          95.51050000000001
+        ]
+      ],
+      "horizons_ms": {
+        "micro": 30000,
+        "trend": 180000,
+        "volatility": 600000
+      },
+      "l2_pressure": -0.38699007717750833,
+      "last_action": "NO_TRADE",
+      "last_decision_ms": 1793503186124,
+      "last_transition_ms": 1793503183171,
+      "momentum_bps": 0.10470162653986037,
+      "observed_print_count": 0,
+      "oscillations": 3,
+      "prospective_move_minus_cost_bps": -11.49999850162285,
+      "range_amplitude_bps": 6.492656491348114,
+      "reason": "no_cost_adjusted_structure",
+      "regime": "UNKNOWN",
+      "round_trip_cost_floor_bps": 16.1047005303072,
+      "rules_hash": "326f45402ffae60bf5d4a29cfaaa3f7cd30215d0bd381355cd5e0613fb6e7fb1",
+      "spread_bps": 0.10470053030719804,
+      "symbol_time_ms": 1793503186124,
+      "trend_bps": -4.604702028684349,
+      "trend_persistence": 0.06666666666666667,
+      "volatility_bps": 0.5195554141324946,
+      "volatility_regime": "LOW"
+    },
+    "ZECUSDTM": {
+      "history": [
+        [
+          1793503139000,
+          1244.9
+        ],
+        [
+          1793503146000,
+          1245.385
+        ],
+        [
+          1793503147000,
+          1245.2649999999999
+        ],
+        [
+          1793503148000,
+          1245.225
+        ],
+        [
+          1793503149000,
+          1245.31
+        ],
+        [
+          1793503151000,
+          1245.425
+        ],
+        [
+          1793503152000,
+          1245.355
+        ],
+        [
+          1793503153000,
+          1245.3249999999998
+        ],
+        [
+          1793503154000,
+          1245.055
+        ],
+        [
+          1793503155000,
+          1245.0500000000002
+        ],
+        [
+          1793503156000,
+          1245.055
+        ],
+        [
+          1793503158000,
+          1245.055
+        ],
+        [
+          1793503161000,
+          1245.0500000000002
+        ],
+        [
+          1793503162000,
+          1245.0700000000002
+        ],
+        [
+          1793503163000,
+          1244.935
+        ],
+        [
+          1793503164000,
+          1244.9099999999999
+        ],
+        [
+          1793503165000,
+          1244.72
+        ],
+        [
+          1793503166000,
+          1244.73
+        ],
+        [
+          1793503167000,
+          1244.7
+        ],
+        [
+          1793503168000,
+          1244.6750000000002
+        ],
+        [
+          1793503169000,
+          1244.585
+        ],
+        [
+          1793503170000,
+          1244.725
+        ],
+        [
+          1793503171000,
+          1244.7350000000001
+        ],
+        [
+          1793503172000,
+          1244.835
+        ],
+        [
+          1793503173000,
+          1244.83
+        ],
+        [
+          1793503174000,
+          1244.7849999999999
+        ],
+        [
+          1793503175000,
+          1244.8200000000002
+        ],
+        [
+          1793503176000,
+          1244.81
+        ],
+        [
+          1793503177000,
+          1244.915
+        ],
+        [
+          1793503178000,
+          1245.08
+        ],
+        [
+          1793503183000,
+          1245.115
+        ],
+        [
+          1793503184000,
+          1245.0900000000001
+        ]
+      ],
+      "symbol_time_ms": 1793503184927,
+      "regime": "UNKNOWN",
+      "candidate": "UNKNOWN",
+      "candidate_since": 1793503184927,
+      "last_transition_ms": 1793503184927,
+      "momentum_bps": 0.3212722380618871,
+      "trend_bps": 1.5262270061855432,
+      "trend_persistence": 0.12903225806451613,
+      "volatility_bps": 1.0072946014299187,
+      "volatility_regime": "LOW",
+      "cvd_notional": 0,
+      "cvd_ratio": 0,
+      "observed_print_count": 0,
+      "bbo_imbalance": -0.7142857142857143,
+      "l2_pressure": -0.7142857142857143,
+      "spread_bps": 0.9637857504286295,
+      "round_trip_cost_floor_bps": 16.963785750428627,
+      "range_amplitude_bps": 6.74923769770519,
+      "oscillations": 15,
+      "entry_bid_depth": 0.01,
+      "entry_ask_depth": 0.06,
+      "data_fresh": true,
+      "evidence_confidence": "OBSERVATIONAL_ONLY",
+      "expected_net_status": "UNSUPPORTED_UNTIL_HELD_OUT_VALIDATION",
+      "reason": "no_cost_adjusted_structure",
+      "prospective_move_minus_cost_bps": -13.589166901576032,
+      "horizons_ms": {
+        "micro": 30000,
+        "trend": 180000,
+        "volatility": 600000
+      },
+      "contract_spec": {
+        "captured_ms": 1793503180418,
+        "rules": {
+          "contract_size": "0.01",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "ZECUSDTM",
+          "tick_size": "0.01"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "rules_hash": "e6e920341a44b0e06ca626b38309035ff64e3e479b87c2899a04522ffddca2a7",
+      "last_action": "NO_TRADE",
+      "last_decision_ms": 1793503184927,
+      "decision_reason": "no_cost_adjusted_observable_opportunity",
+      "hedge_evidence_supported": false
+    },
+    "ETHUSDTM": {
+      "history": [
+        [
+          1793503177000,
+          2267.1949999999997
+        ],
+        [
+          1793503181000,
+          2267.1949999999997
+        ],
+        [
+          1793503182000,
+          2267.1949999999997
+        ],
+        [
+          1793503183000,
+          2267.1949999999997
+        ],
+        [
+          1793503184000,
+          2267.1949999999997
+        ],
+        [
+          1793503185000,
+          2267.1949999999997
+        ],
+        [
+          1793503186000,
+          2267.1949999999997
+        ]
+      ],
+      "symbol_time_ms": 1793503186168,
+      "regime": "UNKNOWN",
+      "candidate": "UNKNOWN",
+      "candidate_since": 1793503182221,
+      "last_transition_ms": 1793503182221,
+      "momentum_bps": 0.0,
+      "trend_bps": 0.0,
+      "trend_persistence": 0.0,
+      "volatility_bps": 0.0,
+      "volatility_regime": "LOW",
+      "cvd_notional": 0,
+      "cvd_ratio": 0,
+      "observed_print_count": 0,
+      "bbo_imbalance": 0.8352059925093632,
+      "l2_pressure": 0.8352059925093632,
+      "spread_bps": 0.044107366149640996,
+      "round_trip_cost_floor_bps": 16.04410736614964,
+      "range_amplitude_bps": 0.0,
+      "oscillations": 0,
+      "entry_bid_depth": 9.8,
+      "entry_ask_depth": 0.88,
+      "data_fresh": true,
+      "evidence_confidence": "LOW",
+      "expected_net_status": "UNSUPPORTED_UNTIL_HELD_OUT_VALIDATION",
+      "reason": "insufficient_history",
+      "prospective_move_minus_cost_bps": -16.04410736614964,
+      "horizons_ms": {
+        "micro": 30000,
+        "trend": 180000,
+        "volatility": 600000
+      },
+      "contract_spec": {
+        "captured_ms": 1793503180418,
+        "rules": {
+          "contract_size": "0.01",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "ETHUSDTM",
+          "tick_size": "0.01"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "rules_hash": "3a2b30a0889ccdd8fe6c8f7efc7743e4188c47b257f61b965e0697f8e3ef4f64",
+      "last_action": "NO_TRADE",
+      "last_decision_ms": 1793503186168,
+      "decision_reason": "no_cost_adjusted_observable_opportunity",
+      "hedge_evidence_supported": false
+    }
+  },
+  "closed_summary": {
+    "count": 0,
+    "loss": "0",
+    "losses": 0,
+    "profit": "0",
+    "wins": 0
+  },
+  "pins": [],
+  "counts": {
+    "BOOK_SNAPSHOT": 46,
+    "DECISION": 3921,
+    "HEALTH": 23,
+    "INITIAL_FUNDING": 1,
+    "REJECTED_EVENT": 122,
+    "SCAN": 15,
+    "VERIFIED_BOOK": 19
+  },
+  "reason_counts": {
+    "REJECTED_EVENT:rule_version_mismatch": 122
+  },
+  "recent_closed_positions": [],
+  "source_cursor": 67316,
+  "input_digest": "2afc62a4b29005ea87b76678b53f3e139558c4eb68717db85a3e8ab23052f01d",
+  "checkpoint_available_ms": 1793503186294,
+  "scan": {
+    "available_ms": 1793503180486,
+    "report_time_ms": 1793503180418,
+    "watch": {
+      "blocked_new_entries": [],
+      "capacity_exhausted": false,
+      "deep_symbols": [
+        "ETHUSDTM",
+        "ZECUSDTM",
+        "SOLUSDTM"
+      ],
+      "entered_at": {
+        "ETHUSDTM": 1793503176791,
+        "SOLUSDTM": 1793502956371,
+        "ZECUSDTM": 1793503138999
+      },
+      "no_trade": true,
+      "pinned": [],
+      "reason": "Snapshot-based candidate rotation only; no strategy edge validated",
+      "time_ms": 1793503180418,
+      "watch_pool": [
+        "ETHUSDTM",
+        "ZECUSDTM",
+        "ASTERUSDTM",
+        "PEPEUSDTM",
+        "SOLUSDTM",
+        "XRPUSDTM",
+        "BNBUSDTM",
+        "HYPEUSDTM",
+        "KCSUSDTM",
+        "FILUSDTM",
+        "NEARUSDTM",
+        "BCHUSDTM",
+        "ENAUSDTM",
+        "SUIUSDTM",
+        "TAOUSDTM",
+        "LINKUSDTM",
+        "DOTUSDTM",
+        "HBARUSDTM",
+        "DOGEUSDTM",
+        "ONDOUSDTM"
+      ]
+    },
+    "specs": {
+      "ETHUSDTM": {
+        "captured_ms": 1793503180418,
+        "rules": {
+          "contract_size": "0.01",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "ETHUSDTM",
+          "tick_size": "0.01"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "SOLUSDTM": {
+        "captured_ms": 1793503180418,
+        "rules": {
+          "contract_size": "0.1",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "SOLUSDTM",
+          "tick_size": "0.001"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "ZECUSDTM": {
+        "captured_ms": 1793503180418,
+        "rules": {
+          "contract_size": "0.01",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "ZECUSDTM",
+          "tick_size": "0.01"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      }
+    },
+    "unavailable": []
+  },
+  "service": {
+    "active": [
+      "ETHUSDTM",
+      "SOLUSDTM",
+      "ZECUSDTM"
+    ],
+    "boot_id": "ed4071e6e75a4a23b5a25c09d350bb25",
+    "connected": true,
+    "disk_free_bytes": 93507272704,
+    "elapsed_seconds": 79.77824788500004,
+    "feed_age_ms": {
+      "ETHUSDTM": {
+        "execution": 1793503186071,
+        "level2": 22,
+        "tickerV2": 49
+      },
+      "SOLUSDTM": {
+        "execution": 1793503186071,
+        "level2": 15,
+        "tickerV2": 104
+      },
+      "ZECUSDTM": {
+        "execution": 1793503186071,
+        "level2": 27,
+        "tickerV2": 1144
+      }
+    },
+    "host_id": null,
+    "paper_bytes": 10260320,
+    "session_id": "2a4a1193a3fb4662abc84efcc0583c12",
+    "source_bytes": 122518576,
+    "stream_counts": {
+      "book_resyncs": 11,
+      "connections": 3,
+      "market_scans": 5,
+      "pongs": 4,
+      "reconciliations": 5,
+      "reconnects": 2,
+      "retired_markets": 2,
+      "snapshots": 22,
+      "subscribe_acks": 33,
+      "unsubscribe_acks": 6
+    },
+    "unavailable": [],
+    "verified_books": [
+      "ETHUSDTM",
+      "SOLUSDTM",
+      "ZECUSDTM"
+    ]
+  },
+  "unsettled_campaign_pnl": "0",
+  "stream": {
+    "connected": false,
+    "session_id": "2a4a1193a3fb4662abc84efcc0583c12",
+    "active": [
+      "ETHUSDTM",
+      "SOLUSDTM",
+      "ZECUSDTM"
+    ],
+    "verified_books": [],
+    "feed_age_ms": {
+      "ETHUSDTM": {
+        "execution": 1793503186452,
+        "tickerV2": 285,
+        "level2": 199
+      },
+      "SOLUSDTM": {
+        "execution": 1793503186452,
+        "tickerV2": 328,
+        "level2": 160
+      },
+      "ZECUSDTM": {
+        "execution": 1793503186452,
+        "tickerV2": 1525,
+        "level2": 211
+      }
+    },
+    "stream_counts": {
+      "market_scans": 5,
+      "connections": 3,
+      "subscribe_acks": 33,
+      "snapshots": 22,
+      "book_resyncs": 11,
+      "reconciliations": 5,
+      "pongs": 4,
+      "unsubscribe_acks": 6,
+      "retired_markets": 2,
+      "reconnects": 2
+    },
+    "unavailable": []
+  },
+  "errors": [
+    "ConnectionError: Scheduled public token renewal",
+    "ConnectionError: Scheduled public token renewal"
+  ],
+  "fatal_error": null,
+  "elapsed_seconds": 80.15898777200005,
+  "boot_id": "ed4071e6e75a4a23b5a25c09d350bb25",
+  "source_path": "state/v4-source.sqlite3",
+  "paper_path": "state/v4-paper.sqlite3",
+  "observed_contracts": 717,
+  "normalized_event_counts": {
+    "tickerV2": 1300,
+    "level2": 21978,
+    "execution": 62
+  },
+  "source_code_sha256": {
+    "continuous.py": "64862adc05f0a9b86ab5b7666481dff76dff3bbaddf276a388d30ea4ac122a8b",
+    "continuous_paper.py": "04e76e5f85336a369ccd4f986a91ee6341c20f2defd6f703889cd5a5620023fa",
+    "continuous_stream.py": "2a18e78fd5bb0d06e1e040641ee7ec3effea3f25065510d6e5436c0b29de3024",
+    "continuous_store.py": "b1fd3315da192b857af9333a830a5ad722dfac2f34b4acffc427b736e8d9b096",
+    "capital_ladder.py": "8fa1a07bac9b4675fa56e13428663ab7cec5de1eb847a722d75b804cf846f58f",
+    "portfolio_paper.py": "acec4a2d37f2bdc319f7c8f9fc62736721b6f312c6a45220d67c2f4859690b04",
+    "market_intelligence.py": "5814c8d49cb13f9798529da005fde45214defdf86d9f8aae26baee6a7abe16ec",
+    "hedge_research.py": "610a0e299c2b3f9b9ad2532757279244b2f3efbec60eff1ea7cbace2c9ad2f88",
+    "funding.py": "96ca25a5090b96ed46f4a7a71bc31295c858297414d5ec8ed2fbf66e2e0d0b32"
+  },
+  "24h_host_gate": "BLOCKED \u2014 HOST NOT PROVISIONED",
+  "smoke_status": "passed",
+  "tested_commit": "f9cbd5cd54a7c6d4e8a15b995482fde05a2cfdc1",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41268122093"
+}
