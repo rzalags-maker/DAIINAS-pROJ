@@ -216,3 +216,9 @@ python scripts/verify_v47.py --output-dir /tmp/v47-proof
 
 Capital is an **explicit MOCK scenario**. Actual account remains NOT_CONNECTED;
 live orders remain disabled. [Execution, assumptions and deployment dependencies](docs/V47_IMPLEMENTATION.md).
+
+New v4.7 PAPER sessions are bounded to five hours and disarm on normal worker
+exit. Restart an intentionally stopped session with `run --start-session` using
+the same configuration and databases; PAUSE/HALT are not cleared. Five-hour expiry
+is tested with a virtual clock, not claimed as real hosted uptime. Maker fees and
+native receipts are explicitly labeled scenarios/MOCK; real order transport is inert.

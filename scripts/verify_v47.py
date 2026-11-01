@@ -13,7 +13,9 @@ import subprocess
 import sys
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tests'))
-from test_v47_conveyor import ConveyorTests,LeverageTests
+from test_v47_conveyor import ConveyorTests,LeverageTests,market_state
+from daiinas.adaptive_execution import select_sniper
+from daiinas.risk import ContractRules
 from daiinas.continuous import replay
 from daiinas.continuous_ops import backup_pair
 
@@ -23,7 +25,7 @@ def run(output):
     result={'evidence_kind':'SYNTHETIC_MARKET_AND_MOCK_FUTURES_ACCOUNT','actual_exchange_account':'NOT_CONNECTED',
             'live_orders_enabled':False,'strategy_validated':False,'production_ready':False,
             'tested_commit':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
-            'python':platform.python_version(),'scenarios':{},'leverage_matrix':{}}
+            'python':platform.python_version(),'scenarios':{},'leverage_matrix':{},'coupled_stop_fee_matrix':{}}
     for name in ('net_target','partial_stop_loss','ten_positions','x5','partial_ioc'):
         case=ConveyorTests();case.setUp()
         try:
@@ -65,9 +67,15 @@ def run(output):
     for side in ('LONG','SHORT'):
         result['leverage_matrix'][side]=[helper.select(side,margin).payload() for margin in ('20','10','5','4','3')]
         assert [row['selected']['leverage'] for row in result['leverage_matrix'][side]]==[1,2,3,4,5]
+    for side in ('LONG','SHORT'):
+        matrix=select_sniper(maker_fee_rate='.0002',rules=ContractRules('S','1','100000','1','.0001','0','1'),
+            quote={'bid':'1','ask':'1.0002'},side=side,allocation='25',margin_budget='25',risk_budget='.125',
+            fee_rate='.0006',market=market_state(side,600),max_leverage='5')
+        assert len(matrix.alternatives)==40
+        result['coupled_stop_fee_matrix'][side]=matrix.payload()
     result['source_sha256']={str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in [
         Path('daiinas/portfolio_paper.py'),Path('daiinas/adaptive_execution.py'),Path('daiinas/position_conveyor.py'),
-        Path('daiinas/market_pulse.py'),Path('tests/test_v47_conveyor.py')]}
+        Path('daiinas/market_pulse.py'),Path('daiinas/paper_session.py'),Path('daiinas/execution_boundary.py'),Path('tests/test_v47_conveyor.py')]}
     result['status']='PASS';(output/'status.json').write_text(json.dumps(result,indent=2)+'\n')
     return result
 

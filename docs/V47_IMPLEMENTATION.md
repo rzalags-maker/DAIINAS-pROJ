@@ -39,7 +39,7 @@ workflow records actual KuCoin public observations using explicit modeled capita
 ## Leverage and economics
 
 `adaptive_execution.LeverageSelection` evaluates
-all x1–x5 alternatives using identical decision-time inputs. Each intent and filled
+40 coupled alternatives: x1–x5, 0.5%/1% price stops, and maker/maker, maker/taker, taker/maker, taker/taker paths using identical decision-time inputs. Each intent and filled
 leg stores selected leverage, notional, reserved margin, stop/target, allocated
 capital, costs and rejection/selection evidence. Account-snapshot `leverage` remains
 the v4.6 historical baseline field: it is **not** reinterpreted as an account-wide
@@ -49,9 +49,9 @@ Actual authenticated account capabilities remain unknown.
 
 The selector sizes down against the strictest of campaign loss <=0.5% allocation,
 per-leg <=0.25% effective ACTIVE and aggregate <=1%, correlation and free margin.
-The 0.5% adverse **entry-price** stop is distinct from those monetary budgets.
+The 0.5% and 1% adverse **entry-price** stop hypotheses are distinct from those monetary budgets. Widening the stop shrinks permissible notional; it never widens the monetary cap.
 A configured stop-gap allowance (default 5 bps), adverse slippage/tick rounding,
-spread, both taker fees and modeled carry are included. Full posted allocation at
+spread, path-specific entry/target fees, conservative taker stop fees and modeled carry are included. Maker 0.02% / taker 0.06% are named owner PAPER scenarios (public contract metadata takes precedence with the existing taker floor), not an authenticated fee tier. All four paths are retained for analysis; the executable quote model uses taker/taker. POST_ONLY_LIMIT maker/taker requires a normalized authoritative MOCK receipt, never a quote touch. Maker-TP paths are cost scenarios only. Full posted allocation at
 x5 is rejected when it violates money risk. Higher leverage cannot rescue an
 unaffordable minimum lot. Among feasible alternatives the lowest leverage wins;
 no quantity/leverage increase is allowed when repricing an admitted intent.
@@ -133,9 +133,47 @@ martingale. Positive partial hedge/leg marks cannot become a campaign WIN.
   can exceed planned loss. The selector explicitly marks liquidation unverified.
 - Independently hosted deployment still needs durable storage, supervised single
   worker, backups, heartbeat/alert routing, an owner-authenticated command bridge
-  and an actual 24h acceptance run. Existing hardened `deploy/daiinas-v4*` units
+  and a verified bounded-session acceptance run. A separate 24h reliability test remains unrun; 24/7 trading is not mandatory. Existing hardened `deploy/daiinas-v4*` units
   can be configured with the new profile/paths; none was deployed by this task.
 - Real Futures account capital needs the separately approved General-only read-only
   connector and verified per-symbol/account scope/collateral/capability mapping.
   UTA remains unsupported. No credentials, private exchange calls or live orders
   are introduced. Multi-day held-out economic validation remains open.
+
+
+## Bounded START/STOP sessions and inert venue boundary
+
+A fresh explicit PAPER profile starts one durable session on its first modeled
+account reconciliation. Default duration is five hours; policy permits a shorter
+bounded duration, never more than five hours. Expiry cancels known unfilled
+entries, disarms entries, persists STOPPED_FLAT or STOPPED_WITH_EXPOSURE and ends
+the worker. Normal worker exit also disarms. To deliberately start another session
+on the SAME config/databases, use `continuous run --start-session ...`. This never
+clears operator PAUSE, risk HALT, funds or reconciliation holds. Existing `stop`
+is a durable entry PAUSE; it continues risk monitoring and does not flatten.
+Session START/STOP source controls require actor/idempotency and report durable
+ledger ACK; they are local tests/CLI, **not a deployed authenticated mobile API**.
+A five-hour virtual-clock regression is not a five-hour real host uptime claim.
+
+`execution_boundary.InertOrderGateway` previews the same accepted intent (stable
+clientOid, instrument/side, quantity, leverage, isolated mode, stop/target and
+reduce-only children). Every place/cancel/modify method raises: no transport exists.
+Native exit handling is **MOCK_NATIVE only**, with owned IDs, actual receipt fee
+and liquidity role, immutable fill-ID deduplication, authoritative remaining
+position/cash/free-margin, child-size and sibling-cancellation proof. An uncertain
+ACK creates a durable reconciliation hold, blocks quote fills/replacements and
+preserves exposure. Updated authority may finish the same immutable receipt once;
+WS/REST duplication cannot book another close. Partial exits retain the occupied
+slot and residual coverage. Free margin authority can tighten the local model.
+Passive entries require receipt proof plus filled quantity, canceled partial tail
+and child coverage; no maker fill is inferred from a touching quote. Entry after
+disarm/unknown ownership remains a reconciliation blocker, never invented flat.
+
+Native MOCK receipts carry no invented BBO: absent spread decomposition is marked
+UNAVAILABLE. All fee amounts are accounted exactly once. Normal quote-model exits
+remain explicitly modeled taker execution. Native sibling cancellation/protection
+is validated data in a simulator, **not KuCoin OCO or native-order verification**.
+When no worker runs there is no observation, discovery, replacement or modeled
+quote exit. Tests can inject a reconciled offline native MOCK fill after restart;
+actual exchange-native protection requires a separately authorized implementation
+and venue verification. Live routing, keys and private API activation remain off.

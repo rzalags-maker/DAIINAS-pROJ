@@ -86,10 +86,10 @@ class ConveyorTests(unittest.TestCase):
     def send(self,t,*packets):
         with patch('daiinas.continuous_store.clock_ms',return_value=t):rows=self.source.append(packets)
         self.paper.apply(rows);return rows
-    def start(self,capital='450',symbols=('UPUSDTM','DOWNUSDTM'),free=None):
+    def start(self,capital='450',symbols=('UPUSDTM','DOWNUSDTM'),free=None,**options):
         snap=mock_snapshot(cash=capital,free_margin=free,timestamp_ms=0,snapshot_id='opening')
         self.paper=PortfolioLedger.from_account_snapshot(self.root/'paper.sqlite3',self.source.source_id,snap,
-            strategy_version='v47',paper_settlement=True,mode='M1',cooldown_ms=30000)
+            strategy_version='v47',paper_settlement=True,mode='M1',cooldown_ms=30000,**options)
         self.pp,self.policy=self.paper.portfolio,self.paper.policy
         self.send(0,('CONTROL','opening',{'action':'account-snapshot','snapshot':snap.payload()}))
         extra={s:{**f.specs(s)[s],'max_leverage':'5','margin_mode':'ISOLATED'} for s in symbols}
@@ -292,6 +292,79 @@ p.apply(src.after(p.state['cursor']))
         self.send(101,('CONTROL','pause',{'action':'pause'}));self.train(start=200)
         self.assertFalse(self.paper.state['positions']);self.reopen();self.assertTrue(self.paper.state['paused'])
 
+    def native_exit(self,p,t,*,quantity=None,fill_id='native-1',sibling=None,liquidity='TAKER',fee='.003'):
+        quantity=D(p['quantity_contracts']) if quantity is None else D(quantity);price=D(p['entry_price'])+D('.04')*(1 if p['direction']=='LONG' else -1)
+        from daiinas.adaptive_execution import cash
+        gross=cash((price-D(p['entry_price']))*D(p['contract_multiplier'])*quantity*(1 if p['direction']=='LONG' else -1))
+        remaining=D(p['quantity_contracts'])-quantity
+        return dict(source_kind='MOCK_NATIVE',fill_id=fill_id,order_id=p['protection']['order_ids']['target'],account_id=self.pp.funding['account_id'],
+                    symbol=p['symbol'],position_side=p['direction'],timestamp_ms=t,price=str(price),quantity=str(quantity),fee=fee,fee_currency='USDT',
+                    liquidity=liquidity,funding='0',phase='EXIT',leverage=p['leverage'],authority=dict(snapshot_id='auth:'+fill_id,timestamp_ms=t,complete=True,
+                    position_quantity=str(remaining),sibling_status=sibling or ('CANCELED' if remaining==0 else 'ACKED'),reduce_only=True,
+                    cash=str(D(self.paper.state['cash'])+gross-D(fee)),free_margin='0',unknown_orders=[],order_status='FILLED' if remaining==0 else 'PARTIAL',protected_quantity=str(remaining)))
+
+    def test_five_hour_expiry_preserves_protection_and_requires_explicit_restart(self):
+        self.start('60',symbols=('UPUSDTM',));t=self.train();s=self.paper.state
+        deadline=s['session']['expires_ms'];funding=s['initial_funding'];p=next(iter(s['positions'].values()))
+        self.send(deadline,('CLOCK','expire',{}));self.assertFalse(self.paper.session_armed())
+        self.assertEqual(self.paper.session_status()['state'],'STOPPED_WITH_EXPOSURE')
+        self.assertEqual(p['protection']['state'],'MODELED_ACKED');self.reopen()
+        self.heartbeat(deadline+1);self.assertFalse(self.paper.session_armed())
+        self.send(deadline+2,('CONTROL','new-session',{'action':'session-start','request_id':'second','actor':'test-owner'}))
+        self.assertTrue(self.paper.session_armed());self.assertEqual(funding,s['initial_funding'])
+        self.assertEqual(self.paper.report()['counts']['INITIAL_FUNDING'],1)
+
+    def test_native_mock_offline_close_pending_sibling_duplicate_and_replay(self):
+        self.start('60',symbols=('UPUSDTM',));t=self.train();p=next(iter(self.paper.state['positions'].values()))
+        self.send(t+50,('CONTROL','stop-worker',{'action':'session-stop'}));self.reopen()
+        packet=self.native_exit(p,t+100,sibling='UNKNOWN');self.send(t+100,('CONTROL','ws-match',{'action':'native-mock-fill','receipt':packet}))
+        self.assertTrue(self.paper.state['positions']);self.assertTrue(self.paper.state['pending_native_receipts'])
+        self.quote(p['symbol'],t+150,float(p['planned_stop_mid'])-.1)
+        self.assertTrue(self.paper.state['positions']);self.assertEqual(self.paper.report()['closed_summary']['count'],0);self.reopen()
+        packet['authority']['sibling_status']='CANCELED';packet['authority']['timestamp_ms']=t+200
+        self.send(t+200,('CONTROL','rest-proof',{'action':'native-mock-fill','receipt':packet}))
+        self.assertFalse(self.paper.state['positions']);self.assertFalse(self.paper.state['pending_native_receipts'])
+        after=self.paper.state['cash'];self.reopen()
+        self.send(t+300,('CONTROL','duplicate-ws',{'action':'native-mock-fill','receipt':packet}))
+        self.assertEqual(self.paper.state['cash'],after);self.assertEqual(self.paper.report()['closed_summary']['count'],1)
+        self.assertEqual(self.paper.session_status()['state'],'STOPPED_FLAT')
+        self.assertEqual(self.paper.report()['counts']['INITIAL_FUNDING'],1)
+        replica=replay([self.source.path],self.root/'native-replay.sqlite3',self.policy,ledger_factory=PortfolioLedger,ledger_options={'portfolio':self.pp})
+        self.assertEqual(replica,self.paper.report())
+
+    def test_native_partial_does_not_release_slot_and_actual_maker_fee_is_booked(self):
+        self.start('60',symbols=('UPUSDTM',));t=self.train();p=next(iter(self.paper.state['positions'].values()));original=D(p['quantity_contracts'])
+        packet=self.native_exit(p,t+100,quantity=2,liquidity='MAKER',fee='.0004')
+        self.send(t+100,('CONTROL','partial-native',{'action':'native-mock-fill','receipt':packet}))
+        self.assertEqual(len(self.paper.state['positions']),1);self.assertEqual(D(p['quantity_contracts']),original-2)
+        self.assertEqual(self.paper.report()['closed_summary']['count'],0)
+        self.assertFalse(self.paper.state['campaigns'][p['campaign_id']]['settled'])
+        row=json.loads(self.paper.db.execute('SELECT payload FROM closed_positions').fetchone()[0])
+        self.assertEqual(D(row['exit_fee_usdt']),D('.0004'));self.assertEqual(row['exit_liquidity'],'MAKER')
+        self.assertEqual(D(self.paper.state['cash']),D(self.paper.state['account_capital']['cash']));self.reopen()
+
+    def test_passive_entry_never_fills_on_quote_and_session_cancel_is_flat(self):
+        self.start('60',symbols=('UPUSDTM',),entry_kind='POST_ONLY_LIMIT')
+        t=self.train();s=self.paper.state
+        self.assertTrue(s['pending_entries']);self.assertFalse(s['positions']);self.assertEqual(s['fees'],'0')
+        self.send(s['session']['expires_ms'],('CLOCK','five-hours',{}))
+        self.assertFalse(s['pending_entries']);self.assertEqual(self.paper.session_status()['state'],'STOPPED_FLAT')
+        self.assertTrue(all(o['status']=='MODEL_CANCELED' for o in s['venue_orders'].values()))
+
+    def test_passive_partial_entry_requires_tail_cancel_and_protection_reconciliation(self):
+        self.start('60',symbols=('UPUSDTM',),entry_kind='POST_ONLY_LIMIT')
+        t=self.train();intent=next(iter(self.paper.state['pending_entries'].values()));price=D(intent['entry_price']);fee='.0004'
+        packet=dict(source_kind='MOCK_NATIVE',fill_id='maker-entry',order_id=intent['order_ids']['entry'],account_id=self.pp.funding['account_id'],
+                    symbol=intent['symbol'],position_side=intent['direction'],timestamp_ms=t,price=str(price),quantity='2',fee=fee,fee_currency='USDT',
+                    liquidity='MAKER',funding='0',phase='ENTRY',leverage=intent['leverage'],authority=dict(snapshot_id='entry-auth',timestamp_ms=t,complete=True,
+                    position_quantity='2',sibling_status='ACKED',reduce_only=True,cash=str(D(self.paper.state['cash'])-D(fee)),free_margin='0',unknown_orders=[],order_status='PARTIAL',protected_quantity='2'))
+        self.send(t,('CONTROL','partial-entry',{'action':'native-mock-fill','receipt':packet}));self.assertFalse(self.paper.state['positions'])
+        packet['authority']['order_status']='CANCELED';packet['authority']['timestamp_ms']=t+100
+        self.send(t+100,('CONTROL','canceled-tail',{'action':'native-mock-fill','receipt':packet}))
+        self.assertEqual(len(self.paper.state['positions']),1);p=next(iter(self.paper.state['positions'].values()))
+        self.assertEqual(p['quantity_contracts'],'2');self.assertEqual(D(p['entry_fee_usdt']),D(fee))
+        self.assertFalse(self.paper.state['pending_entries']);self.assertFalse(self.paper.state['pending_native_receipts']);self.reopen()
+
 
 class RuntimeBoundaryTests(unittest.IsolatedAsyncioTestCase):
     async def test_existing_pipeline_bootstraps_explicit_mock_and_scans_full_catalog(self):
@@ -358,3 +431,27 @@ class RuntimeBoundaryTests(unittest.IsolatedAsyncioTestCase):
 
 
 if __name__=='__main__':unittest.main()
+
+class SniperFeeMatrixTests(unittest.TestCase):
+    def test_forty_paths_both_directions_and_wider_price_stop_reduces_size(self):
+        from daiinas.adaptive_execution import select_sniper
+        for side in ('LONG','SHORT'):
+            result=select_sniper(maker_fee_rate='.0002',rules=ContractRules('S','1','100000','1','.0001','0','1'),
+                quote={'bid':'1','ask':'1.0002'},side=side,allocation='25',margin_budget='25',risk_budget='.125',
+                fee_rate='.0006',market=market_state(side,600),max_leverage='5')
+            self.assertEqual(len(result.alternatives),40);self.assertIsNotNone(result.selected)
+            self.assertEqual(result.selected['liquidity_path'],'TAKER/TAKER')
+            for path in ('TAKER/TAKER','MAKER/TAKER','TAKER/MAKER','MAKER/MAKER'):
+                rows=[r for r in result.alternatives if r['liquidity_path']==path and r['leverage']==5]
+                self.assertEqual(len(rows),2);self.assertTrue(all(r['full_allocation_rejected'] for r in rows))
+                self.assertLessEqual(D(rows[1]['quantity_contracts']),D(rows[0]['quantity_contracts']))
+            self.assertTrue(all(r['stop_liquidity']=='TAKER' for r in result.alternatives))
+            self.assertTrue(all(D(r['planned_loss_usdt'])<=D('.125') for r in result.alternatives if r['accepted']))
+    def test_inert_gateway_post_only_rejection_and_live_mutations_disabled(self):
+        from daiinas.execution_boundary import InertOrderGateway
+        gateway=InertOrderGateway();args=dict(account_id='MOCK',client_oid='x',symbol='XBTUSDTM',side='LONG',quantity='1',leverage=5,
+            order_type='POST_ONLY_LIMIT',stop_price='.99',target_price='1.1',limit_price='1.01',best_bid='1',best_ask='1.01')
+        self.assertTrue(gateway.preview(**args)['post_only_rejected'])
+        args['order_type']='LIMIT';self.assertEqual(gateway.preview(**args)['prospective_liquidity'],'TAKER')
+        for method in (gateway.place_order,gateway.cancel_order,gateway.modify_order):
+            with self.assertRaises(PermissionError):method()

@@ -515,7 +515,7 @@ class Pipeline:
                     raise ValueError('Invalid public leverage/fee limits')
                 specs[sym]={'rules':asdict(rule),'taker_fee_rate':fee,'captured_ms':captured,
                             'source':'KuCoin public contracts/active'}
-                if v47:specs[sym].update(max_leverage=str(min(float(row['maxLeverage']),1/float(row['initialMargin']),5)),margin_mode='ISOLATED',capability_source='MOCK_ISOLATED_PAPER_PUBLIC_CONTRACT_LIMITS')
+                if v47:specs[sym].update(maker_fee_rate=str(max(0,float(row.get('makerFeeRate',self.ledger.portfolio.maker_fee_rate)))),max_leverage=str(min(float(row['maxLeverage']),1/float(row['initialMargin']),5)),margin_mode='ISOLATED',capability_source='MOCK_ISOLATED_PAPER_PUBLIC_CONTRACT_LIMITS')
             except (ValueError,KeyError,TypeError):
                 unavailable.append(sym)
                 if sym in prior.get('specs',{}):specs[sym]=prior['specs'][sym]

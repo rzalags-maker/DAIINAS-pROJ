@@ -33,7 +33,7 @@ jobs:
       - name: Real public market, full catalog, bounded streams and renewal
         run: python -m daiinas.continuous run --config state/v47-public/config.json --seconds 80 --renew-seconds 35 --source-db state/v47-public/source.sqlite3 --paper-db state/v47-public/paper.sqlite3 --report state/v47-public/first.json > state/v47-public/first.log
       - name: Restart the exact same paper account and source
-        run: python -m daiinas.continuous run --config state/v47-public/config.json --seconds 50 --renew-seconds 20 --source-db state/v47-public/source.sqlite3 --paper-db state/v47-public/paper.sqlite3 --report state/v47-public/restart.json > state/v47-public/restart.log
+        run: python -m daiinas.continuous run --start-session --config state/v47-public/config.json --seconds 50 --renew-seconds 20 --source-db state/v47-public/source.sqlite3 --paper-db state/v47-public/paper.sqlite3 --report state/v47-public/restart.json > state/v47-public/restart.log
       - name: Replay all same-source public and modeled-account events
         run: python -m daiinas.continuous replay --config state/v47-public/config.json --source-db state/v47-public/source.sqlite3 --paper-db state/v47-public/replay.sqlite3 --report state/v47-public/replay.json > state/v47-public/replay.log
       - name: Independent cash, fees, source, capacity and replay verification

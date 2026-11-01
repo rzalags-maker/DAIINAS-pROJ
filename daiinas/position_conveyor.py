@@ -9,6 +9,7 @@ from .account_capital import mock_snapshot,reconcile
 from .capital_ladder import CapitalLadder
 from .continuous_store import canonical,digest
 from .paper_audit import position_costs
+from .execution_boundary import owned_order_ids,validate_mock_receipt
 
 D=lambda x:Decimal(str(x))
 Z=D(0)
@@ -79,7 +80,9 @@ class ConveyorMixin:
             opposite=(p['direction']=='LONG' and market.get('regime')=='DOWN_TREND') or (p['direction']=='SHORT' and market.get('regime')=='UP_TREND')
             if opposite or market.get('regime')=='DISLOCATED':self.request(key,'REGIME_EXIT')
         reason='no_qualified_candidate';chosen=None;candidates=[]
-        if any(p.get('protection',{}).get('state')!='MODELED_ACKED' for p in s['positions'].values()):reason='protection_not_confirmed'
+        if not self.session_armed():reason='session_not_armed'
+        elif s.get('pending_native_receipts'):reason='native_reconciliation_pending'
+        elif any(p.get('protection',{}).get('state')!='MODELED_ACKED' for p in s['positions'].values()):reason='protection_not_confirmed'
         elif s['exit_requests'] or s.get('paper_settlements'):reason='existing_exit_or_cash_reconciliation_first'
         elif s['paused'] or s['halted']:reason='operator_or_risk_halt'
         elif self.portfolio.mode=='M0':reason='M0_flat_control'
@@ -107,6 +110,8 @@ class ConveyorMixin:
 
     def fill_conveyor(self,sym,q,spec,data):
         s=self.state;now=s['now_ms']
+        if s.get('pending_native_receipts'):
+            self.choose_conveyor(sym,q);return  # no quote-model double booking while venue outcome is uncertain
         depth={side:D(data[side+'_base_size']) if data else Z for side in ('bid','ask')}
         for key,p in sorted(list(s['positions'].items())):
             if p['symbol']!=sym:continue
@@ -114,6 +119,7 @@ class ConveyorMixin:
             protection=p['protection']
             if protection['state']=='REQUESTED' and data and self.seq>protection['requested_seq'] and now-protection['requested_ms']>=self.policy.minimum_entry_latency_ms and q['observed_ms']>=protection['requested_ms']+self.policy.minimum_entry_latency_ms and int(q['timestamp'])>p['entry_provider_ms']:
                 protection.update(state='MODELED_ACKED',ack_seq=self.seq,ack_ms=now,covered_quantity=p['quantity_contracts'])
+                self.ack_model_orders(p)
                 self.audit('PROTECTION_MODELED_ACK',position_id=p['id'],quantity=p['quantity_contracts'],exchange_ack=False)
             if protection['state']=='FAILED':self.request(key,'PROTECTION_FAILURE')
             if sign*(D(q[side])-D(p['planned_stop_mid']))<=0:self.request(key,'STOP')
@@ -130,41 +136,11 @@ class ConveyorMixin:
             step=D(spec['rules']['step_size']);unit=D(p['contract_multiplier']);original=D(p['quantity_contracts'])
             quantity=min(original,(depth[side]/unit/step).to_integral_value(rounding=ROUND_FLOOR)*step)
             if quantity<=0:self.unresolved_leg(key,'insufficient_verified_partial_exit_depth');continue
-            ratio=quantity/original
-            piece={**p,'quantity_contracts':str(quantity),'entry_notional_usdt':str(D(p['entry_price'])*unit*quantity),
-                   'entry_fee_usdt':str(D(p['entry_fee_usdt']) if quantity==original else cash(D(p['entry_fee_usdt'])*ratio))}
-            amounts=self.close_math(piece,q,now,spec);depth[side]-=quantity*unit
-            done={**piece,'id':p['id']+':slice:'+str(self.seq),'position_id':p['id'],'exit_reason':req['reason'],
-                  'exit_received_ms':now,'exit_source_seq':self.seq,'exit_provider_ms':int(q['timestamp']),
-                  'exit_wire_received_ms':q['observed_ms'],'exit_request_ms':req['requested_ms'],
-                  'exit_observed_bid':q['bid'],'exit_observed_ask':q['ask'],'exit_quote':q[side],
-                  'exit_price':amounts['exit_price'],'exit_fee_usdt':str(amounts['exit_fee']),
-                  'modeled_carry_usdt':str(amounts['carry']),'gross_pnl_usdt':str(amounts['gross']),
-                  'net_pnl_usdt':str(amounts['net']),'holding_ms':now-p['entry_received_ms']}
-            done['cost_attribution']=position_costs(done,carry_rate=self.policy.modeled_carry_8h_rate)
-            self.db.execute('INSERT INTO closed_positions VALUES (?,?)',(done['id'],canonical(done)))
-            self.add('cash',amounts['net_after_exit_only']);self.add('fees',amounts['exit_fee']);self.add('exit_fees',amounts['exit_fee']);self.add('carry',amounts['carry']);self.add('realized',amounts['net'])
-            campaign=s['campaigns'][p['campaign_id']];campaign['realized_net']=str(D(campaign['realized_net'])+amounts['net'])
-            leg_net=D(p.get('closed_slice_net','0'))+amounts['net']
-            self.queue_model_cash(p['campaign_id'],gross=amounts['gross'],fees=amounts['exit_fee'],carry=amounts['carry'],complete=quantity==original,phase='exit')
-            if quantity==original:
-                del s['positions'][key];s['exit_requests'].pop(key,None);campaign['closed_legs'].append(p['id'])
-                summary=s['closed_summary'];summary['count']+=1
-                if leg_net>0:summary['wins']+=1;summary['profit']=str(D(summary['profit'])+leg_net)
-                elif leg_net<0:summary['losses']+=1;summary['loss']=str(D(summary['loss'])-leg_net)
-                s['cooldowns'][sym]=now+self.portfolio.cooldown_ms
-                self.audit('CLOSED',position_id=p['id'],net_pnl=str(leg_net),reason=req['reason']);self.settle(campaign)
-            else:
-                remaining=original-quantity;p['quantity_contracts']=str(remaining)
-                p['entry_fee_usdt']=str(D(p['entry_fee_usdt'])-D(piece['entry_fee_usdt']))
-                p['entry_notional_usdt']=str(D(p['entry_price'])*unit*remaining)
-                for field in ('margin_reserved_usdt','planned_loss_usdt','current_planned_loss_usdt'):
-                    if field in p:p[field]=str(D(p[field])*(1-ratio))
-                p['closed_slice_net']=str(leg_net);p['protection']['covered_quantity']=str(remaining)
-                s.setdefault('conveyor',{}).setdefault('partial_exits',0);s['conveyor']['partial_exits']+=1
-                self.audit('PARTIAL_EXIT',position_id=p['id'],filled=str(quantity),remaining=str(remaining),net_pnl=str(amounts['net']))
+            depth[side]-=quantity*unit
+            self.book_exit_slice(key,p,quantity,q,now,spec,req)
         for key,intent in sorted(list(s['pending_entries'].items())):
             if intent['symbol']!=sym:continue
+            if intent.get('entry_kind')=='POST_ONLY_LIMIT':continue
             if any(p['protection']['state']!='MODELED_ACKED' for p in s['positions'].values()):continue
             if not (self.seq>intent['signal_seq'] and now-intent['signal_ms']>=self.policy.minimum_entry_latency_ms and int(q['timestamp'])>intent['provider_ms'] and q['observed_ms']>=intent['signal_ms']+self.policy.minimum_entry_latency_ms):continue
             del s['pending_entries'][key]
@@ -173,6 +149,8 @@ class ConveyorMixin:
             if not spec or digest(spec['rules'])!=intent['rules_hash']:plan=None;reason='changed_entry_rules'
             mid=(D(q['bid'])+D(q['ask']))/2
             if abs(mid-D(intent['signal_mid']))/D(intent['signal_mid'])*10000>D(self.policy.maximum_entry_drift_bps):plan=None;reason='entry_drift'
+            if plan and intent.get('entry_kind')=='LIMIT' and (D(plan['entry_price'])-D(intent['entry_price']))*(1 if intent['direction']=='LONG' else -1)>0:
+                s['pending_entries'][key]=intent;self.audit('LIMIT_NOT_FILLED',signal_id=intent['id']);continue
             if not plan:
                 s['pending_entries'][key]=intent;self.cancel(key,reason);continue
             side='ask' if intent['direction']=='LONG' else 'bid';unit=D(plan['contract_multiplier']);step=D(spec['rules']['step_size'])
@@ -189,7 +167,7 @@ class ConveyorMixin:
             # Reprice the scaled allocation after a partial IOC, never fake the tail.
             carry=cash(notional*D(self.policy.modeled_carry_8h_rate)*D(self.policy.maximum_holding_ms)/28800000,True)
             target=target_price(entry=plan['entry_price'],units=unit*quantity,entry_fee=entry_fee,allocation=allocation,
-                fee=plan['fee_rate'],carry=carry,side=intent['direction'],target_fraction=self.portfolio.campaign_target_fraction)
+                fee=plan.get('target_fee_rate',plan['fee_rate']),carry=carry,side=intent['direction'],target_fraction=self.portfolio.campaign_target_fraction)
             sign=1 if intent['direction']=='LONG' else -1
             plan['planned_target_mid']=str(target/(1-D(sign)*D(self.policy.adverse_slippage_bps)/10000))
             plan['planned_target_net_usdt']=str(allocation*D(self.portfolio.campaign_target_fraction))
@@ -197,7 +175,8 @@ class ConveyorMixin:
                  'rules_hash':intent['rules_hash'],'signal_received_ms':intent['signal_ms'],'entry_received_ms':now,
                  'entry_source_seq':self.seq,'entry_provider_ms':int(q['timestamp']),'entry_wire_received_ms':q['observed_ms'],
                  'entry_observed_bid':q['bid'],'entry_observed_ask':q['ask'],'last_mark':str(-entry_fee),'last_mark_ms':now,'unresolved':None,
-                 'protection':{'state':'REQUESTED','requested_seq':self.seq,'requested_ms':now,'covered_quantity':'0','kind':'MODELED_ISOLATED_STOP_NOT_EXCHANGE_ACK'}}
+                 'protection':{'order_ids':intent['order_ids'],'reduce_only':True,'trigger_reference':'OBSERVED_EXECUTABLE_QUOTE','state':'REQUESTED','requested_seq':self.seq,'requested_ms':now,'covered_quantity':'0','kind':'MODELED_ISOLATED_STOP_NOT_EXCHANGE_ACK'}}
+            self.register_model_orders(pos)
             campaign=s['campaigns'][intent['campaign_id']]
             campaign['allocated']=str(D(campaign['allocated'])-D(intent['allocation_budget_usdt'])+allocation)
             campaign['filled_leg_count']+=1;s['positions'][key]=pos
@@ -209,3 +188,148 @@ class ConveyorMixin:
                 self.audit('PARTIAL_ENTRY_IOC',position_id=pos['id'],filled=str(quantity),canceled_remainder=str(D(intent['quantity_contracts'])-quantity))
             self.audit('OPENED',position_id=pos['id'],symbol=sym,positionSide=pos['direction'],leverage=pos['leverage'],protection='REQUESTED')
         self.choose_conveyor(sym,q)
+
+    def book_exit_slice(self,key,p,quantity,q,now,spec,req,supplied=None):
+        s=self.state
+        original=D(p['quantity_contracts']);ratio=quantity/original;unit=D(p['contract_multiplier'])
+        piece={**p,'quantity_contracts':str(quantity),'entry_notional_usdt':str(D(p['entry_price'])*unit*quantity),
+               'entry_fee_usdt':str(D(p['entry_fee_usdt']) if quantity==original else cash(D(p['entry_fee_usdt'])*ratio))}
+        unit=D(p['contract_multiplier']);side='bid' if p['direction']=='LONG' else 'ask'
+        if supplied is None:amounts=self.close_math(piece,q,now,spec)
+        else:
+            amounts={**supplied,'net_after_exit_only':supplied['gross']-supplied['exit_fee']-supplied['carry']}
+            amounts['net']=amounts['net_after_exit_only']-D(piece['entry_fee_usdt'])
+        done={**piece,'id':p['id']+':slice:'+str(self.seq),'position_id':p['id'],'exit_reason':req['reason'],
+              'exit_received_ms':now,'exit_source_seq':self.seq,'exit_provider_ms':int(q['timestamp']),
+              'exit_wire_received_ms':q['observed_ms'],'exit_request_ms':req['requested_ms'],
+              'exit_observed_bid':q['bid'],'exit_observed_ask':q['ask'],'exit_quote':q[side],
+              'exit_price':amounts['exit_price'],'exit_fee_usdt':str(amounts['exit_fee']),
+              'modeled_carry_usdt':str(amounts['carry']),'gross_pnl_usdt':str(amounts['gross']),
+              'net_pnl_usdt':str(amounts['net']),'holding_ms':now-p['entry_received_ms']}
+        done['cost_attribution']=position_costs(done,carry_rate=self.policy.modeled_carry_8h_rate) if supplied is None and p.get('entry_observed_bid') is not None else {'kind':'MOCK_NATIVE_CONFIRMED_FEES','quote_attribution':'UNAVAILABLE_NOT_FABRICATED'}
+        if supplied is not None:done['native_mock_fill_id']=supplied['fill_id'];done['exit_liquidity']=supplied['liquidity']
+        self.db.execute('INSERT INTO closed_positions VALUES (?,?)',(done['id'],canonical(done)))
+        self.add('cash',amounts['net_after_exit_only']);self.add('fees',amounts['exit_fee']);self.add('exit_fees',amounts['exit_fee']);self.add('carry',amounts['carry']);self.add('realized',amounts['net'])
+        campaign=s['campaigns'][p['campaign_id']];campaign['realized_net']=str(D(campaign['realized_net'])+amounts['net'])
+        leg_net=D(p.get('closed_slice_net','0'))+amounts['net']
+        self.queue_model_cash(p['campaign_id'],gross=amounts['gross'],fees=amounts['exit_fee'],carry=amounts['carry'],complete=quantity==original,phase='exit')
+        if quantity==original:
+            self.finish_model_orders(p,req['reason'])
+            del s['positions'][key];s['exit_requests'].pop(key,None);campaign['closed_legs'].append(p['id'])
+            summary=s['closed_summary'];summary['count']+=1
+            if leg_net>0:summary['wins']+=1;summary['profit']=str(D(summary['profit'])+leg_net)
+            elif leg_net<0:summary['losses']+=1;summary['loss']=str(D(summary['loss'])-leg_net)
+            s['cooldowns'][p['symbol']]=now+self.portfolio.cooldown_ms
+            self.audit('CLOSED',position_id=p['id'],net_pnl=str(leg_net),reason=req['reason']);self.settle(campaign)
+        else:
+            remaining=original-quantity;p['quantity_contracts']=str(remaining)
+            p['entry_fee_usdt']=str(D(p['entry_fee_usdt'])-D(piece['entry_fee_usdt']))
+            p['entry_notional_usdt']=str(D(p['entry_price'])*unit*remaining)
+            for field in ('margin_reserved_usdt','planned_loss_usdt','current_planned_loss_usdt'):
+                if field in p:p[field]=str(D(p[field])*(1-ratio))
+            p['closed_slice_net']=str(leg_net);p['protection']['covered_quantity']=str(remaining)
+            self.ack_model_orders(p)
+            s.setdefault('conveyor',{}).setdefault('partial_exits',0);s['conveyor']['partial_exits']+=1
+            self.audit('PARTIAL_EXIT',position_id=p['id'],filled=str(quantity),remaining=str(remaining),net_pnl=str(amounts['net']))
+
+
+    def register_model_orders(self,p):
+        orders=self.state.setdefault('venue_orders',{});ids=p['protection']['order_ids']
+        orders.setdefault(ids['entry'],{}).update(status='MODEL_FILLED',position_id=p['id'],quantity=p['quantity_contracts'])
+        for child in ('stop','target'):
+            orders[ids[child]]={'status':'REQUESTED','position_id':p['id'],'quantity':p['quantity_contracts'],'reduce_only':True,'kind':child,'exchange_ack':False}
+
+    def ack_model_orders(self,p):
+        for child in ('stop','target'):
+            self.state['venue_orders'][p['protection']['order_ids'][child]].update(status='MODELED_ACKED',quantity=p['quantity_contracts'])
+
+    def finish_model_orders(self,p,reason):
+        chosen='stop' if reason=='STOP' else 'target' if reason in ('TARGET','CAMPAIGN_TARGET') else None
+        for child in ('stop','target'):
+            self.state.get('venue_orders',{}).get(p['protection']['order_ids'][child],{}).update(status='MODEL_FILLED' if child==chosen else 'MODEL_CANCELED')
+
+    def handle_native_mock_fill(self,packet):
+        """MOCK-only venue contract: never release capacity on an unverified match.
+
+        Authoritative quantities, sibling state and cash must reconcile together.
+        A newer REST authority may complete the same immutable WS fill receipt.
+        """
+        s=self.state
+        try:
+            if not isinstance(packet,dict):raise ValueError('Missing MOCK receipt')
+            fill_id=packet.get('fill_id');order_id=packet.get('order_id')
+            identity=digest({k:v for k,v in packet.items() if k!='authority'})
+            seen=s.setdefault('native_fill_ids',{})
+            if fill_id in seen:
+                if seen[fill_id]!=identity:raise ValueError('Conflicting immutable fill ID')
+                self.audit('NATIVE_MOCK_DUPLICATE',fill_id=fill_id);return
+            pending=s.setdefault('pending_native_receipts',{})
+            if fill_id in pending and pending[fill_id]['digest']!=identity:raise ValueError('Conflicting pending fill ID')
+            registry=s.get('venue_orders',{})
+            if order_id not in registry:raise ValueError('Unknown order ownership')
+            if packet.get('phase')=='ENTRY':
+                self.adopt_mock_entry(packet,identity);return
+            if packet.get('phase')!='EXIT':raise ValueError('Unknown fill phase')
+            pair=next(((key,p) for key,p in s['positions'].items() if order_id in (p['protection']['order_ids']['stop'],p['protection']['order_ids']['target'])),None)
+            if not pair:raise ValueError('No matching owned open position')
+            key,p=pair
+            numbers,identity=validate_mock_receipt(packet,account_id=s['account_capital']['account_id'],now_ms=s['now_ms'],position=p,known_orders=registry)
+            spec=self.spec(p['symbol'])
+            if not spec or numbers['quantity']%D(spec['rules']['step_size']):raise ValueError('Unreconciled contract/lot')
+            gross=cash((numbers['price']-D(p['entry_price']))*D(p['contract_multiplier'])*numbers['quantity']*(1 if p['direction']=='LONG' else -1))
+            expected=D(s['cash'])+D(s['account_capital']['unallocated'])+gross-numbers['fee']+numbers['funding']
+            if D(packet['authority']['cash'])!=expected:raise ValueError('Authoritative cash does not match exact fill economics')
+            reason='STOP' if order_id==p['protection']['order_ids']['stop'] else 'TARGET'
+            q={'timestamp':packet['timestamp_ms'],'observed_ms':s['now_ms'],'bid':None,'ask':None}
+            req={'reason':reason,'requested_ms':p['protection']['requested_ms']}
+            supplied={'exit_price':str(numbers['price']),'gross':gross,'exit_fee':numbers['fee'],'carry':-numbers['funding'],
+                      'fill_id':fill_id,'liquidity':packet['liquidity']}
+            self.book_exit_slice(key,p,numbers['quantity'],q,s['now_ms'],spec,req,supplied)
+            seen[fill_id]=identity;pending.pop(fill_id,None)
+            s['native_free_margin_cap']=packet['authority']['free_margin']
+            s['last_native_authority']={**packet['authority'],'source_kind':'MOCK_NATIVE','fill_id':fill_id,'actual_exchange_connected':False}
+            self.audit('NATIVE_MOCK_RECONCILED',fill_id=fill_id,order_id=order_id,phase='EXIT',actual_exchange_connected=False)
+        except (ValueError,KeyError,TypeError,ArithmeticError) as exc:
+            # Only owned receipts can create a durable reconciliation hold.
+            if isinstance(packet,dict) and packet.get('order_id') in s.get('venue_orders',{}) and isinstance(packet.get('fill_id'),str):
+                s.setdefault('pending_native_receipts',{}).setdefault(packet['fill_id'],{'digest':digest({k:v for k,v in packet.items() if k!='authority'}),'reason':str(exc)})
+            self.audit('NATIVE_MOCK_REJECTED',reason=str(exc),actual_exchange_connected=False)
+
+    def adopt_mock_entry(self,packet,identity):
+        s=self.state;now=s['now_ms'];order_id=packet['order_id']
+        pair=next(((key,p) for key,p in s['pending_entries'].items() if p['order_ids']['entry']==order_id),None)
+        if not pair:raise ValueError('No matching owned pending entry')
+        key,intent=pair
+        template={**intent,'entry_received_ms':intent['signal_ms']}
+        numbers,identity=validate_mock_receipt(packet,account_id=s['account_capital']['account_id'],now_ms=now,position=template,known_orders=s['venue_orders'])
+        if not self.session_armed() or s['paused'] or s['halted']:raise ValueError('Entry arrived after disarm: reconciliation required')
+        if intent.get('entry_kind')!='POST_ONLY_LIMIT' or packet['liquidity']!='MAKER':raise ValueError('Unsupported passive execution attribution')
+        sign=1 if intent['direction']=='LONG' else -1;price=numbers['price'];quantity=numbers['quantity']
+        if sign*(price-D(intent['entry_price']))>0:raise ValueError('Passive fill violates limit')
+        if quantity<D(intent['quantity_contracts']) and packet['authority']['order_status']!='CANCELED':raise ValueError('Partial entry tail not canceled')
+        spec=self.spec(intent['symbol']);unit=D(intent['contract_multiplier'])
+        if not spec or quantity%D(spec['rules']['step_size']) or price%D(spec['rules']['tick_size']):raise ValueError('Unreconciled entry contract/lot/price')
+        if D(packet['authority']['cash'])!=D(s['cash'])+D(s['account_capital']['unallocated'])-numbers['fee']+numbers['funding']:raise ValueError('Authoritative entry cash mismatch')
+        if numbers['funding']!=0:raise ValueError('Entry funding must reconcile separately')
+        allocation=D(intent['allocation_budget_usdt'])*quantity/D(intent['quantity_contracts'])
+        notional=price*unit*quantity;carry=cash(notional*D(self.policy.modeled_carry_8h_rate)*D(self.policy.maximum_holding_ms)/28800000,True)
+        stop=price*(1-sign*D(intent['price_stop_fraction']))
+        stop_fill=stop*(1-sign*(D(self.policy.adverse_slippage_bps)+D(self.portfolio.stop_gap_bps))/10000)-sign*(D(s['quotes'][intent['symbol']]['ask'])-D(s['quotes'][intent['symbol']]['bid']))/2
+        loss=cash(sign*(price-stop_fill)*unit*quantity+numbers['fee']+stop_fill*unit*quantity*D(intent['stop_fee_rate'])+carry,True)
+        target=target_price(entry=price,units=unit*quantity,entry_fee=numbers['fee'],allocation=allocation,fee=intent['target_fee_rate'],carry=carry,side=intent['direction'])
+        p={**intent,'id':'position:'+intent['id'],'quantity_contracts':str(quantity),'entry_price':str(price),'entry_fee_usdt':str(numbers['fee']),
+           'entry_notional_usdt':str(notional),'margin_reserved_usdt':str(notional/D(intent['leverage'])),'allocation_budget_usdt':str(allocation),
+           'planned_loss_usdt':str(loss),'planned_stop_mid':str(stop),'planned_target_mid':str(target/(1-sign*D(self.policy.adverse_slippage_bps)/10000)),
+           'planned_target_net_usdt':str(allocation*D('.02')),'signal_received_ms':intent['signal_ms'],'entry_received_ms':packet['timestamp_ms'],
+           'entry_provider_ms':packet['timestamp_ms'],'entry_source_seq':self.seq,'entry_wire_received_ms':now,'entry_observed_bid':None,'entry_observed_ask':None,
+           'last_mark':str(-numbers['fee']),'last_mark_ms':now,'unresolved':None,'native_mock_fill_id':packet['fill_id'],'entry_liquidity':packet['liquidity'],
+           'protection':{'order_ids':intent['order_ids'],'state':'MODELED_ACKED','kind':'MOCK_NATIVE_NOT_EXCHANGE_ACK','requested_ms':intent['signal_ms'],
+                         'requested_seq':intent['signal_seq'],'ack_seq':self.seq,'ack_ms':now,'covered_quantity':str(quantity),'reduce_only':True,'trigger_reference':'MOCK_VENUE'}}
+        s['native_free_margin_cap']=packet['authority']['free_margin']
+        del s['pending_entries'][key];s['positions'][key]=p;self.register_model_orders(p);self.ack_model_orders(p)
+        campaign=s['campaigns'][p['campaign_id']];campaign['allocated']=str(D(campaign['allocated'])-D(intent['allocation_budget_usdt'])+allocation);campaign['filled_leg_count']+=1
+        self.add('cash',-numbers['fee']);self.add('fees',numbers['fee']);self.add('entry_fees',numbers['fee'])
+        self.queue_model_cash(p['campaign_id'],gross=Z,fees=numbers['fee'],carry=Z,complete=False,phase='entry')
+        s.setdefault('native_fill_ids',{})[packet['fill_id']]=identity;s.setdefault('pending_native_receipts',{}).pop(packet['fill_id'],None)
+        if loss>allocation*D(self.portfolio.campaign_loss_fraction):self.request(key,'RECONCILED_ENTRY_RISK_BREACH')
+        self.audit('NATIVE_MOCK_RECONCILED',fill_id=packet['fill_id'],order_id=order_id,phase='ENTRY',actual_exchange_connected=False)

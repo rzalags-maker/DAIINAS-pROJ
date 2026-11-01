@@ -16,6 +16,8 @@ from .paper_audit import position_costs
 from .funding import validate_funding,snapshot_funding
 from .account_capital import FuturesAccountSnapshot,initial_account_state,reconcile,capital_status,VERSION as ACCOUNT_VERSION
 from .position_conveyor import ConveyorMixin
+from .paper_session import SessionMixin
+from .execution_boundary import InertOrderGateway,owned_order_ids
 from .market_intelligence import update as update_market,correlation,supported_hedge
 
 D=lambda v:dec(str(v))
@@ -45,6 +47,10 @@ class PortfolioPolicy:
     strategy_version: str='v46'
     paper_settlement: bool=False
     stop_gap_bps: str='5'
+    maker_fee_rate: str='.0002'
+    stop_candidates: tuple=('.005','.01')
+    entry_kind: str='MARKET_IOC'
+    session_duration_ms: int=18000000
 
     def __post_init__(self):
         if not isinstance(self.initial_capital,str):raise ValueError('Opening capital must be an exact decimal string')
@@ -54,6 +60,8 @@ class PortfolioPolicy:
         if self.strategy_version=='v47' and (not self.account_driven or self.funding.get('kind')!='mock_futures_snapshot'):
             raise ValueError('v4.7 requires an explicit reconciled MOCK Futures scope; private connector remains disabled')
         if self.paper_settlement and self.strategy_version!='v47':raise ValueError('Modeled settlement requires explicit v4.7')
+        if self.entry_kind not in ('MARKET_IOC','LIMIT','POST_ONLY_LIMIT') or not 0<=D(self.maker_fee_rate)<D('.1') or not self.stop_candidates or any(D(x) not in (D('.005'),D('.01')) for x in self.stop_candidates):raise ValueError('Invalid execution/stop/fee scenario')
+        if type(self.session_duration_ms) is not int or not 1000<=self.session_duration_ms<=18000000:raise ValueError('PAPER session must be bounded to <=5 hours')
         if not 0<=D(self.stop_gap_bps)<=50:raise ValueError('Invalid gap allowance')
         if type(self.account_driven) is not bool:raise ValueError('Explicit account-driven mode required')
         if self.funding.get('kind')=='mock_futures_snapshot' and not self.account_driven:raise ValueError('Account snapshots require account-driven sizing')
@@ -66,7 +74,7 @@ class PortfolioPolicy:
         if not 0<D(self.campaign_loss_fraction)<=D('.01') or not 0<D(self.campaign_target_fraction)<=D('.1'):raise ValueError('Invalid campaign assumptions')
 
 
-class PortfolioLedger(ConveyorMixin,PaperLedger):
+class PortfolioLedger(SessionMixin,ConveyorMixin,PaperLedger):
     def __init__(self,path,source_id,policy=None,shadow=ShadowPolicy(),*,portfolio=None):
         if not isinstance(portfolio,PortfolioPolicy) and (not isinstance(portfolio,dict) or 'initial_capital' not in portfolio or 'funding' not in portfolio):
             raise ValueError('Explicit user-selected PAPER capital and typed funding source required; no v4 default')
@@ -154,6 +162,7 @@ class PortfolioLedger(ConveyorMixin,PaperLedger):
         limits=capital_status(self.account_context(),now_ms=s['now_ms'],local_margin=self.reserved(),
                               local_risk=self.planned(),local_count=len(s['positions'])+len(s['pending_entries']),local_fees=fees)
         if self.v47():
+            if 'native_free_margin_cap' in s:limits['marginal_margin']=str(min(D(limits['marginal_margin']),D(s['native_free_margin_cap'])))
             limits.update(effective_active_after_paper_marks=str(max(ZERO,D(limits['active_budget'])+self.paper_overlay_loss())),
                 paper_equity_with_exit_costs=s['last_equity'],paper_margin_reserved=str(self.reserved()),
                 position_scope='Local virtual positions; snapshot is MOCK cash/external scope, not real KuCoin positions')
@@ -162,7 +171,7 @@ class PortfolioLedger(ConveyorMixin,PaperLedger):
     def profile_payload(self):
         result=asdict(self.portfolio)
         if result['strategy_version']=='v46':
-            for key in ('strategy_version','paper_settlement','stop_gap_bps'):result.pop(key)
+            for key in ('strategy_version','paper_settlement','stop_gap_bps','maker_fee_rate','stop_candidates','entry_kind','session_duration_ms'):result.pop(key)
         if not result['account_driven']:result.pop('account_driven')
         else:result['account_policy_version']=ACCOUNT_VERSION
         if self.v47():
@@ -368,6 +377,7 @@ class PortfolioLedger(ConveyorMixin,PaperLedger):
 
     def cancel(self,key,reason):
         p=self.state['pending_entries'].pop(key)
+        if self.v47() and p.get('order_ids'):self.state.get('venue_orders',{}).get(p['order_ids']['entry'],{}).update(status='MODEL_CANCELED')
         self.state['cooldowns'][p['symbol']]=self.state['now_ms']+self.portfolio.cooldown_ms
         c=self.state['campaigns'][p['campaign_id']]
         c['allocated']=str(max(ZERO,D(c['allocated'])-D(p['allocation_budget_usdt'])))
@@ -377,6 +387,7 @@ class PortfolioLedger(ConveyorMixin,PaperLedger):
     def plan(self,sym,side,q):
         s=self.state;ladder=self.ladder();count=len(s['positions'])+len(s['pending_entries'])
         limits=self.account_limits()
+        if self.v47() and (not self.session_armed() or s.get('pending_native_receipts')):return None,'session_not_armed_or_native_reconciliation_pending'
         if limits:
             if not limits['ready_for_paper']:return None,'account_'+limits['connector_status']
             snap=s['account_capital']['snapshot']
@@ -426,10 +437,10 @@ class PortfolioLedger(ConveyorMixin,PaperLedger):
         rules,fee=self.rules(sym)
         market=s['market_states'].get(sym,{})
         if self.v47():
-            from .adaptive_execution import select_leverage
+            from .adaptive_execution import select_sniper
             maximum=spec.get('max_leverage')
             if maximum is None or spec.get('margin_mode')!='ISOLATED':return None,'missing_per_instrument_execution_capability'
-            selection=select_leverage(rules=rules,quote=data,side=side,allocation=nominal,
+            selection=select_sniper(maker_fee_rate=spec.get('maker_fee_rate',self.portfolio.maker_fee_rate),stop_candidates=self.portfolio.stop_candidates,entry_kind=self.portfolio.entry_kind,rules=rules,quote=data,side=side,allocation=nominal,
                 margin_budget=margin,risk_budget=budget,fee_rate=max(D(fee),D(self.policy.minimum_taker_fee_rate)),
                 market=market,max_leverage=min(D(maximum),D(5)),slippage_bps=self.policy.adverse_slippage_bps,
                 stop_gap_bps=self.portfolio.stop_gap_bps,carry_rate=str(self.policy.modeled_carry_8h_rate),
@@ -525,6 +536,17 @@ class PortfolioLedger(ConveyorMixin,PaperLedger):
         s['pending_entries'][key]={**plan,'id':signal,'campaign_id':campaign_id,'symbol':sym,'direction':side,
             'rules_hash':digest(self.spec(sym)['rules']),'signal_ms':s['now_ms'],'signal_seq':self.seq,
             'provider_ms':int(q['timestamp']),'signal_mid':(float(q['bid'])+float(q['ask']))/2}
+        if self.v47():
+            intent=s['pending_entries'][key];ids=owned_order_ids('position:'+signal)
+            preview=InertOrderGateway().preview(account_id=self.portfolio.funding['account_id'],client_oid=signal,
+                symbol=sym,side=side,quantity=intent['quantity_contracts'],leverage=intent['leverage'],
+                order_type=self.portfolio.entry_kind,stop_price=intent['planned_stop_mid'],target_price=intent['planned_target_mid'],
+                limit_price=intent['entry_price'],best_bid=q['bid'],best_ask=q['ask'])
+            if preview['post_only_rejected']:
+                self.cancel(key,'post_only_would_take_liquidity');return False
+            intent['order_ids']=ids
+            s.setdefault('venue_orders',{})[ids['entry']]={'status':'MODEL_OPEN','kind':self.portfolio.entry_kind,
+                'position_key':key,'clientOid':signal,'quantity':intent['quantity_contracts'],'preview':preview,'exchange_ack':False}
         self.audit('SIGNAL',signal_id=signal,symbol=sym,positionSide=side,campaign_id=campaign_id)
         return True
 
@@ -677,6 +699,7 @@ class PortfolioLedger(ConveyorMixin,PaperLedger):
 
     def portfolio_event(self,kind,p,available):
         s=self.state
+        if self.v47():self.session_step()
         if self.v47() and self.portfolio.paper_settlement:self.flush_paper_settlement()
         for key,v in list(s['pending_entries'].items()):
             if available-v['signal_ms']>self.policy.entry_ttl_ms:self.cancel(key,'entry_ttl')
@@ -708,6 +731,10 @@ class PortfolioLedger(ConveyorMixin,PaperLedger):
             if action=='paper-account-heartbeat' and self.v47() and self.portfolio.paper_settlement:
                 snap=s['account_capital']['snapshot'] or self.portfolio.funding['snapshot']
                 if (s['account_capital']['snapshot'] is None or available>snap['timestamp_ms']) and not s.get('paper_settlements'):self.apply_model_snapshot(snap)
+                if 'session' not in s:self.session_start(request_id='AUTO:'+s['initial_funding']['event_id'],actor='explicit-paper-config')
+            elif action=='session-start' and self.v47():self.session_start(request_id=p.get('request_id'),actor=p.get('actor'),duration_ms=p.get('duration_ms'))
+            elif action=='session-stop' and self.v47():self.session_stop(p.get('reason','OWNER_STOP'))
+            elif action=='native-mock-fill' and self.v47():self.handle_native_mock_fill(p.get('receipt'))
             elif action=='protection-failure' and self.v47():
                 key=p.get('position_key')
                 if key in s['positions']:
@@ -774,7 +801,7 @@ class PortfolioLedger(ConveyorMixin,PaperLedger):
         limits=self.account_limits()
         return {'status':'PAPER_ONLY','engine':'v4','live_orders_enabled':False,'strategy_validated':False,'production_ready':False,
             'initial_capital':self.portfolio.initial_capital,'initial_funding':s['initial_funding'],
-            'strategy_version':self.portfolio.strategy_version,'leverage_selections':s.get('leverage_selections',{}),'whole_market_pulse':s.get('whole_market_pulse',{}),'conveyor':s.get('conveyor',{}),'pending_paper_cash_settlements':s.get('paper_settlements',[]),'entry_capacity':s.get('last_entry_capacity'),'account_status':limits,'actual_exchange_balance_status':'NOT_CONNECTED','mode':self.portfolio.mode,
+            'session':self.session_status() if self.v47() else None,'venue_orders':s.get('venue_orders',{}),'strategy_version':self.portfolio.strategy_version,'leverage_selections':s.get('leverage_selections',{}),'whole_market_pulse':s.get('whole_market_pulse',{}),'conveyor':s.get('conveyor',{}),'pending_paper_cash_settlements':s.get('paper_settlements',[]),'entry_capacity':s.get('last_entry_capacity'),'account_status':limits,'actual_exchange_balance_status':'NOT_CONNECTED','mode':self.portfolio.mode,
             'execution_version':EXECUTION_VERSION,'money_quantum_usdt':str(MONEY_QUANTUM),'evidence_policy_sha256':self.evidence_policy_hash(),'cash':s['cash'],
             'equity_last_mark':s['last_equity'],'executable_equity':s['last_equity'] if s['equity_verified'] else None,
             'mark_status':s['mark_status'],'active_equity':s['active_equity'],'ladder':ladder.snapshot(),

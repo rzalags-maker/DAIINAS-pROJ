@@ -125,7 +125,12 @@ async def service(args,config,paper,shadow,*,account_adapter=None):
                 raise OSError('Storage capacity guard: paper state retained; archive/restore required')
             if config.get('portfolio',{}).get('account_driven',False):await pipeline.poll_account(account_adapter)
             await pipeline.append([('CLOCK',f'clock:{boot}:{tick}',{'service':runtime})])
+            if config.get('portfolio',{}).get('strategy_version')=='v47':
+                armed=await asyncio.get_running_loop().run_in_executor(pipeline.executor,pipeline.ledger.session_armed)
+                if not armed:stop.set();return
             await asyncio.sleep(1)
+    if getattr(args,'start_session',False):
+        await pipeline.append([('CONTROL','session-start:'+boot,{'action':'session-start','request_id':boot,'actor':'local-cli'})])
     runner=asyncio.create_task(loops());clock=asyncio.create_task(clocks());waiting=asyncio.create_task(stop.wait())
     try:
         done,_=await asyncio.wait([runner,clock,waiting],timeout=args.seconds or None,return_when=asyncio.FIRST_COMPLETED)
@@ -136,6 +141,8 @@ async def service(args,config,paper,shadow,*,account_adapter=None):
         stop.set()
         for task in (runner,clock,waiting):task.cancel()
         await asyncio.gather(runner,clock,waiting,return_exceptions=True)
+        if config.get('portfolio',{}).get('strategy_version')=='v47':
+            await pipeline.append([('CONTROL','session-stop:'+boot,{'action':'session-stop','reason':'WORKER_EXIT'})])
         result=await pipeline.report()
         result.update({'stream':observer.runtime(),'errors':errors,'fatal_error':fatal,
                        'elapsed_seconds':time.monotonic()-started,'boot_id':boot,
@@ -144,7 +151,7 @@ async def service(args,config,paper,shadow,*,account_adapter=None):
                        'normalized_event_counts':dict(observer.stats),
                        'source_code_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in
                            [Path(__file__),Path(__file__).with_name('continuous_paper.py'),Path(__file__).with_name('continuous_stream.py'),Path(__file__).with_name('continuous_store.py')]+
-                           ([Path(__file__).with_name(n+'.py') for n in ('capital_ladder','portfolio_paper','market_intelligence','hedge_research','funding','account_capital','adaptive_execution','position_conveyor','market_pulse')] if config.get('engine')=='v4' else [])}})
+                           ([Path(__file__).with_name(n+'.py') for n in ('capital_ladder','portfolio_paper','market_intelligence','hedge_research','funding','account_capital','adaptive_execution','position_conveyor','market_pulse','paper_session','execution_boundary')] if config.get('engine')=='v4' else [])}})
         result['24h_host_gate']='PENDING — HOST ACCEPTANCE NOT RUN' if args.host_id else 'BLOCKED — HOST NOT PROVISIONED'
         if args.seconds:
             stats=observer.stream_stats
@@ -172,6 +179,7 @@ def main(argv=None):
     p.add_argument('--source-archive',type=Path,action='append',default=[])
     p.add_argument('--report',type=Path)
     p.add_argument('--seconds',type=int,default=0)
+    p.add_argument('--start-session',action='store_true',help='Explicitly arm a bounded v4.7 PAPER session; never clears pause/risk halt')
     p.add_argument('--renew-seconds',type=int,default=72000)
     p.add_argument('--review-note',default='')
     p.add_argument('--amount',type=float)
