@@ -1,0 +1,9 @@
+# Draft: v4.6 current Futures capital, WIN eligibility and unified Model A
+
+The v4 portfolio previously sized from its opening paper allocation. It now consumes complete, reconciled account snapshots on the existing source/SQLite writer and recomputes new-entry capacity from current Futures cash, net free margin, exposure, ACTIVE-only allocation and fully costed risk. INITIAL_FUNDING stays immutable historical provenance. Unknown/stale/conflicting account state blocks entries while existing risk remains monitored.
+
+The same durable Capital Ladder combines early <100 positive-net finalized campaign permissions with one-time reserve activation, monetary Model A rungs, loss reversal and recovery. It does not create another account/allocator, convert partial hedge winners into campaign profit or treat external deposits as earnings. Account profiles enforce the isolated 1–2x pilot, separate 0.5% entry-price stop versus campaign-loss cap, and +2% allocation net target as a research goal.
+
+Validation: [271 preserved/new tests and Python 3.11–3.13 CI](https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41270428566), six variable-equity cycles/five restarts/identical replay, two actual SIGKILL paths, 2/3/5/10 concurrent paper positions, complete owner transition/reverse/scaling matrix. See `reports/V46_ACCOUNT_VALIDATION.md` and its checksummed JSON evidence. Synthetic account P&L is explicitly labeled; no profitability or deployed 24h claim.
+
+Authenticated KuCoin transport is **NOT_CONNECTED**. Real mapping, secure host/credentials, private REST/WS sync, UTA normalization, external-funding allocation approval and independent hosted acceptance remain gated. No private API activation, live orders, transfers or graphical interface. Keep Draft; do not merge stable or PR #7/#9.
