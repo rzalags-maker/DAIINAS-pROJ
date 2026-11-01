@@ -1,3 +1,21 @@
+## P0 BITSgap FUTURES WS LIVE RESULTS — 2026-11-01
+
+**Do not retest resolved WS envelope defects from an old Codex sandbox.** Authenticated
+[run 41337235142](https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41337235142)
+proved live WS `auth_ok` for the real `KUCOIN_FUTURES` account and validated
+subscription events `balance=VALIDATED_UPDATE`,
+`positions_settings=VALIDATED_UPDATE`. Both `orders` and `positions` returned
+`PROVIDER_NO_DATA` (JSON null) rather than a count or list; their state is **UNVERIFIED,
+NOT ZERO**. The provider also sends an unscoped `{ok,mes}` reply and nullable
+`mes` metadata in scoped frames. The new WS probe parses both without logging
+private payloads. Existing read-only REST `balance.t/a` is validated, but no real
+number was published; no verified free margin, Model A ACTIVE, or trade authorization
+has been established. **No live order/margin/position writes occurred.** Continue
+with a supported terminal-vs-API account scope comparison, not a new private
+KuCoin connector. Details: `docs/BITSGAP_FUTURES_OBSERVE.md`.
+
+---
+
 ## P0 CURRENT SOURCE OF TRUTH — Bitsgap Futures account observation (2026-11-01)
 
 **Mandatory before starting any new Codex account/wallet integration task:** fetch the latest GitHub `main` and compare the head SHA and the merged PRs. Codex sandbox filesystem, `/workspace` patches and its network/secret allowlist are **not** the deployed/authenticated GitHub Actions environment. A local missing `BITSGAP_PRIVATE_KEY_PEM` or blocked `open.bitsgap.com` **does not prove** the existing deployed Bitsgap account observation is absent. Do not duplicate `_spot_em` logic, rebuild KuCoin private API access, or misreport completed features as still impossible.
