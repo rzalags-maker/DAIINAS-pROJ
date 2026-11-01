@@ -9,6 +9,8 @@ import json
 import os
 import secrets
 import time
+import re
+from decimal import Decimal, InvalidOperation, localcontext
 import urllib.error
 import urllib.request
 
@@ -16,13 +18,26 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 _URL = "https://open.bitsgap.com/api/v1/topic"
-_ALLOWED = frozenset(("manual", "conf_enums"))
+_ALLOWED = frozenset(("manual", "conf_enums", "balance", "orders"))
 
 
 class BitsgapError(RuntimeError):
     def __init__(self, category):
         self.category = category
         super().__init__(category)
+
+
+def _unique_object(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("Duplicate JSON member")
+        result[key] = value
+    return result
+
+
+def _reject_constant(value):
+    raise ValueError("Non-JSON numeric constant")
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -58,6 +73,8 @@ class BitsgapReadOnly:
             raise BitsgapError("WRONG_PRIVATE_KEY_TYPE")
         self._key = key
         self._transport = transport
+        self._spot_em = None
+        self._order_types = None
         public_der = key.public_key().public_bytes(
             encoding=serialization.Encoding.DER,
             format=serialization.PublicFormat.SubjectPublicKeyInfo,
@@ -74,7 +91,13 @@ class BitsgapReadOnly:
             raise BitsgapError("NON_READ_ONLY_TOPIC_REFUSED")
         if params is None:
             params = {}
-        if not isinstance(params, dict) or params:
+        if not isinstance(params, dict):
+            raise BitsgapError("UNEXPECTED_TOPIC_PARAMETERS")
+        if name in ("balance", "orders"):
+            if (set(params) != {"em"} or type(params["em"]) is not int
+                    or self._spot_em is None or params["em"] != self._spot_em):
+                raise BitsgapError("UNEXPECTED_EXCHANGE_PARAMETERS")
+        elif params:
             raise BitsgapError("UNEXPECTED_TOPIC_PARAMETERS")
         ts = int(time.time()) if timestamp is None else timestamp
         if type(ts) is not int:
@@ -97,12 +120,13 @@ class BitsgapReadOnly:
         headers = {"Content-Type": "application/json", "X-Api-Public-Key": self._public}
         try:
             raw = self._transport(_URL, body, headers)
-            obj = json.loads(raw)
+            obj = json.loads(raw, object_pairs_hook=_unique_object,
+                             parse_constant=_reject_constant)
         except BitsgapError:
             raise
         except (ValueError, TypeError, UnicodeError):
             raise BitsgapError("INVALID_RESPONSE") from None
-        if not isinstance(obj, dict) or "data" not in obj:
+        if not isinstance(obj, dict) or set(obj) != {"data"}:
             raise BitsgapError("UNEXPECTED_RESPONSE_SHAPE")
         return obj["data"]
 
@@ -158,3 +182,166 @@ class BitsgapReadOnly:
         # Neither KuCoin scope nor account balance is authenticated yet.
         return {"bitsgap_authenticated": True, "kucoin_account_reconciled": False,
                 "order_routing_enabled": False}
+
+    def resolve_kucoin_spot(self):
+        """Resolve a real Spot catalog entry, never a connected-account identity."""
+        self._spot_em = None
+        self._order_types = None
+        enums = self.topic("conf_enums")
+        market = enums.get("market") if isinstance(enums, dict) else None
+        if (not isinstance(market, dict) or market.get("alias") != "em"
+                or not isinstance(market.get("items"), dict)):
+            raise BitsgapError("INVALID_MARKET_ENUM_SCHEMA")
+        items = market["items"]
+        if any(not isinstance(k, str) or type(v) is not int or v <= 0
+               for k, v in items.items()):
+            raise BitsgapError("INVALID_MARKET_ENUM_SCHEMA")
+        # Only explicit real Spot spellings. Unknown variants fail closed.
+        matches = [v for k, v in items.items()
+                   if k.upper().replace(" ", "_") in ("KUCOIN", "KUCOIN_SPOT")]
+        if (len(matches) != 1
+                or sum(v == matches[0] for v in items.values()) != 1):
+            raise BitsgapError("KUCOIN_SPOT_ENUM_UNRESOLVED")
+        self._spot_em = matches[0]
+        types = enums.get("order_type", {}).get("items") if isinstance(
+            enums.get("order_type", {}), dict) else None
+        if (isinstance(types, dict) and types and all(isinstance(k, str)
+                and type(v) is int and v >= 0 for k, v in types.items())
+                and len(set(types.values())) == len(types)):
+            self._order_types = types
+        return self._spot_em
+
+    @staticmethod
+    def _decimal(value, *, positive=False):
+        if (not isinstance(value, str) or len(value) > 128
+                or re.fullmatch(r"[0-9]+(?:\.[0-9]+)?", value) is None):
+            raise BitsgapError("INVALID_ACCOUNT_SCHEMA")
+        try:
+            number = Decimal(value)
+        except InvalidOperation:
+            raise BitsgapError("INVALID_ACCOUNT_SCHEMA") from None
+        if not number.is_finite() or number < 0 or (positive and number <= 0):
+            raise BitsgapError("INVALID_ACCOUNT_SCHEMA")
+        return number
+
+    @classmethod
+    def validate_balance(cls, value):
+        # Documented topic-value wrapper only; never recursively unwrap data.
+        if (not isinstance(value, dict) or set(value) != {"data"}
+                or not isinstance(value["data"], dict)):
+            raise BitsgapError("UNVERIFIED_BALANCE_RESPONSE_SHAPE")
+        if not value["data"]:
+            raise BitsgapError("EMPTY_BALANCE_UNVERIFIED")
+        for currency, record in value["data"].items():
+            if (not isinstance(currency, str) or not currency
+                    or not isinstance(record, dict)
+                    or not {"t", "a"} <= set(record)
+                    or not set(record) <= {"t", "a", "l"}):
+                raise BitsgapError("INVALID_ACCOUNT_SCHEMA")
+            total, available = cls._decimal(record["t"]), cls._decimal(record["a"])
+            locked = cls._decimal(record["l"]) if "l" in record else Decimal(0)
+            with localcontext() as context:
+                context.prec = 256
+                if available > total or available + locked > total:
+                    raise BitsgapError("INVALID_ACCOUNT_SCHEMA")
+        return True
+
+    @classmethod
+    def validate_orders(cls, value, order_types=None):
+        if (not isinstance(value, dict) or set(value) != {"data", "cnt"}
+                or not isinstance(value["data"], dict)
+                or type(value["cnt"]) is not int or value["cnt"] < 0):
+            raise BitsgapError("UNVERIFIED_ORDERS_RESPONSE_SHAPE")
+        count = 0
+        for pair, orders in value["data"].items():
+            if not isinstance(pair, str) or not pair or not isinstance(orders, list):
+                raise BitsgapError("INVALID_ACCOUNT_SCHEMA")
+            for order in orders:
+                if (not isinstance(order, dict)
+                        or not {"id", "eost", "eot", "eos", "t0"} <= set(order)
+                        or not isinstance(order["id"], str) or not order["id"]
+                        or any(type(order[k]) is not int or order[k] < 0
+                               for k in ("eost", "eot", "eos", "t0"))):
+                    raise BitsgapError("INVALID_ACCOUNT_SCHEMA")
+                allowed = {"id", "eost", "eot", "eos", "t0", "am", "pr", "eid",
+                           "ame", "pre", "tl", "f", "apiid"}
+                if not set(order) <= allowed:
+                    raise BitsgapError("INVALID_ACCOUNT_SCHEMA")
+                if not order_types or order["eot"] not in order_types.values():
+                    raise BitsgapError("UNVERIFIED_ORDER_TYPE_ENUM")
+                type_name = next(k for k, v in order_types.items() if v == order["eot"])
+                if type_name not in ("LIMIT", "MARKET"):
+                    raise BitsgapError("UNVERIFIED_ORDER_TYPE_ENUM")
+                if ((type_name == "LIMIT" and "pr" not in order)
+                        or (type_name == "MARKET" and "pr" in order)):
+                    raise BitsgapError("INVALID_ACCOUNT_SCHEMA")
+                # Partial-fill/fee structures lack a complete schema in the
+                # supplied reference. Do not bless them using guessed types.
+                if set(order) & {"ame", "pre", "tl", "f"}:
+                    raise BitsgapError("UNVERIFIED_ORDER_OPTIONAL_SCHEMA")
+                for field in ("am", "pr"):
+                    if field in order:
+                        cls._decimal(order[field], positive=True)
+                for field in ("eid", "apiid"):
+                    if field in order and not isinstance(order[field], str):
+                        raise BitsgapError("INVALID_ACCOUNT_SCHEMA")
+                count += 1
+        if count == 0 and value["cnt"] == 0:
+            raise BitsgapError("EMPTY_ORDERS_UNVERIFIED")
+        # Full-snapshot count semantics are not established by the reference.
+        if count != value["cnt"]:
+            raise BitsgapError("ORDER_SNAPSHOT_COUNT_UNVERIFIED")
+        return True
+
+    def check_balance(self):
+        if self._spot_em is None:
+            raise BitsgapError("KUCOIN_SPOT_ENUM_UNRESOLVED")
+        return self.validate_balance(self.topic("balance", {"em": self._spot_em}))
+
+    def check_orders(self):
+        if self._spot_em is None:
+            raise BitsgapError("KUCOIN_SPOT_ENUM_UNRESOLVED")
+        return self.validate_orders(self.topic("orders", {"em": self._spot_em}),
+                                    self._order_types)
+
+
+def main():
+    """Explicit manual probe; emits fixed statuses, never account content."""
+    checks = ("BITSGAP_API_AUTH", "KUCOIN_EXCHANGE_RESOLVED",
+              "KUCOIN_BALANCE_ACCESS", "KUCOIN_ORDERS_ACCESS")
+    results = dict.fromkeys(checks, "NOT_TESTED")
+    print("DAIINAS_ORDER_ROUTING=DISABLED")
+    print("LIVE_TRADING=DISABLED")
+    print("FUTURES_POSITION_MODE=ONE_WAY")
+    print("FUTURES_POSITION_MODE_SOURCE=OWNER_CONFIGURATION_NOT_API_VERIFIED")
+    current = checks[0]
+    try:
+        client = BitsgapReadOnly.from_env()
+        for current, operation in zip(checks, (client.handshake,
+                client.resolve_kucoin_spot, client.check_balance, client.check_orders)):
+            try:
+                operation()
+                results[current] = "PASS"
+            except BitsgapError as exc:
+                # Category allowlist excludes arbitrary messages/response data.
+                safe = {"INVALID_MARKET_ENUM_SCHEMA", "KUCOIN_SPOT_ENUM_UNRESOLVED",
+                        "UNVERIFIED_BALANCE_RESPONSE_SHAPE", "UNVERIFIED_ORDERS_RESPONSE_SHAPE",
+                        "EMPTY_BALANCE_UNVERIFIED", "EMPTY_ORDERS_UNVERIFIED",
+                        "INVALID_ACCOUNT_SCHEMA", "UNVERIFIED_ORDER_OPTIONAL_SCHEMA",
+                        "UNVERIFIED_ORDER_TYPE_ENUM",
+                        "ORDER_SNAPSHOT_COUNT_UNVERIFIED", "NETWORK_UNAVAILABLE",
+                        "INVALID_RESPONSE", "UNEXPECTED_RESPONSE_SHAPE", "OVERSIZED_RESPONSE"}
+                category = exc.category if exc.category in safe or re.fullmatch(
+                    r"HTTP_[1-5][0-9]{2}", exc.category) else "RESPONSE_OR_AUTH_FAILURE"
+                results[current] = "FAIL; CATEGORY=" + category
+                if current in checks[:2]:
+                    break
+    except Exception:
+        results[current] = "FAIL; CATEGORY=SETUP_OR_RUNTIME_FAILURE"
+    for check in checks:
+        print(check + "=" + results[check])
+    return 0 if all(v == "PASS" for v in results.values()) else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
