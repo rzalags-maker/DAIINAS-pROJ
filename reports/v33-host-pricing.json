@@ -1,8 +1,8 @@
 {
   "source_url": "https://aws.amazon.com/lightsail/pricing/",
-  "retrieved_utc": "2026-11-01T11:47:26.367414+00:00",
+  "retrieved_utc": "2026-11-01T11:48:53.833292+00:00",
   "status": "retrieved_official_page",
-  "sha256": "e21fa80194efb8112fc764ce70068c2cdfb79acef46d7d14e1b05db321cc72db",
+  "sha256": "c3fc058265e58ee3d61cd552f3b1d76601422255926804d0e8b4fd028044d722",
   "excerpts": [
     "o 0.5 GB Memory 2 vCPUs*** 20 GB SSD Disk 1 TB Transfer* $7 USD/mo 1 GB Memory 2 vCPUs*** 40 GB SSD Disk 2 TB Transfer* $12 USD/mo 2 GB Memory 2 vCPUs*** 60 GB SSD Disk 3 TB Transfer* $24 USD/mo 4 GB Memory 2 vCPUs 80 GB SSD Disk 4 TB Transfer* $44 USD/mo 8 GB Memory 2 vCPUs 160 GB SSD Disk 5 TB Transf",
     "mory 2 vCPUs*** 20 GB SSD Disk 1 TB Transfer* $7 USD/mo 1 GB Memory 2 vCPUs*** 40 GB SSD Disk 2 TB Transfer* $12 USD/mo 2 GB Memory 2 vCPUs*** 60 GB SSD Disk 3 TB Transfer* $24 USD/mo 4 GB Memory 2 vCPUs 80 GB SSD Disk 4 TB Transfer* $44 USD/mo 8 GB Memory 2 vCPUs 160 GB SSD Disk 5 TB Transfer* $84 USD/",
@@ -26,6 +26,6 @@
     " SSD Disk 10 TB Transfer* Memory optimized $134 USD/mo 16 GB Memory 2 vCPUs 160 GB SSD Disk 5 TB Transfer* $264 USD/mo 32 GB Memory 4 vCPUs 320 GB SSD Disk 6 TB Transfer* $524 USD/mo 64 GB Memory 8 vCPUs 640 GB SSD Disk 7 TB Transfer* $1,044 USD/mo 128 GB Memory 16 vCPUs 1280 GB SSD Disk 8 TB Transfer* "
   ],
   "caveat": "Provider quote, region, tax, storage and egress must be reviewed; no purchase made.",
-  "tested_commit": "c13ee231297b4f478f03dd51f595b05e8203d1b2",
-  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41303421687"
+  "tested_commit": "f79229d38fc6f0f92be5ea97b49e450694a10d09",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41303507498"
 }

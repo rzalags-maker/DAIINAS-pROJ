@@ -1,0 +1,9 @@
+{
+  "status": "downloaded",
+  "run_id": 41251111492,
+  "artifact_id": 13061023549,
+  "bytes": 28207972,
+  "sha256": "96238231767ff25ac76292c7458e8bd21547b1a025e7113224f638eb7026cd17",
+  "tested_commit": "f79229d38fc6f0f92be5ea97b49e450694a10d09",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41303507498"
+}
