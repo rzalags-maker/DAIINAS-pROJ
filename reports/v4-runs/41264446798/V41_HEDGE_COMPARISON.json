@@ -1,0 +1,800 @@
+{
+  "live_orders_enabled": false,
+  "sample_kind": "RECORDED_PUBLIC_MARKET_DATA",
+  "strategy_validated": false,
+  "production_ready": false,
+  "source_sha256": {
+    "state/v4-source.sqlite3": "b640450912098fdbb88dc52d97e6526749d3fbb6e670350286d349294d06f822"
+  },
+  "first_available_ms": 1793499631422,
+  "last_available_ms": 1793499861746,
+  "duration_seconds": 230.324,
+  "walk_forward": {
+    "training_end_ms": 1793499746583,
+    "held_out_start_ms": 1793499746584,
+    "thresholds": "Online per-symbol cost/volatility/structure estimates; no fitted return probabilities",
+    "status": "INSUFFICIENT_MULTIDAY_OUT_OF_SAMPLE_EVIDENCE",
+    "confidence_intervals": "Not estimated from sparse dependent legs"
+  },
+  "scenarios": {
+    "8": {
+      "M0": {
+        "cash": "8",
+        "equity_last_mark": "8",
+        "executable_equity": "8",
+        "mark_status": "FLAT",
+        "ladder": {
+          "starting_total": "8",
+          "realized_net": "0",
+          "active": "8",
+          "reserve": "0",
+          "pending": "0",
+          "deficit": "0",
+          "total": "8",
+          "stage": "BOOTSTRAP",
+          "next_step": "RESERVE",
+          "committed_active": "0",
+          "slot_ceiling": 1,
+          "per_position_budget": "25",
+          "policy": {
+            "activation_total": "100",
+            "activation_reserve": "50",
+            "position_budget": "25",
+            "max_slots": 10,
+            "reserve_step": "50",
+            "active_step": "50",
+            "per_trade_planned_risk": "0.0025",
+            "aggregate_planned_risk": "0.01"
+          },
+          "live_orders_enabled": false
+        },
+        "realized_net_pnl": "0",
+        "fees": "0",
+        "modeled_carry": "0",
+        "maximum_drawdown": 0.0,
+        "account_maximum_drawdown": 0.0,
+        "positions": [],
+        "campaigns": [],
+        "closed_summary": {
+          "count": 0,
+          "wins": 0,
+          "losses": 0,
+          "profit": "0",
+          "loss": "0"
+        },
+        "reason_counts": {
+          "REJECTED_EVENT:rule_version_mismatch": 868
+        },
+        "counts": {
+          "SCAN": 16,
+          "HEALTH": 31,
+          "DECISION": 5279,
+          "BOOK_SNAPSHOT": 68,
+          "VERIFIED_BOOK": 21,
+          "REJECTED_EVENT": 868
+        },
+        "held_out_closed_legs": 0,
+        "held_out_mean_net": null,
+        "confidence_interval": null,
+        "expected_net_advantage": "UNSUPPORTED",
+        "abstention_count": 5279,
+        "source_cursor": 72877,
+        "input_digest": "93c6abdac940ec29756c54b072df45d243082c8e5b93860d05c7eaa735d228c2",
+        "comparison_policy": "Same as-of observations, same initial capital and risk model; M2 is a negative control"
+      },
+      "M1": {
+        "cash": "8",
+        "equity_last_mark": "8",
+        "executable_equity": "8",
+        "mark_status": "FLAT",
+        "ladder": {
+          "starting_total": "8",
+          "realized_net": "0",
+          "active": "8",
+          "reserve": "0",
+          "pending": "0",
+          "deficit": "0",
+          "total": "8",
+          "stage": "BOOTSTRAP",
+          "next_step": "RESERVE",
+          "committed_active": "0",
+          "slot_ceiling": 1,
+          "per_position_budget": "25",
+          "policy": {
+            "activation_total": "100",
+            "activation_reserve": "50",
+            "position_budget": "25",
+            "max_slots": 10,
+            "reserve_step": "50",
+            "active_step": "50",
+            "per_trade_planned_risk": "0.0025",
+            "aggregate_planned_risk": "0.01"
+          },
+          "live_orders_enabled": false
+        },
+        "realized_net_pnl": "0",
+        "fees": "0",
+        "modeled_carry": "0",
+        "maximum_drawdown": 0.0,
+        "account_maximum_drawdown": 0.0,
+        "positions": [],
+        "campaigns": [],
+        "closed_summary": {
+          "count": 0,
+          "wins": 0,
+          "losses": 0,
+          "profit": "0",
+          "loss": "0"
+        },
+        "reason_counts": {
+          "REJECTED_EVENT:rule_version_mismatch": 868
+        },
+        "counts": {
+          "SCAN": 16,
+          "HEALTH": 31,
+          "DECISION": 5279,
+          "BOOK_SNAPSHOT": 68,
+          "VERIFIED_BOOK": 21,
+          "REJECTED_EVENT": 868
+        },
+        "held_out_closed_legs": 0,
+        "held_out_mean_net": null,
+        "confidence_interval": null,
+        "expected_net_advantage": "UNSUPPORTED",
+        "abstention_count": 5279,
+        "source_cursor": 72877,
+        "input_digest": "93c6abdac940ec29756c54b072df45d243082c8e5b93860d05c7eaa735d228c2",
+        "comparison_policy": "Same as-of observations, same initial capital and risk model; M2 is a negative control"
+      },
+      "M2": {
+        "cash": "8",
+        "equity_last_mark": "8",
+        "executable_equity": "8",
+        "mark_status": "FLAT",
+        "ladder": {
+          "starting_total": "8",
+          "realized_net": "0",
+          "active": "8",
+          "reserve": "0",
+          "pending": "0",
+          "deficit": "0",
+          "total": "8",
+          "stage": "BOOTSTRAP",
+          "next_step": "RESERVE",
+          "committed_active": "0",
+          "slot_ceiling": 1,
+          "per_position_budget": "25",
+          "policy": {
+            "activation_total": "100",
+            "activation_reserve": "50",
+            "position_budget": "25",
+            "max_slots": 10,
+            "reserve_step": "50",
+            "active_step": "50",
+            "per_trade_planned_risk": "0.0025",
+            "aggregate_planned_risk": "0.01"
+          },
+          "live_orders_enabled": false
+        },
+        "realized_net_pnl": "0",
+        "fees": "0",
+        "modeled_carry": "0",
+        "maximum_drawdown": 0.0,
+        "account_maximum_drawdown": 0.0,
+        "positions": [],
+        "campaigns": [],
+        "closed_summary": {
+          "count": 0,
+          "wins": 0,
+          "losses": 0,
+          "profit": "0",
+          "loss": "0"
+        },
+        "reason_counts": {
+          "REJECTED_EVENT:rule_version_mismatch": 868
+        },
+        "counts": {
+          "SCAN": 16,
+          "HEALTH": 31,
+          "DECISION": 5279,
+          "BOOK_SNAPSHOT": 68,
+          "VERIFIED_BOOK": 21,
+          "REJECTED_EVENT": 868
+        },
+        "held_out_closed_legs": 0,
+        "held_out_mean_net": null,
+        "confidence_interval": null,
+        "expected_net_advantage": "UNSUPPORTED",
+        "abstention_count": 5279,
+        "source_cursor": 72877,
+        "input_digest": "93c6abdac940ec29756c54b072df45d243082c8e5b93860d05c7eaa735d228c2",
+        "comparison_policy": "Same as-of observations, same initial capital and risk model; M2 is a negative control"
+      },
+      "M3": {
+        "cash": "8",
+        "equity_last_mark": "8",
+        "executable_equity": "8",
+        "mark_status": "FLAT",
+        "ladder": {
+          "starting_total": "8",
+          "realized_net": "0",
+          "active": "8",
+          "reserve": "0",
+          "pending": "0",
+          "deficit": "0",
+          "total": "8",
+          "stage": "BOOTSTRAP",
+          "next_step": "RESERVE",
+          "committed_active": "0",
+          "slot_ceiling": 1,
+          "per_position_budget": "25",
+          "policy": {
+            "activation_total": "100",
+            "activation_reserve": "50",
+            "position_budget": "25",
+            "max_slots": 10,
+            "reserve_step": "50",
+            "active_step": "50",
+            "per_trade_planned_risk": "0.0025",
+            "aggregate_planned_risk": "0.01"
+          },
+          "live_orders_enabled": false
+        },
+        "realized_net_pnl": "0",
+        "fees": "0",
+        "modeled_carry": "0",
+        "maximum_drawdown": 0.0,
+        "account_maximum_drawdown": 0.0,
+        "positions": [],
+        "campaigns": [],
+        "closed_summary": {
+          "count": 0,
+          "wins": 0,
+          "losses": 0,
+          "profit": "0",
+          "loss": "0"
+        },
+        "reason_counts": {
+          "REJECTED_EVENT:rule_version_mismatch": 868
+        },
+        "counts": {
+          "SCAN": 16,
+          "HEALTH": 31,
+          "DECISION": 5279,
+          "BOOK_SNAPSHOT": 68,
+          "VERIFIED_BOOK": 21,
+          "REJECTED_EVENT": 868
+        },
+        "held_out_closed_legs": 0,
+        "held_out_mean_net": null,
+        "confidence_interval": null,
+        "expected_net_advantage": "UNSUPPORTED",
+        "abstention_count": 5279,
+        "source_cursor": 72877,
+        "input_digest": "93c6abdac940ec29756c54b072df45d243082c8e5b93860d05c7eaa735d228c2",
+        "comparison_policy": "Same as-of observations, same initial capital and risk model; M2 is a negative control"
+      }
+    },
+    "60": {
+      "M0": {
+        "cash": "60",
+        "equity_last_mark": "60",
+        "executable_equity": "60",
+        "mark_status": "FLAT",
+        "ladder": {
+          "starting_total": "60",
+          "realized_net": "0",
+          "active": "60",
+          "reserve": "0",
+          "pending": "0",
+          "deficit": "0",
+          "total": "60",
+          "stage": "BOOTSTRAP",
+          "next_step": "RESERVE",
+          "committed_active": "0",
+          "slot_ceiling": 1,
+          "per_position_budget": "25",
+          "policy": {
+            "activation_total": "100",
+            "activation_reserve": "50",
+            "position_budget": "25",
+            "max_slots": 10,
+            "reserve_step": "50",
+            "active_step": "50",
+            "per_trade_planned_risk": "0.0025",
+            "aggregate_planned_risk": "0.01"
+          },
+          "live_orders_enabled": false
+        },
+        "realized_net_pnl": "0",
+        "fees": "0",
+        "modeled_carry": "0",
+        "maximum_drawdown": 0.0,
+        "account_maximum_drawdown": 0.0,
+        "positions": [],
+        "campaigns": [],
+        "closed_summary": {
+          "count": 0,
+          "wins": 0,
+          "losses": 0,
+          "profit": "0",
+          "loss": "0"
+        },
+        "reason_counts": {
+          "REJECTED_EVENT:rule_version_mismatch": 868
+        },
+        "counts": {
+          "SCAN": 16,
+          "HEALTH": 31,
+          "DECISION": 5279,
+          "BOOK_SNAPSHOT": 68,
+          "VERIFIED_BOOK": 21,
+          "REJECTED_EVENT": 868
+        },
+        "held_out_closed_legs": 0,
+        "held_out_mean_net": null,
+        "confidence_interval": null,
+        "expected_net_advantage": "UNSUPPORTED",
+        "abstention_count": 5279,
+        "source_cursor": 72877,
+        "input_digest": "93c6abdac940ec29756c54b072df45d243082c8e5b93860d05c7eaa735d228c2",
+        "comparison_policy": "Same as-of observations, same initial capital and risk model; M2 is a negative control"
+      },
+      "M1": {
+        "cash": "60",
+        "equity_last_mark": "60",
+        "executable_equity": "60",
+        "mark_status": "FLAT",
+        "ladder": {
+          "starting_total": "60",
+          "realized_net": "0",
+          "active": "60",
+          "reserve": "0",
+          "pending": "0",
+          "deficit": "0",
+          "total": "60",
+          "stage": "BOOTSTRAP",
+          "next_step": "RESERVE",
+          "committed_active": "0",
+          "slot_ceiling": 1,
+          "per_position_budget": "25",
+          "policy": {
+            "activation_total": "100",
+            "activation_reserve": "50",
+            "position_budget": "25",
+            "max_slots": 10,
+            "reserve_step": "50",
+            "active_step": "50",
+            "per_trade_planned_risk": "0.0025",
+            "aggregate_planned_risk": "0.01"
+          },
+          "live_orders_enabled": false
+        },
+        "realized_net_pnl": "0",
+        "fees": "0",
+        "modeled_carry": "0",
+        "maximum_drawdown": 0.0,
+        "account_maximum_drawdown": 0.0,
+        "positions": [],
+        "campaigns": [],
+        "closed_summary": {
+          "count": 0,
+          "wins": 0,
+          "losses": 0,
+          "profit": "0",
+          "loss": "0"
+        },
+        "reason_counts": {
+          "REJECTED_EVENT:rule_version_mismatch": 868
+        },
+        "counts": {
+          "SCAN": 16,
+          "HEALTH": 31,
+          "DECISION": 5279,
+          "BOOK_SNAPSHOT": 68,
+          "VERIFIED_BOOK": 21,
+          "REJECTED_EVENT": 868
+        },
+        "held_out_closed_legs": 0,
+        "held_out_mean_net": null,
+        "confidence_interval": null,
+        "expected_net_advantage": "UNSUPPORTED",
+        "abstention_count": 5279,
+        "source_cursor": 72877,
+        "input_digest": "93c6abdac940ec29756c54b072df45d243082c8e5b93860d05c7eaa735d228c2",
+        "comparison_policy": "Same as-of observations, same initial capital and risk model; M2 is a negative control"
+      },
+      "M2": {
+        "cash": "60",
+        "equity_last_mark": "60",
+        "executable_equity": "60",
+        "mark_status": "FLAT",
+        "ladder": {
+          "starting_total": "60",
+          "realized_net": "0",
+          "active": "60",
+          "reserve": "0",
+          "pending": "0",
+          "deficit": "0",
+          "total": "60",
+          "stage": "BOOTSTRAP",
+          "next_step": "RESERVE",
+          "committed_active": "0",
+          "slot_ceiling": 1,
+          "per_position_budget": "25",
+          "policy": {
+            "activation_total": "100",
+            "activation_reserve": "50",
+            "position_budget": "25",
+            "max_slots": 10,
+            "reserve_step": "50",
+            "active_step": "50",
+            "per_trade_planned_risk": "0.0025",
+            "aggregate_planned_risk": "0.01"
+          },
+          "live_orders_enabled": false
+        },
+        "realized_net_pnl": "0",
+        "fees": "0",
+        "modeled_carry": "0",
+        "maximum_drawdown": 0.0,
+        "account_maximum_drawdown": 0.0,
+        "positions": [],
+        "campaigns": [],
+        "closed_summary": {
+          "count": 0,
+          "wins": 0,
+          "losses": 0,
+          "profit": "0",
+          "loss": "0"
+        },
+        "reason_counts": {
+          "REJECTED_EVENT:rule_version_mismatch": 868
+        },
+        "counts": {
+          "SCAN": 16,
+          "HEALTH": 31,
+          "DECISION": 5279,
+          "BOOK_SNAPSHOT": 68,
+          "VERIFIED_BOOK": 21,
+          "REJECTED_EVENT": 868
+        },
+        "held_out_closed_legs": 0,
+        "held_out_mean_net": null,
+        "confidence_interval": null,
+        "expected_net_advantage": "UNSUPPORTED",
+        "abstention_count": 5279,
+        "source_cursor": 72877,
+        "input_digest": "93c6abdac940ec29756c54b072df45d243082c8e5b93860d05c7eaa735d228c2",
+        "comparison_policy": "Same as-of observations, same initial capital and risk model; M2 is a negative control"
+      },
+      "M3": {
+        "cash": "60",
+        "equity_last_mark": "60",
+        "executable_equity": "60",
+        "mark_status": "FLAT",
+        "ladder": {
+          "starting_total": "60",
+          "realized_net": "0",
+          "active": "60",
+          "reserve": "0",
+          "pending": "0",
+          "deficit": "0",
+          "total": "60",
+          "stage": "BOOTSTRAP",
+          "next_step": "RESERVE",
+          "committed_active": "0",
+          "slot_ceiling": 1,
+          "per_position_budget": "25",
+          "policy": {
+            "activation_total": "100",
+            "activation_reserve": "50",
+            "position_budget": "25",
+            "max_slots": 10,
+            "reserve_step": "50",
+            "active_step": "50",
+            "per_trade_planned_risk": "0.0025",
+            "aggregate_planned_risk": "0.01"
+          },
+          "live_orders_enabled": false
+        },
+        "realized_net_pnl": "0",
+        "fees": "0",
+        "modeled_carry": "0",
+        "maximum_drawdown": 0.0,
+        "account_maximum_drawdown": 0.0,
+        "positions": [],
+        "campaigns": [],
+        "closed_summary": {
+          "count": 0,
+          "wins": 0,
+          "losses": 0,
+          "profit": "0",
+          "loss": "0"
+        },
+        "reason_counts": {
+          "REJECTED_EVENT:rule_version_mismatch": 868
+        },
+        "counts": {
+          "SCAN": 16,
+          "HEALTH": 31,
+          "DECISION": 5279,
+          "BOOK_SNAPSHOT": 68,
+          "VERIFIED_BOOK": 21,
+          "REJECTED_EVENT": 868
+        },
+        "held_out_closed_legs": 0,
+        "held_out_mean_net": null,
+        "confidence_interval": null,
+        "expected_net_advantage": "UNSUPPORTED",
+        "abstention_count": 5279,
+        "source_cursor": 72877,
+        "input_digest": "93c6abdac940ec29756c54b072df45d243082c8e5b93860d05c7eaa735d228c2",
+        "comparison_policy": "Same as-of observations, same initial capital and risk model; M2 is a negative control"
+      }
+    },
+    "100": {
+      "M0": {
+        "cash": "100",
+        "equity_last_mark": "100",
+        "executable_equity": "100",
+        "mark_status": "FLAT",
+        "ladder": {
+          "starting_total": "100",
+          "realized_net": "0",
+          "active": "50",
+          "reserve": "50",
+          "pending": "0",
+          "deficit": "0",
+          "total": "100",
+          "stage": "EXPAND",
+          "next_step": "RESERVE",
+          "committed_active": "0",
+          "slot_ceiling": 2,
+          "per_position_budget": "25",
+          "policy": {
+            "activation_total": "100",
+            "activation_reserve": "50",
+            "position_budget": "25",
+            "max_slots": 10,
+            "reserve_step": "50",
+            "active_step": "50",
+            "per_trade_planned_risk": "0.0025",
+            "aggregate_planned_risk": "0.01"
+          },
+          "live_orders_enabled": false
+        },
+        "realized_net_pnl": "0",
+        "fees": "0",
+        "modeled_carry": "0",
+        "maximum_drawdown": 0.0,
+        "account_maximum_drawdown": 0.0,
+        "positions": [],
+        "campaigns": [],
+        "closed_summary": {
+          "count": 0,
+          "wins": 0,
+          "losses": 0,
+          "profit": "0",
+          "loss": "0"
+        },
+        "reason_counts": {
+          "REJECTED_EVENT:rule_version_mismatch": 868
+        },
+        "counts": {
+          "SCAN": 16,
+          "HEALTH": 31,
+          "DECISION": 5279,
+          "BOOK_SNAPSHOT": 68,
+          "VERIFIED_BOOK": 21,
+          "REJECTED_EVENT": 868
+        },
+        "held_out_closed_legs": 0,
+        "held_out_mean_net": null,
+        "confidence_interval": null,
+        "expected_net_advantage": "UNSUPPORTED",
+        "abstention_count": 5279,
+        "source_cursor": 72877,
+        "input_digest": "93c6abdac940ec29756c54b072df45d243082c8e5b93860d05c7eaa735d228c2",
+        "comparison_policy": "Same as-of observations, same initial capital and risk model; M2 is a negative control"
+      },
+      "M1": {
+        "cash": "100",
+        "equity_last_mark": "100",
+        "executable_equity": "100",
+        "mark_status": "FLAT",
+        "ladder": {
+          "starting_total": "100",
+          "realized_net": "0",
+          "active": "50",
+          "reserve": "50",
+          "pending": "0",
+          "deficit": "0",
+          "total": "100",
+          "stage": "EXPAND",
+          "next_step": "RESERVE",
+          "committed_active": "0",
+          "slot_ceiling": 2,
+          "per_position_budget": "25",
+          "policy": {
+            "activation_total": "100",
+            "activation_reserve": "50",
+            "position_budget": "25",
+            "max_slots": 10,
+            "reserve_step": "50",
+            "active_step": "50",
+            "per_trade_planned_risk": "0.0025",
+            "aggregate_planned_risk": "0.01"
+          },
+          "live_orders_enabled": false
+        },
+        "realized_net_pnl": "0",
+        "fees": "0",
+        "modeled_carry": "0",
+        "maximum_drawdown": 0.0,
+        "account_maximum_drawdown": 0.0,
+        "positions": [],
+        "campaigns": [],
+        "closed_summary": {
+          "count": 0,
+          "wins": 0,
+          "losses": 0,
+          "profit": "0",
+          "loss": "0"
+        },
+        "reason_counts": {
+          "REJECTED_EVENT:rule_version_mismatch": 868
+        },
+        "counts": {
+          "SCAN": 16,
+          "HEALTH": 31,
+          "DECISION": 5279,
+          "BOOK_SNAPSHOT": 68,
+          "VERIFIED_BOOK": 21,
+          "REJECTED_EVENT": 868
+        },
+        "held_out_closed_legs": 0,
+        "held_out_mean_net": null,
+        "confidence_interval": null,
+        "expected_net_advantage": "UNSUPPORTED",
+        "abstention_count": 5279,
+        "source_cursor": 72877,
+        "input_digest": "93c6abdac940ec29756c54b072df45d243082c8e5b93860d05c7eaa735d228c2",
+        "comparison_policy": "Same as-of observations, same initial capital and risk model; M2 is a negative control"
+      },
+      "M2": {
+        "cash": "100",
+        "equity_last_mark": "100",
+        "executable_equity": "100",
+        "mark_status": "FLAT",
+        "ladder": {
+          "starting_total": "100",
+          "realized_net": "0",
+          "active": "50",
+          "reserve": "50",
+          "pending": "0",
+          "deficit": "0",
+          "total": "100",
+          "stage": "EXPAND",
+          "next_step": "RESERVE",
+          "committed_active": "0",
+          "slot_ceiling": 2,
+          "per_position_budget": "25",
+          "policy": {
+            "activation_total": "100",
+            "activation_reserve": "50",
+            "position_budget": "25",
+            "max_slots": 10,
+            "reserve_step": "50",
+            "active_step": "50",
+            "per_trade_planned_risk": "0.0025",
+            "aggregate_planned_risk": "0.01"
+          },
+          "live_orders_enabled": false
+        },
+        "realized_net_pnl": "0",
+        "fees": "0",
+        "modeled_carry": "0",
+        "maximum_drawdown": 0.0,
+        "account_maximum_drawdown": 0.0,
+        "positions": [],
+        "campaigns": [],
+        "closed_summary": {
+          "count": 0,
+          "wins": 0,
+          "losses": 0,
+          "profit": "0",
+          "loss": "0"
+        },
+        "reason_counts": {
+          "REJECTED_EVENT:rule_version_mismatch": 868
+        },
+        "counts": {
+          "SCAN": 16,
+          "HEALTH": 31,
+          "DECISION": 5279,
+          "BOOK_SNAPSHOT": 68,
+          "VERIFIED_BOOK": 21,
+          "REJECTED_EVENT": 868
+        },
+        "held_out_closed_legs": 0,
+        "held_out_mean_net": null,
+        "confidence_interval": null,
+        "expected_net_advantage": "UNSUPPORTED",
+        "abstention_count": 5279,
+        "source_cursor": 72877,
+        "input_digest": "93c6abdac940ec29756c54b072df45d243082c8e5b93860d05c7eaa735d228c2",
+        "comparison_policy": "Same as-of observations, same initial capital and risk model; M2 is a negative control"
+      },
+      "M3": {
+        "cash": "100",
+        "equity_last_mark": "100",
+        "executable_equity": "100",
+        "mark_status": "FLAT",
+        "ladder": {
+          "starting_total": "100",
+          "realized_net": "0",
+          "active": "50",
+          "reserve": "50",
+          "pending": "0",
+          "deficit": "0",
+          "total": "100",
+          "stage": "EXPAND",
+          "next_step": "RESERVE",
+          "committed_active": "0",
+          "slot_ceiling": 2,
+          "per_position_budget": "25",
+          "policy": {
+            "activation_total": "100",
+            "activation_reserve": "50",
+            "position_budget": "25",
+            "max_slots": 10,
+            "reserve_step": "50",
+            "active_step": "50",
+            "per_trade_planned_risk": "0.0025",
+            "aggregate_planned_risk": "0.01"
+          },
+          "live_orders_enabled": false
+        },
+        "realized_net_pnl": "0",
+        "fees": "0",
+        "modeled_carry": "0",
+        "maximum_drawdown": 0.0,
+        "account_maximum_drawdown": 0.0,
+        "positions": [],
+        "campaigns": [],
+        "closed_summary": {
+          "count": 0,
+          "wins": 0,
+          "losses": 0,
+          "profit": "0",
+          "loss": "0"
+        },
+        "reason_counts": {
+          "REJECTED_EVENT:rule_version_mismatch": 868
+        },
+        "counts": {
+          "SCAN": 16,
+          "HEALTH": 31,
+          "DECISION": 5279,
+          "BOOK_SNAPSHOT": 68,
+          "VERIFIED_BOOK": 21,
+          "REJECTED_EVENT": 868
+        },
+        "held_out_closed_legs": 0,
+        "held_out_mean_net": null,
+        "confidence_interval": null,
+        "expected_net_advantage": "UNSUPPORTED",
+        "abstention_count": 5279,
+        "source_cursor": 72877,
+        "input_digest": "93c6abdac940ec29756c54b072df45d243082c8e5b93860d05c7eaa735d228c2",
+        "comparison_policy": "Same as-of observations, same initial capital and risk model; M2 is a negative control"
+      }
+    }
+  },
+  "hedge_authorization": "No supported held-out advantage installed; adaptive hedge abstains",
+  "24h_host_gate": "BLOCKED \u2014 HOST NOT PROVISIONED",
+  "uk_product_gate": "OPEN_NOT_VERIFIED",
+  "tested_commit": "5f1f51c5e6f5b57daf4a32f264e08ce100eab7f2",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41264446798"
+}

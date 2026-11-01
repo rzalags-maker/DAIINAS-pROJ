@@ -5,12 +5,12 @@
   "strategy_validated": false,
   "production_ready": false,
   "actual_public_events": {
-    "execution": 664,
-    "level2": 134603,
-    "tickerV2": 12630
+    "execution": 81,
+    "level2": 67108,
+    "tickerV2": 5348
   },
-  "journal_records": 148193,
-  "duration_seconds": 229.75,
+  "journal_records": 72877,
+  "duration_seconds": 230.324,
   "replay_identical": true,
   "money_reconciled_independently": true,
   "cash": "100",
@@ -49,30 +49,28 @@
   "positions": [],
   "campaigns": [],
   "counts": {
-    "BOOK_SNAPSHOT": 36,
-    "DECISION": 11472,
-    "HEALTH": 19,
-    "REJECTED_EVENT": 714,
-    "REJECTED_QUOTE": 1124,
-    "SCAN": 13,
-    "VERIFIED_BOOK": 19
+    "BOOK_SNAPSHOT": 68,
+    "DECISION": 5279,
+    "HEALTH": 31,
+    "REJECTED_EVENT": 868,
+    "SCAN": 16,
+    "VERIFIED_BOOK": 21
   },
   "reason_counts": {
-    "REJECTED_EVENT:rule_version_mismatch": 714,
-    "REJECTED_QUOTE:invalid_or_stale": 1124
+    "REJECTED_EVENT:rule_version_mismatch": 868
   },
-  "input_digest": "6f12663b6bf80454dfb34fe504dc2b110ddd7774f0288b0f98eddeb8b64eb024",
+  "input_digest": "93c6abdac940ec29756c54b072df45d243082c8e5b93860d05c7eaa735d228c2",
   "backup": {
-    "source_id": "83cd589d73d84bbb9ab59b786efce543",
-    "paper_cursor": 148193,
-    "source_max_seq": 148193,
-    "paper_input_digest": "6f12663b6bf80454dfb34fe504dc2b110ddd7774f0288b0f98eddeb8b64eb024",
+    "source_id": "87a1ce505a4a4656a9c31506867200a1",
+    "paper_cursor": 72877,
+    "source_max_seq": 72877,
+    "paper_input_digest": "93c6abdac940ec29756c54b072df45d243082c8e5b93860d05c7eaa735d228c2",
     "sha256": {
-      "source.sqlite3": "ca174ca5a0c2eb8f53afbc2810477dfc4eab01059903bf6b3cad889c9b63991e",
-      "paper.sqlite3": "232e191b459d0262a5dc0547644b10c68999124fa97bf6c05b0f32f99b894c77"
+      "source.sqlite3": "4daeb5c39b3d879b92d4a0465a40f93bc66a75fcffe9544aa5dbc20e5875184d",
+      "paper.sqlite3": "f504ecc988fa0c7f1f2701052a14bdf1241ecc0ed73fa63f37c820a91586f94e"
     }
   },
   "24h_host_gate": "BLOCKED \u2014 HOST NOT PROVISIONED",
-  "tested_commit": "bb5392af092ee06d862e304951308bdb699f3a5c",
-  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41263173254"
+  "tested_commit": "5f1f51c5e6f5b57daf4a32f264e08ce100eab7f2",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41264446798"
 }

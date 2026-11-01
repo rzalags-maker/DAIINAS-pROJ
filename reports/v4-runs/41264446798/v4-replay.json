@@ -1,0 +1,543 @@
+{
+  "status": "PAPER_ONLY",
+  "engine": "v4",
+  "live_orders_enabled": false,
+  "strategy_validated": false,
+  "production_ready": false,
+  "initial_capital": "100",
+  "mode": "M3",
+  "execution_version": "v4.1-decimal18-v2",
+  "money_quantum_usdt": "1E-18",
+  "evidence_policy_sha256": "0dbe5d5d99b714c97c2a6dbcaaff5cb3debbb493b3a250ecb4beebb2a2306416",
+  "cash": "100",
+  "equity_last_mark": "100",
+  "executable_equity": "100",
+  "mark_status": "FLAT",
+  "active_equity": "50",
+  "ladder": {
+    "starting_total": "100",
+    "realized_net": "0",
+    "active": "50",
+    "reserve": "50",
+    "pending": "0",
+    "deficit": "0",
+    "total": "100",
+    "stage": "EXPAND",
+    "next_step": "RESERVE",
+    "committed_active": "0",
+    "slot_ceiling": 2,
+    "per_position_budget": "25",
+    "policy": {
+      "activation_total": "100",
+      "activation_reserve": "50",
+      "position_budget": "25",
+      "max_slots": 10,
+      "reserve_step": "50",
+      "active_step": "50",
+      "per_trade_planned_risk": "0.0025",
+      "aggregate_planned_risk": "0.01"
+    },
+    "live_orders_enabled": false
+  },
+  "capital_status": {
+    "allowed_slots": 2,
+    "open_positions": 0,
+    "free_slots": 2,
+    "excess_open_to_reduce_safely": 0,
+    "block_new_entries": false,
+    "marked_trading_budget": "50",
+    "reserve_untouched": "50",
+    "manual_safe_exit_required": false
+  },
+  "reserved_margin": "0",
+  "planned_risk": "0",
+  "realized_net_pnl": "0",
+  "fees": "0",
+  "entry_fees": "0",
+  "exit_fees": "0",
+  "modeled_carry": "0",
+  "external_simulated_flows": "0",
+  "account_maximum_drawdown": 0.0,
+  "account_peak": "100",
+  "maximum_drawdown_basis": "Active equity risk gate; total account metric is account_maximum_drawdown",
+  "maximum_drawdown": 0.0,
+  "halted": false,
+  "paused_new_entries": false,
+  "positions": [],
+  "pending_entries": [],
+  "exit_requests": {},
+  "campaigns": [],
+  "market_states": {
+    "ENAUSDTM": {
+      "history": [
+        [
+          1793499827000,
+          0.18719000000000002
+        ],
+        [
+          1793499831000,
+          0.18723
+        ],
+        [
+          1793499838000,
+          0.187165
+        ],
+        [
+          1793499849000,
+          0.187185
+        ],
+        [
+          1793499850000,
+          0.187185
+        ],
+        [
+          1793499851000,
+          0.187245
+        ],
+        [
+          1793499852000,
+          0.18721
+        ],
+        [
+          1793499853000,
+          0.18725999999999998
+        ],
+        [
+          1793499854000,
+          0.18726500000000001
+        ],
+        [
+          1793499855000,
+          0.187275
+        ],
+        [
+          1793499856000,
+          0.18725999999999998
+        ],
+        [
+          1793499857000,
+          0.18725999999999998
+        ],
+        [
+          1793499858000,
+          0.18727
+        ],
+        [
+          1793499859000,
+          0.18725
+        ],
+        [
+          1793499860000,
+          0.18727
+        ],
+        [
+          1793499861000,
+          0.18727
+        ]
+      ],
+      "symbol_time_ms": 1793499861451,
+      "regime": "UNKNOWN",
+      "candidate": "UNKNOWN",
+      "candidate_since": 1793499858435,
+      "last_transition_ms": 1793499858435,
+      "momentum_bps": 5.610023241524598,
+      "trend_bps": 4.273732571182798,
+      "trend_persistence": 0.26666666666666666,
+      "volatility_bps": 1.6534475406403855,
+      "volatility_regime": "LOW",
+      "cvd_notional": 4074.4972,
+      "cvd_ratio": 1.0,
+      "observed_print_count": 5,
+      "bbo_imbalance": -0.6442189673512806,
+      "l2_pressure": -0.6442189673512806,
+      "spread_bps": 5.339883590537139,
+      "round_trip_cost_floor_bps": 21.339883590537138,
+      "range_amplitude_bps": 5.8771672054058754,
+      "oscillations": 8,
+      "entry_bid_depth": 2174.0,
+      "entry_ask_depth": 10047.0,
+      "data_fresh": true,
+      "evidence_confidence": "OBSERVATIONAL_ONLY",
+      "expected_net_status": "UNSUPPORTED_UNTIL_HELD_OUT_VALIDATION",
+      "reason": "no_cost_adjusted_structure",
+      "prospective_move_minus_cost_bps": -15.72986034901254,
+      "horizons_ms": {
+        "micro": 30000,
+        "trend": 180000,
+        "volatility": 600000
+      },
+      "contract_spec": {
+        "captured_ms": 1793499846691,
+        "rules": {
+          "contract_size": "1.0",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "ENAUSDTM",
+          "tick_size": "1e-05"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "rules_hash": "6b49a0e881c7347efe2cc276bf15c1c3cad472209e4741be79647d6a3c9ad59c",
+      "last_action": "NO_TRADE",
+      "last_decision_ms": 1793499861451,
+      "decision_reason": "no_cost_adjusted_observable_opportunity",
+      "hedge_evidence_supported": false
+    },
+    "ETHUSDTM": {
+      "history": [
+        [
+          1793499847000,
+          2264.465
+        ],
+        [
+          1793499848000,
+          2264.465
+        ],
+        [
+          1793499849000,
+          2264.465
+        ],
+        [
+          1793499850000,
+          2264.465
+        ],
+        [
+          1793499851000,
+          2264.465
+        ],
+        [
+          1793499852000,
+          2264.465
+        ],
+        [
+          1793499853000,
+          2264.465
+        ],
+        [
+          1793499854000,
+          2264.465
+        ],
+        [
+          1793499855000,
+          2264.465
+        ],
+        [
+          1793499856000,
+          2264.9049999999997
+        ],
+        [
+          1793499857000,
+          2264.9049999999997
+        ],
+        [
+          1793499858000,
+          2264.565
+        ],
+        [
+          1793499859000,
+          2264.565
+        ],
+        [
+          1793499860000,
+          2264.565
+        ]
+      ],
+      "symbol_time_ms": 1793499860218,
+      "regime": "UNKNOWN",
+      "candidate": "UNKNOWN",
+      "candidate_since": 1793499858864,
+      "last_transition_ms": 1793499858864,
+      "momentum_bps": 0.4416054123157487,
+      "trend_bps": 0.4416054123157487,
+      "trend_persistence": 0.0,
+      "volatility_bps": 0.6801570797374391,
+      "volatility_regime": "LOW",
+      "cvd_notional": 452.8983999999999,
+      "cvd_ratio": 1.0,
+      "observed_print_count": 2,
+      "bbo_imbalance": -0.06507592190889366,
+      "l2_pressure": -0.06507592190889366,
+      "spread_bps": 0.044158591165271384,
+      "round_trip_cost_floor_bps": 16.04415859116527,
+      "range_amplitude_bps": 1.9430638141892942,
+      "oscillations": 1,
+      "entry_bid_depth": 4.3100000000000005,
+      "entry_ask_depth": 4.91,
+      "data_fresh": true,
+      "evidence_confidence": "OBSERVATIONAL_ONLY",
+      "expected_net_status": "UNSUPPORTED_UNTIL_HELD_OUT_VALIDATION",
+      "reason": "no_cost_adjusted_structure",
+      "prospective_move_minus_cost_bps": -15.072626684070624,
+      "horizons_ms": {
+        "micro": 30000,
+        "trend": 180000,
+        "volatility": 600000
+      },
+      "contract_spec": {
+        "captured_ms": 1793499846691,
+        "rules": {
+          "contract_size": "0.01",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "ETHUSDTM",
+          "tick_size": "0.01"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "rules_hash": "3a2b30a0889ccdd8fe6c8f7efc7743e4188c47b257f61b965e0697f8e3ef4f64",
+      "last_action": "NO_TRADE",
+      "last_decision_ms": 1793499860218,
+      "decision_reason": "no_cost_adjusted_observable_opportunity",
+      "hedge_evidence_supported": false
+    },
+    "TRXUSDTM": {
+      "history": [
+        [
+          1793499848000,
+          0.309095
+        ],
+        [
+          1793499849000,
+          0.30910000000000004
+        ],
+        [
+          1793499853000,
+          0.309085
+        ],
+        [
+          1793499854000,
+          0.30906
+        ],
+        [
+          1793499858000,
+          0.309105
+        ],
+        [
+          1793499859000,
+          0.30911
+        ]
+      ],
+      "symbol_time_ms": 1793499859338,
+      "regime": "UNKNOWN",
+      "candidate": "UNKNOWN",
+      "candidate_since": 1793499859322,
+      "last_transition_ms": 1793499859322,
+      "momentum_bps": 0.4852876947203377,
+      "trend_bps": 0.4852876947203377,
+      "trend_persistence": 0.2,
+      "volatility_bps": 0.7765228583100039,
+      "volatility_regime": "LOW",
+      "cvd_notional": 0,
+      "cvd_ratio": 0,
+      "observed_print_count": 0,
+      "bbo_imbalance": 0.6363636363636364,
+      "l2_pressure": -0.3333333333333333,
+      "spread_bps": 1.2940377212008671,
+      "round_trip_cost_floor_bps": 17.294037721200866,
+      "range_amplitude_bps": 1.617808839706747,
+      "oscillations": 2,
+      "entry_bid_depth": 900.0,
+      "entry_ask_depth": 200.0,
+      "data_fresh": true,
+      "evidence_confidence": "LOW",
+      "expected_net_status": "UNSUPPORTED_UNTIL_HELD_OUT_VALIDATION",
+      "reason": "insufficient_history",
+      "prospective_move_minus_cost_bps": -16.485133301347492,
+      "horizons_ms": {
+        "micro": 30000,
+        "trend": 180000,
+        "volatility": 600000
+      },
+      "contract_spec": {
+        "captured_ms": 1793499846691,
+        "rules": {
+          "contract_size": "100.0",
+          "max_qty": "100000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "TRXUSDTM",
+          "tick_size": "1e-05"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "rules_hash": "2ded8e2173688c847de25c0cb630574786b816e19bbcec79fc3c0e3a39879cd2",
+      "last_action": "NO_TRADE",
+      "last_decision_ms": 1793499859338,
+      "decision_reason": "no_cost_adjusted_observable_opportunity",
+      "hedge_evidence_supported": false
+    }
+  },
+  "closed_summary": {
+    "count": 0,
+    "wins": 0,
+    "losses": 0,
+    "profit": "0",
+    "loss": "0"
+  },
+  "pins": [],
+  "counts": {
+    "SCAN": 16,
+    "HEALTH": 31,
+    "DECISION": 5279,
+    "BOOK_SNAPSHOT": 68,
+    "VERIFIED_BOOK": 21,
+    "REJECTED_EVENT": 868
+  },
+  "reason_counts": {
+    "REJECTED_EVENT:rule_version_mismatch": 868
+  },
+  "recent_closed_positions": [],
+  "source_cursor": 72877,
+  "input_digest": "93c6abdac940ec29756c54b072df45d243082c8e5b93860d05c7eaa735d228c2",
+  "checkpoint_available_ms": 1793499861746,
+  "scan": {
+    "available_ms": 1793499846757,
+    "report_time_ms": 1793499846691,
+    "watch": {
+      "blocked_new_entries": [],
+      "capacity_exhausted": false,
+      "deep_symbols": [
+        "ETHUSDTM",
+        "TRXUSDTM",
+        "ENAUSDTM"
+      ],
+      "entered_at": {
+        "ENAUSDTM": 1793499823565,
+        "ETHUSDTM": 1793499846691,
+        "TRXUSDTM": 1793499830416
+      },
+      "no_trade": true,
+      "pinned": [],
+      "reason": "Snapshot-based candidate rotation only; no strategy edge validated",
+      "time_ms": 1793499846691,
+      "watch_pool": [
+        "ETHUSDTM",
+        "PEPEUSDTM",
+        "ZECUSDTM",
+        "BNBUSDTM",
+        "TRXUSDTM",
+        "ENAUSDTM",
+        "BCHUSDTM",
+        "TAOUSDTM",
+        "ASTERUSDTM",
+        "HYPEUSDTM",
+        "PAXGUSDTM",
+        "KCSUSDTM",
+        "SUIUSDTM",
+        "FILUSDTM",
+        "NEARUSDTM",
+        "XMRUSDTM",
+        "DOGEUSDTM",
+        "UNIUSDTM",
+        "INJUSDTM",
+        "LINKUSDTM"
+      ]
+    },
+    "specs": {
+      "ENAUSDTM": {
+        "captured_ms": 1793499846691,
+        "rules": {
+          "contract_size": "1.0",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "ENAUSDTM",
+          "tick_size": "1e-05"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "ETHUSDTM": {
+        "captured_ms": 1793499846691,
+        "rules": {
+          "contract_size": "0.01",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "ETHUSDTM",
+          "tick_size": "0.01"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "TRXUSDTM": {
+        "captured_ms": 1793499846691,
+        "rules": {
+          "contract_size": "100.0",
+          "max_qty": "100000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "TRXUSDTM",
+          "tick_size": "1e-05"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      }
+    },
+    "unavailable": []
+  },
+  "service": {
+    "active": [
+      "ENAUSDTM",
+      "ETHUSDTM",
+      "TRXUSDTM"
+    ],
+    "boot_id": "948363b592db4169a08960d41a70b90c",
+    "connected": true,
+    "disk_free_bytes": 93489307648,
+    "elapsed_seconds": 79.37839327199993,
+    "feed_age_ms": {
+      "ENAUSDTM": {
+        "execution": 9098,
+        "level2": 65,
+        "tickerV2": 321
+      },
+      "ETHUSDTM": {
+        "execution": 3975,
+        "level2": 4,
+        "tickerV2": 840
+      },
+      "TRXUSDTM": {
+        "execution": 1793499861056,
+        "level2": 144,
+        "tickerV2": 1718
+      }
+    },
+    "host_id": null,
+    "paper_bytes": 10985048,
+    "session_id": "c99db76412154a18aebf9ae92481994f",
+    "source_bytes": 131853240,
+    "stream_counts": {
+      "book_resyncs": 9,
+      "connections": 7,
+      "market_scans": 8,
+      "pongs": 2,
+      "reconciliations": 3,
+      "reconnects": 6,
+      "retired_markets": 1,
+      "snapshots": 36,
+      "subscribe_acks": 42,
+      "unsubscribe_acks": 3
+    },
+    "unavailable": [],
+    "verified_books": [
+      "ENAUSDTM",
+      "ETHUSDTM",
+      "TRXUSDTM"
+    ]
+  },
+  "unsettled_campaign_pnl": "0",
+  "tested_commit": "5f1f51c5e6f5b57daf4a32f264e08ce100eab7f2",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41264446798"
+}
