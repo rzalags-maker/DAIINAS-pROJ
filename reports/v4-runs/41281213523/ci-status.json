@@ -1,0 +1,15 @@
+{
+  "original": "success",
+  "tests": "success",
+  "first": "cancelled",
+  "restart": "skipped",
+  "replay": "skipped",
+  "verify": "failure",
+  "v4first": "skipped",
+  "v4restart": "skipped",
+  "v4replay": "skipped",
+  "v4verify": "failure",
+  "comparison": "skipped",
+  "tested_commit": "1a2703efc91a2756a8d78fac1b6c18f916199be1",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41281213523"
+}
