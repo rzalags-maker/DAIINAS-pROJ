@@ -92,8 +92,24 @@ class ContinuousStreamTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_multi_scan_rotation_is_acknowledged_in_same_connection(self):
         await self.observer.preflight()
-        with self.assertRaises(asyncio.TimeoutError):
-            await asyncio.wait_for(self.observer.session(),2.4)
+        # Await the actual ACKed rotation condition instead of assuming a
+        # fixed 2.4s runner scheduling budget (flaky on Python 3.13 CI).
+        session = asyncio.create_task(self.observer.session())
+        try:
+            async def rotated():
+                while True:
+                    if (self.observer.stream_stats['market_scans'] >= 3
+                            and self.observer.stream_stats['unsubscribe_acks'] >= 3
+                            and self.observer.stream_stats['pongs'] > 0):
+                        return
+                    if session.done():
+                        await session  # Propagate unexpected early failure.
+                        self.fail('Session terminated before acknowledged rotation')
+                    await asyncio.sleep(.04)
+            await asyncio.wait_for(rotated(), 7.0)
+        finally:
+            session.cancel()
+            await asyncio.gather(session, return_exceptions=True)
         self.assertEqual(len(self.sockets),1)
         sent=self.sockets[0].sent
         unsub=[x for x in sent if x['type']=='unsubscribe']
