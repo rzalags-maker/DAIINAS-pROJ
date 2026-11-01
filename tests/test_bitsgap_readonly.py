@@ -261,10 +261,10 @@ class KucoinSpotReadOnlyTests(unittest.TestCase):
         with self.assertRaisesRegex(BitsgapError, "^EMPTY_ORDERS_UNVERIFIED$"):
             self.api.check_orders()
 
-    def test_unknown_and_direct_wrappers_rejected(self):
+    def test_unknown_and_invalid_wrappers_rejected(self):
         self.api.resolve_kucoin_spot()
         for value in (None, [], {}, {"ok": True}, {"error": "denied"},
-                      {"USDT": {"t": "1", "a": "1"}}, {"data": {"data": {}}}):
+                      {"data": {"data": {}}}):
             self.balance = value
             with self.assertRaises(BitsgapError):
                 self.api.check_balance()
@@ -272,6 +272,13 @@ class KucoinSpotReadOnlyTests(unittest.TestCase):
             self.orders = value
             with self.assertRaises(BitsgapError):
                 self.api.check_orders()
+
+    def test_direct_rest_balance_topic_data_shape_is_supported(self):
+        # The direct REST topic value {data: {USDT: {t,a}}} is documented.
+        # The historic outer {data: <topic_value>} response is still supported.
+        self.api.resolve_kucoin_spot()
+        self.balance = {"USDT": {"t": "1", "a": "1"}}
+        self.assertTrue(self.api.check_balance())
 
     def test_invalid_balance_amounts_and_fields(self):
         self.api.resolve_kucoin_spot()
