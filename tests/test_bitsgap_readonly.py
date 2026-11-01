@@ -27,10 +27,15 @@ class BitsgapReadOnlyTests(unittest.TestCase):
         self.calls.append((url, body, headers))
         data = json.loads(body)
         name = data["topic"]
-        response = {"data": {"descr": "test", "data": {"x": 1}}}
-        if name == "conf_enums":
-            response["data"]["data"] = {"market": {"items": {"KUCOIN": 1}}}
-        return json.dumps(response).encode()
+        if name == "manual":
+            data = {"manual": {"descr": "catalog"},
+                    "conf_enums": {"descr": "enums"},
+                    "price": {"descr": "price"}}
+        elif name == "conf_enums":
+            data = {"market": {"alias": "em", "items": {"KUCOIN": 1}}}
+        else:
+            raise AssertionError("Unexpected network topic")
+        return json.dumps({"data": data}).encode()
 
     def test_signed_payload_and_key_are_verifiable(self):
         api = BitsgapReadOnly(self.pem, self.transport)
@@ -91,6 +96,13 @@ class BitsgapReadOnlyTests(unittest.TestCase):
         self.assertIn("VALUE=DICT", category)
         self.assertIn("TOPIC=PRESENT", category)
         self.assertNotIn(account_marker, category)
+
+    def test_rejects_unknown_success_body_instead_of_claiming_authenticated(self):
+        def unexpected(url, body, headers):
+            return json.dumps({"data": {"unrecognized": {"content": "redacted"}}}).encode()
+        api = BitsgapReadOnly(self.pem, unexpected)
+        with self.assertRaisesRegex(BitsgapError, "UNEXPECTED_MANUAL_RESPONSE"):
+            api.handshake()
 
     def test_server_http_rejection_uses_only_status_code(self):
         def fail(url, body, headers):
