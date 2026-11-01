@@ -64,6 +64,7 @@ class BitsgapFuturesStream:
         self.disconnects = 0
         self.last_failure = None
         self.last_frame_shape = None
+        self.unscoped_control_responses = 0
 
     def auth_frame(self, *, ts=None, nonce=None):
         timestamp = int(time.time()) if ts is None else ts
@@ -143,7 +144,18 @@ class BitsgapFuturesStream:
                     messages = frame if isinstance(frame, list) else [frame]
                     for msg in messages:
                         try:
-                            event = self._ingest(msg)
+                            # Bitsgap may acknowledge a batch with {ok, mes} and
+                            # no topic. This is NOT a scoped subscription ACK.
+                            if (isinstance(msg, dict) and set(msg) == {"ok", "mes"}
+                                    and type(msg["ok"]) is bool
+                                    and isinstance(msg["mes"], str)):
+                                if not msg["ok"]:
+                                    _fail("WS_UNSCOPED_REJECTION")
+                                self.unscoped_control_responses += 1
+                                event = {"topic": "account", "event": "UNSCOPED_OK_RESPONSE",
+                                         "funding_authorized": False}
+                            else:
+                                event = self._ingest(msg)
                         except BitsgapError:
                             self.last_frame_shape = _safe_envelope_shape(msg)
                             raise
