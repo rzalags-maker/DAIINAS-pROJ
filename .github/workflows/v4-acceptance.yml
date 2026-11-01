@@ -21,7 +21,7 @@ permissions:
   actions: read
 concurrency:
   group: continuous-paper-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   public-integrity:
     if: github.ref == 'refs/heads/feature/v4-ladder-integration'

@@ -222,6 +222,8 @@ class PortfolioLedger(PaperLedger):
         budget=min(effective*D('.0025')*(D('.5') if dd>=D('.03') else 1),
                    max(ZERO,effective*D('.01')-self.planned())/max(1,allowed-count))
         nominal=ladder.active/max(1,ladder.slot_ceiling)
+        if ladder.stage=='EXPAND':nominal=min(D(ladder.policy.position_budget),nominal)
+        elif ladder.stage=='SCALE':nominal=min(ladder.committed_active/ladder.policy.max_slots,nominal)
         margin=min(nominal*D('.8'),max(ZERO,effective*D('.8')-self.reserved()))
         # Conservative correlation clusters use GROSS planned risk, including opposite legs.
         correlated=ZERO

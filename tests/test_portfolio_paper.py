@@ -281,3 +281,61 @@ class WriterIntegrationTests(unittest.IsolatedAsyncioTestCase):
             replica=replay([src],root/'replica.sqlite3',policy,ledger_factory=PortfolioLedger,ledger_options={'portfolio':pp})
             self.assertEqual(expected,replica)
             backup_pair(src,paper,root/'backup');self.assertTrue(verify_backup(root/'backup'))
+
+class OwnerSourceGoldenTests(unittest.TestCase):
+    def test_all_source_forward_and_reverse_examples(self):
+        from daiinas.capital_ladder import CapitalLadder
+        states=[('8','0','8','0',1),('29','0','29','0',1),('60','0','60','0',1)]
+        states += [(str(100+25*i),'50',str(50+25*i),'0',2+i) for i in range(9)]
+        states += [('330','50','250','30',10),('350','100','250','0',10),('400','100','300','0',10),
+                   ('450','150','300','0',10),('500','150','350','0',10),('550','200','350','0',10),
+                   ('600','200','400','0',10),('650','250','400','0',10),('700','250','450','0',10)]
+        for total,r,a,p,n in states:
+            x=CapitalLadder(total)
+            self.assertEqual((x.reserve,x.active,x.pending,x.slot_ceiling),(D(r),D(a),D(p),n))
+        for active in [250,225,200,175,150,125,100,75,50,25,24,0]:
+            x=CapitalLadder('300');x.realized_result(str(active-250))
+            self.assertEqual(x.reserve,D(50));self.assertEqual(x.slot_ceiling,min(10,max(0,active//25)))
+        x=CapitalLadder('400');x.realized_result('-60')
+        self.assertEqual((x.reserve,x.active,x.slot_ceiling),(D(100),D(240),9))
+        x.realized_result('59');self.assertEqual(x.pending,0);x.realized_result('1');self.assertEqual(x.active,D(300))
+        self.assertEqual(D(25)*D('.02'),D('.50'));self.assertEqual(D(25)/(D(25)*D('.02')),D(50))
+
+class ProcessKillTests(unittest.TestCase):
+    setUp=PortfolioTests.setUp
+    tearDown=PortfolioTests.tearDown
+    start=PortfolioTests.start
+    send=PortfolioTests.send
+    signal=PortfolioTests.signal
+    market=PortfolioTests.market
+    def test_process_kill_after_fill_before_checkpoint_recovers_once(self):
+        import subprocess,sys,signal
+        self.start('126');self.signal('S0USDTM')
+        self.idx+=1
+        with patch('daiinas.continuous_store.clock_ms',return_value=221):
+            self.source.append([f.market('tickerV2',221,self.idx,sym='S0USDTM',bid_size=10000,ask_size=1000)])
+        self.paper.close();self.paper=None
+        code="""
+import os,sys,signal
+from pathlib import Path
+from daiinas.portfolio_paper import PortfolioLedger,PortfolioPolicy
+from daiinas.continuous_store import SourceJournal
+from daiinas.paper_micro import PaperPolicy
+root=Path(sys.argv[1]);source=SourceJournal(root/'source.sqlite3')
+p=PortfolioLedger(root/'portfolio.sqlite3',source.source_id,PaperPolicy(initial_capital_usdt=126.0),
+ portfolio=PortfolioPolicy(initial_capital='126',mode='M1',decision_model='pressure',allow_research_expansion=True))
+old=p.audit
+def audit(action,**detail):
+ old(action,**detail)
+ if action=='OPENED':os.kill(os.getpid(),signal.SIGKILL)
+p.audit=audit
+p.apply(source.after(p.state['cursor']))
+"""
+        result=subprocess.run([sys.executable,'-c',code,str(self.root)],capture_output=True,text=True,timeout=10)
+        self.assertEqual(result.returncode,-signal.SIGKILL,result.stderr)
+        self.paper=PortfolioLedger(self.root/'portfolio.sqlite3',self.source.source_id,self.policy,portfolio=self.pp)
+        self.assertEqual(D(self.paper.state['cash']),D(126))
+        rows=self.source.after(self.paper.state['cursor']);self.paper.apply(rows);self.paper.apply(rows)
+        self.assertEqual(len(self.paper.state['positions']),1)
+        self.assertEqual(self.paper.state['counts']['OPENED'],1)
+        self.paper.invariant()
