@@ -100,6 +100,14 @@ class FuturesObservationTests(unittest.TestCase):
                 self.api.read("balance",pair=pair)
         self.assertEqual(before,len(self.w.calls))
 
+    def test_internal_shared_signer_also_denies_mutating_topics(self):
+        self.api.discover()
+        before = len(self.w.calls)
+        for topic in ("order_place", "order_cancel", "position_close", "transfer", "leverage_change"):
+            with self.assertRaisesRegex(BitsgapError, "NON_READ_ONLY_TOPIC_REFUSED"):
+                self.api._signed_read(topic, {"em": 72})
+        self.assertEqual(len(self.w.calls), before)
+
     def test_fail_closed_ambiguous_demo_and_unresolved(self):
         for markets in ({"KUCOIN":71,"KUCOIN_FUTURES_DEMO":73},
                         {"KUCOIN_FUTURES":72,"OTHER":72},
