@@ -33,6 +33,10 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install '.[live]'
+      - name: Clear every generated report before its producer; never relabel old evidence
+        run: |
+          for name in tests first restart replay acceptance pr ci-status risk-audit original-artifact original-parity host-pricing; do rm -f "reports/v33-$name.json"; done
+          for name in v4-first v4-restart v4-replay v4-validation V41_HEDGE_COMPARISON; do rm -f "reports/$name.json"; done
       - name: Independent original-capture audit (read-only public-data artifact)
         id: original
         continue-on-error: true
@@ -104,11 +108,6 @@ jobs:
           except Exception as exc:result.update(status='not_verified',error=type(exc).__name__+': '+str(exc))
           pathlib.Path('reports/v33-host-pricing.json').write_text(json.dumps(result,indent=2)+'\n')
           PY
-      - name: Remove prior generated reports; never relabel old evidence
-        run: |
-          if [ -f reports/v33-pr.json ]; then cp reports/v33-pr.json /tmp/v33-pr-previous.json; fi
-          for name in tests first restart replay acceptance pr ci-status; do rm -f "reports/v33-$name.json"; done
-          for name in v4-first v4-restart v4-replay v4-validation V41_HEDGE_COMPARISON; do rm -f "reports/$name.json"; done
       - name: All original and new deterministic tests
         id: tests
         run: |
@@ -234,14 +233,14 @@ jobs:
             git read-tree "$latest"
             for name in tests first restart replay acceptance pr ci-status risk-audit original-artifact original-parity host-pricing; do
               path="reports/v33-$name.json"
-              if [ ! -f "$path" ]; then continue; fi
+              if [ ! -f "$path" ]; then git update-index --force-remove -- "$path"; continue; fi
               blob="$(git hash-object -w "$path")"
               git update-index --add --cacheinfo "100644,$blob,$path"
               git update-index --add --cacheinfo "100644,$blob,reports/v4-runs/$GITHUB_RUN_ID/$name.json"
             done
             for name in v4-first v4-restart v4-replay v4-validation V41_HEDGE_COMPARISON; do
               path="reports/$name.json"
-              if [ ! -f "$path" ]; then continue; fi
+              if [ ! -f "$path" ]; then git update-index --force-remove -- "$path"; continue; fi
               blob="$(git hash-object -w "$path")"
               git update-index --add --cacheinfo "100644,$blob,$path"
               git update-index --add --cacheinfo "100644,$blob,reports/v4-runs/$GITHUB_RUN_ID/$name.json"
@@ -263,5 +262,7 @@ jobs:
           assert json.load(open('reports/v33-original-parity.json'))['financial_replay_identical']
           assert json.load(open('reports/v4-validation.json'))['status']=='passed'
           assert json.load(open('reports/V41_HEDGE_COMPARISON.json'))['strategy_validated'] is False
-          assert json.load(open('reports/v33-ci-status.json'))['comparison']=='success'
+          outcomes=json.load(open('reports/v33-ci-status.json'))
+          for key in ('original','tests','first','restart','replay','verify','v4first','v4restart','v4replay','v4verify','comparison'):
+              assert outcomes[key]=='success',(key,outcomes[key])
           PY
