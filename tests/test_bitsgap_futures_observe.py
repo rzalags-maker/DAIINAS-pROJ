@@ -168,6 +168,7 @@ class FuturesObservationTests(unittest.TestCase):
         self.assertFalse(status["capital_reconciled"])
         self.assertFalse(status["orders_enabled"])
         # Historical envelope null is equally unknown, not an empty order list.
+        self.w.orders = None
         with self.assertRaisesRegex(BitsgapError, "^PROVIDER_NULL_RESPONSE$"):
             self.api._signed_read("orders", {"em": 72})
 
