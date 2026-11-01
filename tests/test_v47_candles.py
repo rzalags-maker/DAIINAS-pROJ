@@ -65,9 +65,9 @@ class CandleLedgerTests(unittest.TestCase):
         case=v.ConveyorTests();case.setUp()
         try:
             case.start('60',symbols=('UPUSDTM',),require_candle_context=True)
-            import test_continuous_paper as f
+            import test_continuous_paper as fixture
             specs={s:{**spec,'captured_ms':NOW} for s,spec in case.paper.state['scan']['specs'].items()}
-            case.send(NOW,f.scan(t=NOW,symbol='UPUSDTM',extra=specs))
+            case.send(NOW,fixture.scan(t=NOW,symbol='UPUSDTM',extra=specs))
             t=case.train(start=NOW+100);self.assertFalse(case.paper.state['positions'])
             self.assertFalse(case.paper.state['pending_entries'])
             bid=1.003**16;p=packet(asof=t)
@@ -82,7 +82,7 @@ class CandleLedgerTests(unittest.TestCase):
             target=float(position['planned_target_mid'])+.002
             case.quote('UPUSDTM',t+600,target);case.quote('UPUSDTM',t+800,target)
             self.assertFalse(case.paper.state['positions']);self.assertGreaterEqual(float(case.paper.state['realized']),.5)
-            case.send(t+1000,f.scan(t=t+1000,symbol='NEXTUSDTM'))
+            case.send(t+1000,fixture.scan(t=t+1000,symbol='NEXTUSDTM'))
             self.assertNotIn('UPUSDTM',case.paper.state['candle_contexts'])
             case.reopen();case.paper.invariant()
             replica=replay([case.source.path],case.root/'closed-replay.sqlite3',case.policy,ledger_factory=type(case.paper),ledger_options={'portfolio':case.pp})

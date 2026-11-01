@@ -215,10 +215,10 @@ those still require actual public execution and verified order-book feeds.
 With the same config/source/PAPER paths, local commands now distinguish:
 
 ```sh
-python -m daiinas.continuous start --config /tmp/v47-paper.json --session-seconds 18000 --actor local-owner
-python -m daiinas.continuous pause --config /tmp/v47-paper.json
-python -m daiinas.continuous status --config /tmp/v47-paper.json
-python -m daiinas.continuous stop --config /tmp/v47-paper.json
+python -m daiinas.continuous start --config /tmp/v47-paper.json --source-db state/v47-source.sqlite3 --paper-db state/v47-paper.sqlite3 --session-seconds 18000 --actor local-owner
+python -m daiinas.continuous pause --config /tmp/v47-paper.json --source-db state/v47-source.sqlite3 --paper-db state/v47-paper.sqlite3
+python -m daiinas.continuous status --config /tmp/v47-paper.json --source-db state/v47-source.sqlite3 --paper-db state/v47-paper.sqlite3
+python -m daiinas.continuous stop --config /tmp/v47-paper.json --source-db state/v47-source.sqlite3 --paper-db state/v47-paper.sqlite3
 ```
 
 `start`/`stop` queue source commands; they do not start an absent process and do
