@@ -227,7 +227,7 @@ Bitsgap `position_mode` enum label is **`ONEWAY`**, whereas the new
 service initially required `ONE_WAY`. The bounded normalization maps only
 `ONEWAY` to the internal Model A `ONE_WAY` label. Unknown enum labels
 remain unknown, and no on-exchange position settings are modified.
-Recheck `positions_settings` after CI before claiming live normalized PASS.
+Follow-up [authenticated run 41345665215](https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41345665215) verified **positions_settings=VALIDATED** over both REST and WS following the explicit ONEWAY normalization. It also confirmed the observed margin mode remains **UNVERIFIED**, not guessed. [Full GitHub regression run 41345616369](https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41345616369) passed **432/432** tests on Python 3.11, 3.12 and 3.13.
 
 All private capital authorization, venue-wide exposure reconciliation,
 persistent TP/SL protection and real order routing remain disabled or
