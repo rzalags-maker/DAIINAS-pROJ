@@ -1,4 +1,5 @@
 name: One-time bounded Bitsgap Futures WS observation
+# One bounded repeat to diagnose frame envelopes, no raw data
 
 on:
   push:
