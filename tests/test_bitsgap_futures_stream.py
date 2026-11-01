@@ -54,6 +54,33 @@ class StreamTests(unittest.IsolatedAsyncioTestCase):
 
     async def _record(self, events, event):events.append(event)
 
+    async def test_rest_null_exposure_does_not_block_ws_subscription(self):
+        # Exact observed production anomaly: REST orders and positions JSON null.
+        self.w.orders = None
+        self.w.positions = None
+        ws=FakeWS([{"type":"auth_ok","sid":"synthetic"},
+                   {"ok":True,"topic":"orders","params":{"em":72},"value":None},
+                   {"ok":True,"topic":"positions","params":{"em":72},"mes":"subscribed"},
+                   {"ok":False,"topic":"positions_settings","params":{"em":72},"mes":"no data"}])
+        events=[]
+        await self.stream.watch_once(lambda url:ws,on_event=lambda e:self._record(events,e),max_messages=3)
+        self.assertTrue(self.stream.authenticated)
+        self.assertEqual([x["event"] for x in events],
+                         ["PROVIDER_NO_DATA","SUBSCRIBED","SUBSCRIPTION_REJECTED"])
+        self.assertTrue(all(not x["funding_authorized"] for x in events))
+        self.assertEqual(self.stream.last_rest_observation.orders_reason, "PROVIDER_NULL_RESPONSE")
+        self.assertEqual(self.stream.last_rest_observation.positions_reason, "PROVIDER_NULL_RESPONSE")
+        self.assertEqual(len(ws.sent),2)
+        self.assertTrue(all(x["subs"] is True for x in ws.sent[1]))
+        self.assertNotIn("61.07",json.dumps(events))
+
+    async def test_foreign_and_unknown_topic_rejected_before_event_classification(self):
+        for msg in (
+                {"ok":False,"topic":"orders","params":{"em":71},"mes":"no data"},
+                {"ok":True,"topic":"order_place","params":{"em":72},"value":None}):
+            with self.assertRaisesRegex(BitsgapError,"WS_FOREIGN_EXCHANGE_SCOPE|WS_UNVERIFIED_TOPIC_FRAME"):
+                self.stream._ingest(msg)
+
     async def test_foreign_exchange_event_is_denied(self):
         ws=FakeWS([{"type":"auth_ok","sid":"ok"},
                    {"ok":True,"topic":"balance","params":{"em":71},"value":self.w.balance}])
