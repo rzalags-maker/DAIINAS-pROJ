@@ -267,6 +267,11 @@ class AccountState:
                 elif record.values:
                     raise ValueError()
                 self.records[(record.topic, record.source)] = record
+            windows = (saved.get("max_age_ms", 15000), saved.get("comparison_ms", 5000))
+            if (any(type(v) is not int for v in windows)
+                    or not 0 < windows[1] <= windows[0]):
+                raise ValueError()
+            self.max_age_ms, self.comparison_ms = windows
             self.generation = saved["generation"]
             self.state_version = saved.get("state_version", 0)
         except (KeyError, TypeError, ValueError, BitsgapError):
@@ -285,6 +290,7 @@ class AccountState:
         if self.store is not None:
             self.store.save({"version": 1, "market_id": self.market_id,
                 "scope_ref": self.scope_ref, "currency": "USDT",
+                "max_age_ms": self.max_age_ms, "comparison_ms": self.comparison_ms,
                 "generation": self.generation,
                 "state_version": self.state_version,
                 "connected": self.connected, "resynced": self.resynced,
@@ -601,6 +607,10 @@ def main(argv=None):
         else:
             if not args.observe:
                 raise AccountStateError("EXPLICIT_OBSERVE_REQUIRED")
+            if not os.environ.get("BITSGAP_PRIVATE_KEY_PEM"):
+                print(json.dumps({"status": "CREDENTIAL_NOT_CONFIGURED",
+                                  "new_entry": BLOCKED, "orders_enabled": False}))
+                return 2
             from websockets.asyncio.client import connect
             observer = BitsgapFuturesObserver(os.environ.get("BITSGAP_PRIVATE_KEY_PEM"))
             observer.discover()
