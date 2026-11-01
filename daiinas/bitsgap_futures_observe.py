@@ -207,7 +207,8 @@ class FuturesWalletObservation:
 class BitsgapFuturesObserver(BitsgapReadOnly):
     """Separately authorized FUTURES reads, while Spot client remains sealed."""
 
-    def __init__(self, private_key_pem, transport=None, *, clock_ms=None):
+    def __init__(self, private_key_pem, transport=None, *, clock_ms=None, observation_sink=None,
+                 request_budget=None):
         if transport is None:
             super().__init__(private_key_pem)
         else:
@@ -216,6 +217,9 @@ class BitsgapFuturesObserver(BitsgapReadOnly):
         self._futures_enums = None
         self._capabilities = None
         self._clock_ms = clock_ms or (lambda: int(time.time() * 1000))
+        # Optional trusted in-process consumer; never a CI/log callback.
+        self.observation_sink = observation_sink
+        self.request_budget = request_budget
 
     def discover(self):
         # Do not retain a previously valid market on a subsequent failed discovery.
@@ -253,7 +257,23 @@ class BitsgapFuturesObserver(BitsgapReadOnly):
             if topic != "orders_history" or not isinstance(pair, str) or not _PAIR.fullmatch(pair):
                 _fail("INVALID_OBSERVATION_PARAMETERS")
             params["pair"] = pair
-        return self._signed_read(topic, params)
+        sink = self.observation_sink
+        budget = self.request_budget
+        if budget is not None and topic in _REQUIRED:
+            budget.acquire((topic,))
+        if sink is None or topic not in _REQUIRED:
+            return self._signed_read(topic, params)
+        started = self._clock_ms()
+        try:
+            value = self._signed_read(topic, params)
+        except BitsgapError as exc:
+            sink(topic=topic, value=None, source="REST",
+                market_id=self._futures_em, started_ms=started, received_ms=self._clock_ms(),
+                quality="PROVIDER_NO_DATA" if exc.category == "PROVIDER_NULL_RESPONSE" else "UNVERIFIED")
+            raise
+        sink(topic=topic, value=value, source="REST",
+            market_id=self._futures_em, started_ms=started, received_ms=self._clock_ms())
+        return value
 
     def _balance(self, value):
         if not isinstance(value, dict) or set(value) != {"data"} or not isinstance(value["data"], dict):
