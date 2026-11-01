@@ -41,7 +41,9 @@ class ReadOnlyWSProbeTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("PRIVATE_SESSION_ID", json.dumps(r))
         self.assertFalse(r["absence_of_data_is_zero_exposure"])
         self.assertEqual(r["order_routing"], "DISABLED")
-        self.assertEqual(len(fake.sent),2)
+        self.assertEqual(len(fake.sent),3)
+        self.assertTrue(all(entry["subs"] is True for entry in fake.sent[1]))
+        self.assertTrue(all("subs" not in entry for entry in fake.sent[2]))
 
     async def test_invalid_auth_never_sends_subscription(self):
         fake = FakeWS([{"type":"auth_rejected","detail":"PRIVATE_SESSION_ID"}])

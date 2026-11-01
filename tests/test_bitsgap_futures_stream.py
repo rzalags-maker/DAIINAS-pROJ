@@ -2,6 +2,7 @@ import asyncio
 import base64
 import json
 import unittest
+from unittest.mock import patch
 from daiinas.bitsgap_readonly import BitsgapError
 from daiinas.bitsgap_futures_stream import BitsgapFuturesStream, read_only_ws_topics
 from daiinas.bitsgap_futures_observe import BitsgapFuturesObserver
@@ -43,10 +44,12 @@ class StreamTests(unittest.IsolatedAsyncioTestCase):
         events=[]
         await self.stream.watch_once(lambda url:ws,on_event=lambda event:self._record(events,event),max_messages=3)
         self.assertFalse(self.stream.connected)
-        self.assertEqual(len(ws.sent),2)
+        self.assertEqual(len(ws.sent),3)
         self.assertEqual(ws.sent[0]["type"],"auth")
         self.assertEqual([x["topic"] for x in ws.sent[1]],list(read_only_ws_topics()))
         self.assertTrue(all(x["params"]=={"em":72} and x["subs"] is True for x in ws.sent[1]))
+        self.assertEqual([x["topic"] for x in ws.sent[2]], list(read_only_ws_topics()))
+        self.assertTrue(all(x["params"] == {"em":72} and "subs" not in x for x in ws.sent[2]))
         self.assertEqual([x["event"] for x in events],["SUBSCRIBED","VALIDATED_UPDATE","VALIDATED_UPDATE"])
         self.assertNotIn("61.07",json.dumps(events))
         self.assertEqual(self.stream.last_rest_observation.total_usdt,"61.07")
@@ -70,8 +73,9 @@ class StreamTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(all(not x["funding_authorized"] for x in events))
         self.assertEqual(self.stream.last_rest_observation.orders_reason, "PROVIDER_NULL_RESPONSE")
         self.assertEqual(self.stream.last_rest_observation.positions_reason, "PROVIDER_NULL_RESPONSE")
-        self.assertEqual(len(ws.sent),2)
+        self.assertEqual(len(ws.sent),3)
         self.assertTrue(all(x["subs"] is True for x in ws.sent[1]))
+        self.assertTrue(all("subs" not in x for x in ws.sent[2]))
         self.assertNotIn("61.07",json.dumps(events))
 
     async def test_foreign_and_unknown_topic_rejected_before_event_classification(self):
@@ -152,7 +156,7 @@ class StreamTests(unittest.IsolatedAsyncioTestCase):
                    {"ok":True,"topic":"order_place","params":{"em":72},"value":{"res":True}}])
         with self.assertRaisesRegex(BitsgapError,"WS_UNVERIFIED_TOPIC_FRAME"):
             await self.stream.watch_once(lambda url:ws,on_event=lambda e:self._record([],e),max_messages=1)
-        self.assertEqual(len(ws.sent),2)
+        self.assertEqual(len(ws.sent),3)
 
     async def test_failed_auth_blocks_subscription(self):
         ws=FakeWS([{"type":"auth_failed","message":"secret"}])
@@ -204,5 +208,111 @@ class StreamTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len([x for x in self.w.calls if x[0]=="balance"]),len(sessions))
         self.assertTrue(any(x["event"]=="DISCONNECTED" for x in events))
         self.assertEqual([x["type"] for ws in sessions for x in ws.sent if isinstance(x,dict)],["auth"]*len(sessions))
+
+
+    async def test_explicit_snapshot_response_not_subscription_duplicate(self):
+        observed = []
+        self.stream.observation_sink = lambda **kw: observed.append(kw)
+        ws = FakeWS([{"type":"auth_ok","sid":"synthetic"},
+                     {"ok":True,"topic":"balance","params":{"em":72},"value":self.w.balance},
+                     {"ok":True,"topic":"balance","params":{"em":72},"value":self.w.balance}])
+        await self.stream.watch_once(lambda _:ws,
+            on_event=lambda e:self._record([],e),max_messages=2)
+        self.assertEqual([v["snapshot_response"] for v in observed], [True, False])
+        self.assertEqual(self.stream.snapshot_responses,1)
+        self.assertEqual(self.stream.subscription_updates,1)
+        self.assertEqual(self.stream.diagnostic_status()["ws_snapshot_batches_sent"],1)
+        self.assertNotIn("61.07",json.dumps(self.stream.diagnostic_status()))
+
+    async def test_idle_socket_requests_periodic_one_off_snapshots(self):
+        class IdleWS(FakeWS):
+            def __init__(self):
+                super().__init__([])
+                self.queue = asyncio.Queue()
+                self.queue.put_nowait(json.dumps({"type":"auth_ok","sid":"synthetic"}))
+            async def recv(self):
+                return await self.queue.get()
+        ws = IdleWS()
+        async def later_frame():
+            await asyncio.sleep(0.07)
+            await ws.queue.put(json.dumps({"ok":True,"topic":"balance",
+                "params":{"em":72},"value":self.w.balance}))
+        task = asyncio.create_task(later_frame())
+        try:
+            with patch("daiinas.bitsgap_futures_stream._SNAPSHOT_INTERVAL_SECONDS",0.01):
+                await self.stream.watch_once(lambda _:ws,
+                    on_event=lambda e:self._record([],e),max_messages=1)
+        finally:
+            task.cancel()
+            await asyncio.gather(task,return_exceptions=True)
+        self.assertGreaterEqual(len(ws.sent),4)
+        self.assertTrue(all(isinstance(batch,list) and
+                            all("subs" not in item for item in batch)
+                            for batch in ws.sent[2:]))
+        self.assertGreaterEqual(self.stream.snapshot_batches,2)
+        self.assertFalse(self.stream.connected)
+
+    async def test_retry_session_clears_snapshot_pending(self):
+        self.stream._snapshot_pending = {"balance": 0.0}
+        ws = FakeWS([{"type":"auth_ok","sid":"new-session"},
+                     {"ok":True,"topic":"balance","params":{"em":72},"value":self.w.balance}])
+        await self.stream.watch_once(lambda _:ws,
+            on_event=lambda e:self._record([],e),max_messages=1)
+        self.assertEqual(self.stream.snapshot_responses,1)
+        self.assertEqual(self.stream._snapshot_pending,{})
+        self.assertTrue(all("subs" not in entry for entry in ws.sent[2]))
+
+    async def test_received_before_request_cannot_refresh_or_consume_pending_snapshot(self):
+        observed = []
+        self.stream.observation_sink = lambda **kw: observed.append(kw)
+        self.stream._snapshot_pending = {"balance": 100.0}
+        message = {"ok":True, "topic":"balance", "params":{"em":72},
+                   "value":self.w.balance}
+        self.stream._ingest(message, received_monotonic=99.0, received_ms=1783000000000)
+        self.assertFalse(observed[-1]["snapshot_response"])
+        self.assertEqual(self.stream.snapshot_responses, 0)
+        self.assertIn("balance", self.stream._snapshot_pending)
+        self.stream._ingest(message, received_monotonic=101.0, received_ms=1783000000000)
+        self.assertTrue(observed[-1]["snapshot_response"])
+        self.assertEqual(self.stream.snapshot_responses, 1)
+
+    async def test_delayed_processing_preserves_actual_receive_time(self):
+        observed = []
+        self.stream.observation_sink = lambda **kw: observed.append(kw)
+        self.stream._snapshot_pending = {"balance": 100.0}
+        message = {"ok":True, "topic":"balance", "params":{"em":72},
+                   "value":self.w.balance}
+        with patch("daiinas.bitsgap_futures_stream.time.monotonic", return_value=120.0):
+            self.stream._ingest(message, received_monotonic=101.0, received_ms=1782999990000)
+        self.assertEqual(observed[-1]["received_ms"], 1782999990000)
+        self.assertTrue(observed[-1]["snapshot_response"])
+
+    async def test_null_snapshot_rejects_unexpected_envelope_before_pending_consumption(self):
+        self.stream._snapshot_pending = {"orders": 100.0}
+        with self.assertRaisesRegex(BitsgapError, "WS_UNVERIFIED_TOPIC_FRAME"):
+            self.stream._ingest({"ok":True, "topic":"orders", "params":{"em":72},
+                                 "value":None, "unexpected":"SYNTHETIC_PRIVATE"})
+        self.assertIn("orders", self.stream._snapshot_pending)
+
+    async def test_watch_keeps_receive_time_when_snapshot_timer_delays_processing(self):
+        now = [1783000000000]
+        self.api._clock_ms = lambda: now[0]
+        observed = []
+        self.stream.observation_sink = lambda **kw: observed.append(kw)
+        ws = FakeWS([{"type":"auth_ok", "sid":"synthetic"},
+                     {"ok":True, "topic":"balance", "params":{"em":72},
+                      "value":self.w.balance}])
+        original = self.stream._request_snapshots
+        async def delayed_snapshot(socket):
+            await original(socket)
+            if self.stream.snapshot_batches >= 2:
+                now[0] += 10000
+        with patch.object(self.stream, "_request_snapshots", delayed_snapshot), \
+             patch("daiinas.bitsgap_futures_stream._SNAPSHOT_INTERVAL_SECONDS", 0):
+            await self.stream.watch_once(lambda _:ws,
+                on_event=lambda e:self._record([],e), max_messages=1)
+        self.assertGreaterEqual(self.stream.snapshot_batches, 2)
+        self.assertLess(observed[-1]["received_ms"], now[0])
+        self.assertEqual(observed[-1]["received_ms"], 1783000000000)
 
 if __name__ == "__main__":unittest.main()

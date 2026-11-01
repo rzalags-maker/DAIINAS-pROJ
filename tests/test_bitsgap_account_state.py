@@ -54,6 +54,27 @@ class AccountStateTests(unittest.TestCase):
     def topic(self, name):
         return self.state.status()["topics"][name]
 
+    def test_identical_ws_subscription_does_not_refresh_but_explicit_read_does(self):
+        self.connect()
+        self.pair("balance", self.wire.balance)
+        first = self.state.records[("balance", "WS")].received_ms
+        self.now += 1000
+        duplicate = self.push("balance", self.wire.balance, "WS")
+        self.assertEqual(duplicate, "DUPLICATE")
+        self.assertEqual(self.state.records[("balance", "WS")].received_ms, first)
+        self.now += 1000
+        accepted = self.push("balance", self.wire.balance, "WS", snapshot_response=True)
+        self.assertEqual(accepted, "VALIDATED")
+        self.assertEqual(self.state.records[("balance", "WS")].received_ms, self.now)
+        self.assertFalse(self.state.model_a_input()["funding_authorized"])
+
+    def test_snapshot_provenance_restricted_to_ws(self):
+        self.connect()
+        with self.assertRaises(AccountStateError):
+            self.push("balance", self.wire.balance, "REST", snapshot_response=True)
+        with self.assertRaises(AccountStateError):
+            self.push("balance", self.wire.balance, "WS", snapshot_response="true")
+
     def test_rest_ws_null_remains_no_data_not_zero(self):
         self.connect()
         for topic in ("orders", "positions"):
