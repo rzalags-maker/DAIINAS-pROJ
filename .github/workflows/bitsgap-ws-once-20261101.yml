@@ -1,5 +1,5 @@
 name: One-time bounded Bitsgap Futures WS observation
-# Bounded diagnosis of message-field type only; no values/IDs/logging
+# Bounded acceptance check for documented nullable mes, no balances or account details
 
 on:
   push:
