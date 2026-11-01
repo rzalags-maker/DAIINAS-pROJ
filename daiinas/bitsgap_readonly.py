@@ -106,13 +106,43 @@ class BitsgapReadOnly:
             raise BitsgapError("UNEXPECTED_RESPONSE_SHAPE")
         return obj["data"]
 
+    @staticmethod
+    def _safe_shape(value):
+        # Only fixed type labels; never return any response content or field values.
+        if isinstance(value, dict):
+            return "DICT"
+        if isinstance(value, list):
+            return "LIST"
+        if isinstance(value, str):
+            return "STRING"
+        if isinstance(value, (int, float, bool)):
+            return "SCALAR"
+        if value is None:
+            return "NULL"
+        return "OTHER"
+
+    @classmethod
+    def _shape_error(cls, category, payload):
+        # Bounded metadata based on known protocol field names, never unknown keys.
+        if not isinstance(payload, dict):
+            return BitsgapError(category + "; ROOT=" + cls._safe_shape(payload))
+        return BitsgapError(
+            category
+            + "; ROOT=DICT"
+            + "; DATA=" + cls._safe_shape(payload.get("data"))
+            + "; VALUE=" + cls._safe_shape(payload.get("value"))
+            + "; DESCR=" + cls._safe_shape(payload.get("descr"))
+            + "; OK=" + ("PRESENT" if "ok" in payload else "ABSENT")
+            + "; TOPIC=" + ("PRESENT" if "topic" in payload else "ABSENT")
+        )
+
     def handshake(self):
         manual = self.topic("manual")
         if not isinstance(manual, dict) or not isinstance(manual.get("data"), dict):
-            raise BitsgapError("UNEXPECTED_MANUAL_RESPONSE")
+            raise self._shape_error("UNEXPECTED_MANUAL_RESPONSE", manual)
         enums = self.topic("conf_enums")
         if not isinstance(enums, dict) or not isinstance(enums.get("data"), dict):
-            raise BitsgapError("UNEXPECTED_ENUMS_RESPONSE")
+            raise self._shape_error("UNEXPECTED_ENUMS_RESPONSE", enums)
         # A successful signed handshake validates Bitsgap access, NOT KuCoin balances.
         return {"bitsgap_authenticated": True, "kucoin_account_reconciled": False,
                 "order_routing_enabled": False}
