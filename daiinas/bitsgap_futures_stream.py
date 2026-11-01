@@ -100,7 +100,9 @@ class BitsgapFuturesStream:
             if message.get("mes") == "subscribed" and set(message) <= {"ok", "topic", "params", "mes"}:
                 return {"topic": topic, "event": "SUBSCRIBED", "funding_authorized": False}
             _fail("WS_UNVERIFIED_TOPIC_FRAME")
-        if set(message) - {"ok", "topic", "params", "value"}:
+        if set(message) - {"ok", "topic", "params", "value", "mes"}:
+            _fail("WS_UNVERIFIED_TOPIC_FRAME")
+        if "mes" in message and not isinstance(message["mes"], str):
             _fail("WS_UNVERIFIED_TOPIC_FRAME")
         value = message["value"]
         if topic == "balance":
