@@ -84,7 +84,35 @@ risk limit was widened while reconciling documentation updates.
 4. UTA collateral normalization and borrowed opening-equity semantics are unsupported until verified. Deposits remain unallocated until a separately approved `ALLOCATE_EXTERNAL_FUNDING` policy exists; withdrawing allocated/protected money blocks for reconciliation.
 5. Actual account-connected paper acceptance and independent 24h hosted evidence; market economic validation remains separate. No live order transport, transfers, wallet operation or guaranteed target return.
 
-The existing broader public-market regression [run 41270428562](https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41270428562) was triggered for the same source; its final outcome is separate from this account proof. Existing evidence is preserved without relabeling it as authenticated account data.
+## Actual public-market regression — completed separately
+
+[Run 41270428562](https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41270428562)
+**SUCCESS**, all eleven required outcomes successful on the exact same source.
+It independently recorded **271 tests, zero failures/errors/skips**. Immutable
+source reports are preserved under `reports/v4-runs/41270428562/`, including
+raw-source/backup digests; the JSON above links their checksums.
+
+The public adaptive research capture covered **230.283 seconds**, **102,083 journal
+records**: 237 actual trade prints, 97,094 L2 updates and 4,425 ticker updates.
+First process, renewal/reconnect, second-process restart, independent replay,
+cash/reserve reconciliation and backups passed. There were 799 rejected
+rule-version-mismatch events; they were rejected rather than used for fills.
+This was a public feed with explicitly hypothetical research capital, **not an
+authenticated account test**.
+
+All 12 historical 8/60/100 M0–M3 research profiles produced **zero closed trades,
+zero net P&L/costs/drawdown and unchanged balances**. This supplies no positive
+expectancy, hedge edge or multiday out-of-sample evidence.
+
+The separate **legacy 8-USDT** public smoke was not profitable: four closed losing
+paper trades, realized net **−0.01982871853311789 USDT**; total modeled fees
+**0.0140774136**, carry **0.00000035933311762500005**, cash **7.978606227066882**.
+One SHORT paper position remained open with an unresolved stale mark at the end;
+marked equity **7.975272050107009** is indicative, not an executable final flat
+balance. Recorded maximum drawdown was **0.32665946677400415%**. This remaining
+simulated risk was preserved in restart/replay, not fictitiously closed.
+Infrastructure integrity SUCCESS is not trading-profit or production-readiness
+acceptance. Actual Futures account remains NOT_CONNECTED.
 
 ## Review delivery
 

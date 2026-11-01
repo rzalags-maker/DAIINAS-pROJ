@@ -1460,5 +1460,55 @@
     }
   },
   "preserved_baseline_tests": 251,
-  "new_account_tests": 20
+  "new_account_tests": 20,
+  "public_market_regression": {
+    "status": "SUCCESS",
+    "run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41270428562",
+    "tested_revision": "b428a8b7702c60b65053d6b4d80d92249866ad05",
+    "account_funding": "EXPLICIT_HYPOTHETICAL_PAPER_NOT_AUTHENTICATED",
+    "actual_public_events": {
+      "execution": 237,
+      "level2": 97094,
+      "tickerV2": 4425
+    },
+    "duration_seconds": 230.283,
+    "journal_records": 102083,
+    "v4_closed_trades": 0,
+    "v4_net_pnl": "0",
+    "v4_fees": "0",
+    "v4_drawdown": 0,
+    "all_twelve_historical_research_profiles_unchanged": true,
+    "strategy_edge": "NOT_ESTABLISHED",
+    "private_account_status": "NOT_CONNECTED",
+    "input_digest": "312c7b99f11b2e4efb00152cee00e9c779b8b08b3b85b02e9b9f11f1781cb2b3",
+    "backup_sha256": {
+      "source.sqlite3": "8a33b7c7a9cb0d0d0a6211949d94b3dae2a4e084e06bc8234f7b2c634b35dbf2",
+      "paper.sqlite3": "bf91a4790a94d3dc184dbbfbe2ebf0d14f9b3de648dcf09f55dd597b77f8d1b8"
+    },
+    "rule_version_mismatch_rejections": 799,
+    "legacy_8_usdt_smoke": {
+      "cash": 7.978606227066882,
+      "equity_last_mark": 7.975272050107009,
+      "realized_net_pnl": -0.01982871853311789,
+      "fees": 0.0140774136,
+      "modeled_carry": 3.5933311762500005e-07,
+      "maximum_drawdown": 0.0032665946677400415,
+      "mark_status": "UNRESOLVED_STALE_MARK",
+      "closed_summary": {
+        "count": 4,
+        "wins": 0,
+        "losses": 4,
+        "profit": 0.0,
+        "loss": 0.01982871853311789
+      }
+    },
+    "legacy_open_position_remaining": true,
+    "immutable_report_sha256": {
+      "reports/v4-runs/41270428562/ci-status.json": "aed94ad871ee77e105f40f343071d1961098bff75c811931034256695d7c5f8e",
+      "reports/v4-runs/41270428562/tests.json": "6f71bbfcc8bd0bab53c475fdab88e1b0f21845d04ef255399c2f11b0818b85c1",
+      "reports/v4-runs/41270428562/v4-validation.json": "d16d8e4f73f7eee704727164d52442ff6902f6283c43a641309e5fc7690ec764",
+      "reports/v4-runs/41270428562/V41_HEDGE_COMPARISON.json": "207746ae36de8e5450e1dfad6b15e69cf07732eddc288bcf72310bb6a40cec2f",
+      "reports/v4-runs/41270428562/replay.json": "96689f2b5effde7681621a51ce4428171f502393909360910cbf1431e9f82d7c"
+    }
+  }
 }
