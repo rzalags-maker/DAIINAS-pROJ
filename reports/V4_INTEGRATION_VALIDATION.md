@@ -100,7 +100,7 @@ do not change the tested engine.
 The actual new KuCoin recording spans **230.324 seconds**, observes **717 public
 contracts** across **16 as-of scans**, and retains **72,877 journal records**:
 **81 execution prints**, **67,108 L2 events** and **5,348 ticker events**. The first
-process monitored SOLUSDTM/ETHUSDTM/HYPEUSDTM; the restarted process's final
+process's final observed set was SOLUSDTM/ETHUSDTM/HYPEUSDTM; the restarted process's final
 selection was ENAUSDTM/ETHUSDTM/TRXUSDTM. These are observed selected markets,
 not a claim of full-market L2/trade-tape completeness.
 
@@ -128,6 +128,8 @@ actual-SIGKILL fixtures, not relabeled real observations.
 
 The 100-USDT account reconciles exactly to **R50 / A50 / P0 / deficit0 / two
 funded candidate slots**. The 8/60 accounts remain bootstrap with one candidate.
+Win rate, profit factor and average return per trade are undefined (no fills),
+not zero-confidence estimates of strategy quality.
 NO_TRADE is a valid safe execution outcome, **not** evidence of positive expected
 returns, validated prediction, feasibility of every 8-USDT contract or a demonstrated
 2%-net campaign. All twelve held-out closed-leg counts are zero; confidence
@@ -182,12 +184,18 @@ economic validation remain unverified; no live authorization follows.
 
 ## Review / PR
 
-A gated workflow is now preparing the explicitly requested nested Draft PR from
-the verified implementation. The historical repository Actions PR policy returned
-HTTP 403, "GitHub Actions is not permitted to create or approve pull requests."
-The fresh outcome will be preserved in `v4-pr.json`; no personal-token or policy
-bypass is attempted. If that policy still blocks creation, use
-[this exact comparison](https://github.com/rzalags-maker/DAIINAS-pROJ/compare/feature/v33-risk-acceptance...feature/v4-ladder-integration).
-The issue #8 lineage and PR #9 source are included in the review; PRs #7/#9 and
-stable `daiinas-v1` remain unmerged. No private account or real 8/60/100 USDT balance
-was accessed, merged with simulation or represented as verified.
+After all verification gates passed, [fresh review workflow 41265667565](https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41265667565)
+attempted the explicitly requested nested Draft PR. GitHub returned **HTTP 403**:
+**"GitHub Actions is not permitted to create or approve pull requests."** Exact
+outcome and tested revision are committed in `v4-pr.json` and immutable
+`v4-review-runs/41265667565.json`. No Draft PR was created by this workflow.
+No personal token, credential discovery or policy bypass was attempted. Subsequent
+pushes retain the denial without retrying; an owner may retry only after changing
+the repository Actions PR setting.
+
+The implementation is concrete and reviewable at
+[this exact Draft PR comparison](https://github.com/rzalags-maker/DAIINAS-pROJ/compare/feature/v33-risk-acceptance...feature/v4-ladder-integration).
+Target: `feature/v33-risk-acceptance`; head: `feature/v4-ladder-integration`.
+PRs #7/#9, the original feature/audit branches and stable `daiinas-v1` remain
+unmerged and unchanged by this task. No actual 8/60/100-USDT account was accessed
+or combined with the simulation.
