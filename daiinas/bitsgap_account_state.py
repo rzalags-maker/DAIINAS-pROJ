@@ -112,27 +112,38 @@ class Observation:
 class PrivateStore:
     """0600 SQLite normalized checkpoint; opt-in, local, single writer.
 
-    Stores normalized amounts/counts/provenance, never raw provider frames or
-    credentials. Read-only status does not acquire the worker's writer lock.
+    A permanent sidecar file carries flock; locking the SQLite database inode
+    itself prevents SQLite acquiring its own locks on macOS. Never unlink the
+    sidecar on close, as replacing its inode can permit concurrent writers.
+    Read-only status does not acquire the worker's writer lock.
     """
     def __init__(self, path, *, readonly=False):
         if _ci():
             raise AccountStateError("PRIVATE_STORE_DISALLOWED_IN_CI")
         self.path = Path(path)
+        self.lock_path = self.path.with_name(self.path.name + ".lock")
         self.readonly = readonly
         self.fd = None
         self.db = None
-        if self.path.is_symlink():
+        if self.path.is_symlink() or self.lock_path.is_symlink():
             raise AccountStateError("UNSAFE_PRIVATE_STORE")
         if not readonly:
             self.path.parent.mkdir(parents=True, mode=0o700, exist_ok=True)
-            self.fd = os.open(self.path, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
             try:
+                self.fd = os.open(self.lock_path,
+                                  os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
                 self._check(os.fstat(self.fd))
                 fcntl.flock(self.fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                db_fd = os.open(self.path,
+                                os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+                try:
+                    self._check(os.fstat(db_fd))
+                finally:
+                    os.close(db_fd)
             except Exception:
-                os.close(self.fd)
-                self.fd = None
+                if self.fd is not None:
+                    os.close(self.fd)
+                    self.fd = None
                 raise AccountStateError("PRIVATE_STORE_LOCKED_OR_UNSAFE") from None
         else:
             self._check(self.path.stat(follow_symlinks=False))
@@ -158,8 +169,15 @@ class PrivateStore:
         return json.loads(row[0]) if row else None
 
     def writer_active(self):
-        fd = os.open(self.path, os.O_RDONLY | os.O_NOFOLLOW)
+        # A legacy checkpoint without a sidecar is never considered live.
         try:
+            fd = os.open(self.lock_path, os.O_RDONLY | os.O_NOFOLLOW)
+        except FileNotFoundError:
+            return False
+        except OSError:
+            raise AccountStateError("UNSAFE_PRIVATE_STORE") from None
+        try:
+            self._check(os.fstat(fd))
             try:
                 fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
             except BlockingIOError:

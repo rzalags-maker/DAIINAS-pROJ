@@ -1,6 +1,7 @@
 """Synthetic normalized state only; never authenticates an exchange account."""
 import asyncio
 import contextlib
+import fcntl
 import copy
 import io
 import json
@@ -291,6 +292,45 @@ class AccountStateTests(unittest.TestCase):
                 self.assertEqual(recovered.model_a_input()["decision"], BLOCKED)
             finally:
                 recovered_store.close()
+
+    def test_private_store_uses_sidecar_lock_not_database_inode(self):
+        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {}, clear=True):
+            path = Path(directory) / "private.sqlite"
+            sidecar = path.with_name(path.name + ".lock")
+            store = PrivateStore(path)
+            try:
+                self.assertTrue(sidecar.exists())
+                self.assertEqual(sidecar.stat().st_mode & 0o777, 0o600)
+                with open(path, "rb") as handle:
+                    # SQLite's own database inode must not carry our flock.
+                    fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+                reader = PrivateStore(path, readonly=True)
+                try:
+                    self.assertTrue(reader.writer_active())
+                finally:
+                    reader.close()
+            finally:
+                store.close()
+            reader = PrivateStore(path, readonly=True)
+            try:
+                self.assertFalse(reader.writer_active())
+            finally:
+                reader.close()
+            self.assertTrue(sidecar.exists())  # never unlink: preserves lock inode
+
+    def test_private_store_rejects_unsafe_sidecar(self):
+        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {}, clear=True):
+            path = Path(directory) / "private.sqlite"
+            sidecar = path.with_name(path.name + ".lock")
+            sidecar.symlink_to(Path(directory) / "other")
+            with self.assertRaises(AccountStateError):
+                PrivateStore(path)
+            sidecar.unlink()
+            sidecar.touch()
+            sidecar.chmod(0o644)
+            with self.assertRaises(AccountStateError):
+                PrivateStore(path)
 
     def test_unsafe_checkpoint_and_ci_private_output_blocked(self):
         with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {}, clear=True):

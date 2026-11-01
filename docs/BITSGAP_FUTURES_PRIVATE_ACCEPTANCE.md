@@ -26,6 +26,10 @@ access to the exact existing Bitsgap adapter endpoints (see source; no TLS bypas
 Use two private interactive terminals in the same checkout/virtual environment.
 No terminal recording, CI, shared screen, shell tracing or automatic transcript
 upload. The checkpoint and comparison are private financial files, never artifacts.
+The observer creates a persistent ".sqlite.lock" sidecar (0600) next to each private
+SQLite file; it holds the single-writer flock independently of SQLite database
+locks on macOS. Do not delete or rename the sidecar while any session runs.
+
 
 Install the existing dependencies in a virtual environment:
 
