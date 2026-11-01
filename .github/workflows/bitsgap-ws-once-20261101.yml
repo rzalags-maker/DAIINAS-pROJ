@@ -1,5 +1,5 @@
 name: One-time bounded Bitsgap Futures WS observation
-# Final bounded repeat to classify unscoped control reply vs scoped events; no raw data
+# Bounded validation after observed optional mes+value topic payload, no raw data
 
 on:
   push:
