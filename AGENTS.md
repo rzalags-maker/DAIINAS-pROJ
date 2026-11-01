@@ -1,3 +1,11 @@
+
+
+## P0 Owner correction — NEW V4 funded capital is NOT the old 8-USDT paper fixture
+
+Read [docs/V4_FUNDED_ACCOUNT_BOOTSTRAP.md](docs/V4_FUNDED_ACCOUNT_BOOTSTRAP.md) and the updated owner priority in [GitHub issue #10](https://github.com/rzalags-maker/DAIINAS-pROJ/issues/10) **BEFORE finalizing the multi-position integration**. The new V4 account must initialize with the **verified settled available balance for the selected eligible trading scope** at first activation (future secure read-only KuCoin adapter), or with an **explicit, user-selected PAPER scenario** while the connector is absent. **Do not default the new V4 engine to 8 USDT**. The existing v3.3 code currently hard-codes/guards 8 USDT; keep that behavior only for the **separate legacy regression account**, never for the new account. CapitalLadder already accepts a variable exact Decimal opening balance. Distinguish KuCoin trading cash from MetaMask holdings, unsettled funds and pledged collateral. A capital estimate (e.g., planned 60 USDT) is NOT a verified account balance.
+
+Persist INITIAL_FUNDING exactly once, with source provenance, account identity and stable policy ID, in the durable single-writer SQLite ledger. Replays/restarts cannot re-seed or double-count funds. New deposits/withdrawals are external cash flows, not realized strategy profit; their allocation must be explicitly decided, and until then they remain nontradable/unallocated (no accidental +25 slot creation). At <100 USDT maintain bootstrap; at >=100 apply the owner-approved reserve/active ladder. Preserve all existing 8-USDT fixtures, run varied capital and restart tests, keep LIVE DISABLED, and never claim account capital is verified without a current read-only snapshot or explicitly labeled operator paper seed.
+
 # DAIINAS — instructions for Codex agents
 
 This repository contains a KuCoin **PUBLIC-DATA PAPER trading** project. **LIVE ORDERS DISABLED**. Never attempt authenticated trading, real transactions, private key use, wallet transfers, API-key collection, or activating any exchange account. Do not present unit tests or a short market smoke as demonstrated trading profitability or 24-hour hosting reliability.
