@@ -107,6 +107,42 @@ class FuturesObservationTests(unittest.TestCase):
             api.discover()
         wire.manual = original
 
+    def test_real_null_orders_and_positions_still_show_verified_wallet_privately(self):
+        self.api.discover()
+        self.w.orders = None
+        self.w.positions = None
+        view = self.api.wallet_observation()
+        self.assertEqual(view.total_usdt, "61.07")
+        self.assertEqual(view.available_usdt, "61.07")
+        self.assertIsNone(view.order_count)
+        self.assertIsNone(view.position_count)
+        self.assertEqual(view.settings_status, "VALIDATED")
+        self.assertEqual(view.position_mode, "ONE_WAY")
+        self.assertEqual(view.safe_status()["status"], "PARTIAL_OBSERVATION_NOT_RECONCILED")
+        self.assertEqual(view.safe_status()["orders"], "UNVERIFIED")
+        self.assertEqual(view.private_panel()["orders"], "UNVERIFIED")
+        self.assertEqual(view.private_panel()["usdt_available_reported"], "61.07")
+        self.assertEqual(view.private_panel()["new_entry"], "NO_TRADE_ACCOUNT_NOT_RECONCILED")
+        self.assertNotIn("61.07", repr(view) + json.dumps(view.safe_status()))
+        self.assertNotIn("None", json.dumps(view.private_panel()))
+
+    def test_wallet_observation_complete_scopes_still_never_funds_model_a(self):
+        self.api.discover()
+        view = self.api.wallet_observation()
+        self.assertEqual(view.safe_status()["status"], "OBSERVED_NON_ATOMIC_NOT_RECONCILED")
+        self.assertEqual(view.order_count, 0)
+        self.assertEqual(view.position_count, 0)
+        self.assertFalse(view.safe_status()["capital_reconciled"])
+        self.assertFalse(view.safe_status()["orders_enabled"])
+
+    def test_wallet_observation_rejects_invalid_balance_without_reusing_last_value(self):
+        self.api.discover()
+        first = self.api.wallet_observation()
+        self.w.balance = None
+        with self.assertRaises(BitsgapError):
+            self.api.wallet_observation()
+        self.assertNotIn("61.07", repr(first))
+
     def test_signatures_are_byte_for_byte_existing_rest_format(self):
         self.api.discover()
         self.api.snapshot()

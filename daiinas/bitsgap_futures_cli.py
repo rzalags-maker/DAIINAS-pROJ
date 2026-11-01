@@ -27,12 +27,13 @@ def main(argv=None):
     try:
         client = BitsgapFuturesObserver(os.environ.get("BITSGAP_PRIVATE_KEY_PEM"))
         client.discover()
-        snap = client.snapshot()
+        snap = client.wallet_observation()
         if args.private_panel:
             print(json.dumps(snap.private_panel(), sort_keys=True))
         else:
             print(json.dumps(snap.safe_status(), sort_keys=True))
-        return 0
+        # A valid balance alone is partial evidence, not a green trading gate.
+        return 0 if snap.safe_status()["status"] == "OBSERVED_NON_ATOMIC_NOT_RECONCILED" else 2
     except Exception:
         print(json.dumps({"status":"UNVERIFIED", "reason":"AUTH_OR_SCHEMA_FAILURE",
                           "capital_reconciled":False, "orders_enabled":False}, sort_keys=True))

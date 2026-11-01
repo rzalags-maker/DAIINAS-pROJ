@@ -120,6 +120,60 @@ class FuturesAccountObservation:
                 "capital_reconciled": False, "orders_enabled": False}
 
 
+
+@dataclass(frozen=True, repr=False)
+class FuturesWalletObservation:
+    """An authenticated balance with independently checked exposure scopes.
+
+    This is deliberately NOT FuturesAccountSnapshot and CANNOT fund Model A.
+    Unknown orders/positions are None, never zero or a cleared liability.
+    """
+    received_unix_ms: int
+    total_usdt: str
+    available_usdt: str
+    order_count: int | None
+    position_count: int | None
+    setting_count: int | None
+    orders_status: str
+    positions_status: str
+    settings_status: str
+    position_mode: str
+    margin_mode: str
+
+    def __repr__(self):
+        return "FuturesWalletObservation(AMOUNTS_REDACTED, REAL_TRADING_DISABLED)"
+
+    def safe_status(self):
+        """Redacted evidence suitable for CI; NEVER include private balances."""
+        return {"status": "PARTIAL_OBSERVATION_NOT_RECONCILED"
+                if any(v != "VALIDATED" for v in
+                       (self.orders_status, self.positions_status, self.settings_status))
+                else "OBSERVED_NON_ATOMIC_NOT_RECONCILED",
+                "source": "BITSGAP_KUCOIN_FUTURES",
+                "balance": "VALIDATED",
+                "orders": self.orders_status,
+                "positions": self.positions_status,
+                "positions_settings": self.settings_status,
+                "capital_reconciled": False,
+                "orders_enabled": False}
+
+    def private_panel(self):
+        """Visible ONLY to the authenticated operator, never CI/public logs."""
+        return {"source": "BITSGAP_KUCOIN_FUTURES", "mode": "OBSERVE",
+                "received_unix_ms": self.received_unix_ms,
+                "usdt_total_reported": self.total_usdt,
+                "usdt_available_reported": self.available_usdt,
+                "orders": (self.order_count if self.orders_status == "VALIDATED" else "UNVERIFIED"),
+                "positions": (self.position_count if self.positions_status == "VALIDATED" else "UNVERIFIED"),
+                "position_settings": (self.setting_count if self.settings_status == "VALIDATED" else "UNVERIFIED"),
+                "position_mode": self.position_mode, "margin_mode": self.margin_mode,
+                "futures_equity": "UNVERIFIED", "net_free_margin": "UNVERIFIED",
+                "model_a_active": "UNVERIFIED", "model_a_reserve": "UNVERIFIED",
+                "new_entry": "NO_TRADE_ACCOUNT_NOT_RECONCILED",
+                "real_order_routing": "DISABLED"}
+
+
+
 class BitsgapFuturesObserver(BitsgapReadOnly):
     """Separately authorized FUTURES reads, while Spot client remains sealed."""
 
@@ -282,6 +336,49 @@ class BitsgapFuturesObserver(BitsgapReadOnly):
                 _fail("UNVERIFIED_POSITION_MARGIN_MODE")
             margin = _enum(self._futures_enums, "position_margin", "epm", value["epm"])
         return actual, mode, margin
+
+
+    def wallet_observation(self):
+        """Observe real reported USDT even when provider order/position scope is unknown.
+
+        No successful response here may authorize funds, positions or order writes.
+        """
+        if self._futures_em is None:
+            _fail("FUTURES_DISCOVERY_REQUIRED")
+        total, available = self._balance(self.read("balance"))
+        results = {}
+        for topic in ("orders", "positions", "positions_settings"):
+            try:
+                result = self.read(topic)
+                if topic == "orders":
+                    count = self._orders(result)
+                    mode, margin = "UNVERIFIED", "UNVERIFIED"
+                else:
+                    count, mode, margin = self._positions(
+                        result, settings=(topic == "positions_settings"))
+                results[topic] = (count, "VALIDATED", mode, margin)
+            except BitsgapError:
+                # A JSON null is NOT an empty inventory, and an error is not a zero.
+                results[topic] = (None, "UNVERIFIED", "UNVERIFIED", "UNVERIFIED")
+        # If both scopes report a mode, their agreement is mandatory.
+        p_mode, s_mode = results["positions"][2], results["positions_settings"][2]
+        p_margin, s_margin = results["positions"][3], results["positions_settings"][3]
+        if p_mode != "UNVERIFIED" and s_mode != "UNVERIFIED" and p_mode != s_mode:
+            _fail("INCONSISTENT_POSITION_MODES")
+        if p_margin != "UNVERIFIED" and s_margin != "UNVERIFIED" and p_margin != s_margin:
+            _fail("INCONSISTENT_MARGIN_MODES")
+        observed = self._clock_ms()
+        if type(observed) is not int or observed <= 0:
+            _fail("INVALID_OBSERVATION_CLOCK")
+        return FuturesWalletObservation(
+            received_unix_ms=observed, total_usdt=total, available_usdt=available,
+            order_count=results["orders"][0], position_count=results["positions"][0],
+            setting_count=results["positions_settings"][0],
+            orders_status=results["orders"][1], positions_status=results["positions"][1],
+            settings_status=results["positions_settings"][1],
+            position_mode=p_mode if p_mode != "UNVERIFIED" else s_mode,
+            margin_mode=p_margin if p_margin != "UNVERIFIED" else s_margin)
+
 
     def snapshot(self):
         """Read only: sequential snapshots, NOT a coherent venue atomic snapshot."""

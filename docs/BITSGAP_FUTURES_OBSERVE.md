@@ -62,3 +62,23 @@ Synthetic tests include valid/invalid wallet, Spot/demo separation, duplicate ID
 One owner-authorized **redacted real Bitsgap Futures snapshot**. Compare vendor-real field shapes against strict mock fixtures without publishing private amounts. Then implement a complete account-specific collateral and settlement reconciler in the existing single-writer ledger, before ever allowing an `ALLOW` decision for real money. Verify TP/SL protected order semantics separately.
 
 Primary sources: https://github.com/Bitsgap/bitsgap-api-docs/tree/main/docs/topics and https://github.com/Bitsgap/bitsgap-api-docs/blob/main/docs/ws/README.md
+
+## Authenticated account observation — live evidence (2026-11-01)
+
+The signed Bitsgap API key successfully resolved the actual `KUCOIN_FUTURES` market
+and validated the USDT `balance` `t/a` values. The `positions_settings` structure
+also validated. On the same real account, `orders` and `positions` returned
+literal JSON `null`, **not** the documented `{data: ..., cnt: ...}` structures.
+This does **not** prove zero orders or zero positions; these scopes remain
+`UNVERIFIED`. Sanitized evidence: [GitHub run 41333637776](https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41333637776).
+
+Use `python -m daiinas.bitsgap_futures_cli` for a redacted safe observation summary.
+For exact USDT `total/available`, the owner may run
+`python -m daiinas.bitsgap_futures_cli --private-panel` on a trusted local
+operator computer with securely provisioned Bitsgap credentials. Private
+amounts are forbidden from GitHub Actions logs and public artifacts.
+
+An authenticated `balance` observation remains distinct from proved free
+margin/equity, Capital Ladder reserve/active funding, or valid order scope.
+`UNVERIFIED` orders and positions block every real new-entry decision.
+No mock balances are overwritten; order mutation remains disabled.
