@@ -2,6 +2,32 @@
 
 **Owner clarification: 2026-11-01. Priority P0.** Read together with Issue #15 (Futures account cycle-zero and rolling balance), Issue #10 (Capital Ladder Model A), `docs/V4_CAPITAL_LADDER.md`, and v4.5 PAPER strategy specification on `feature/v42-kucoin-control-plane`. This adds an **early-stage win-gated eligibility mechanism** to the existing capital-funded ladder; it does not authorize live trading, margin transfers, or automatic position openings.
 
+## FINAL OWNER SELECTED CAPITAL MODEL — A (NOT B)
+
+**Owner re-confirmed 2026-11-01: use MODEL A.** This selection is **final for the current DAIINAS v4/v4.6 specification**. Model B, the constant 50/50 active/reserve distribution, is an archived alternative **not to be implemented or offered as a runtime selector**. This does not replace the below-100 candidate win-gating addition, and does not force actual trade entries.
+
+| Eligible settled Futures capital | Reserve | Active | Maximum nominal funded slots |
+| ---:| ---:| ---:| ---:|
+| 100 | 50 | 50 | 2 |
+| 125 | 50 | 75 | 3 |
+| 150 | 50 | 100 | 4 |
+| **200** | **50** | **150** | **6** |
+| **300** | **50** | **250** | **10** |
+| 350 | 100 | 250 | 10 |
+| 400 | 100 | 300 | 10 |
+| 450 | 150 | 300 | 10 |
+| 500 | 150 | 350 | 10 |
+
+- At and above 100 USDT, retain the selected Model A mathematical allocation (100 activates R50/A50; 25-USDT realized net-profit rungs to ten positions at 300; after ten alternating +50 net-profit deposits to Reserve then Active). The 50/50 split happens only at the 100 activation threshold, **not on every account balance**.
+- An account that starts at 200 USDT immediately computes **R50/A150, 6 nominal slots** from the verified Futures opening account, with no fabricated campaign wins. It MUST NOT start Model B **R100/A100, 4 slots**.
+- An account that starts at 300 USDT immediately computes **R50/A250, 10 nominal slots**, not Model B R150/A150/6. At 300 +50 settled net gain, Model A R100/A250/10; another +50, R100/A300/10.
+- Every new cycle uses reconciled CURRENT Futures equity, exchange free margin, committed exposure, and the persistent ledger. Initial funding is history, not the ongoing spending balance. External deposits are accounted for separately, not invented as wins, and need an explicit allocation authorization. Losses reduce position eligibility without arbitrary account reset or unsafe instant closes.
+- **Funding 6 or 10 nominal slots is not an order-placement instruction:** new trades still require independent market/risk/cost/lot/margin gates. Remain PAPER and live-order-disabled.
+
+**Acceptance tests must assert the A/B discriminatory counterexamples at balances 200 and 300, plus 300 -> 350 -> 400, direct startup at 450 and post-loss recovery.** Preserve original standalone Model A tests and new v4.6 integrated loop acceptance.
+
+---
+
 ## ONE EXECUTABLE RUNTIME CONTRACT — NO COMPETING LADDER MODELS
 
 This is **ONE state machine**, not a request to choose between original PR #9 and newer v4.6. Original Model A remains the financial allocation algorithm for the funded stage. The owner's subsequent per-winning-campaign unlock is the **early-stage capacity policy**, implemented in front of the same ledger. Both consume the **same current Futures account reconciliation** and the same journal, with a single worker/transaction writer. **Do not create a second strategy, account, reserve allocator, or separate loop.**
