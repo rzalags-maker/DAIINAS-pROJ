@@ -9,7 +9,7 @@ import json
 import os
 
 from .bitsgap_readonly import BitsgapError
-from .bitsgap_futures_observe import BitsgapFuturesObserver, safe_preflight
+from .bitsgap_futures_observe import BitsgapFuturesObserver, safe_diagnostic_category
 from .bitsgap_futures_stream import BitsgapFuturesStream
 
 
@@ -34,8 +34,12 @@ def main(argv=None):
             print(json.dumps(snap.safe_status(), sort_keys=True))
         # A valid balance alone is partial evidence, not a green trading gate.
         return 0 if snap.safe_status()["status"] == "OBSERVED_NON_ATOMIC_NOT_RECONCILED" else 2
+    except BitsgapError as exc:
+        print(json.dumps({"status": "UNVERIFIED", "reason": safe_diagnostic_category(exc.category),
+                          "capital_reconciled": False, "orders_enabled": False}, sort_keys=True))
+        return 2
     except Exception:
-        print(json.dumps({"status":"UNVERIFIED", "reason":"AUTH_OR_SCHEMA_FAILURE",
+        print(json.dumps({"status":"UNVERIFIED", "reason":"LOCAL_RUNTIME_UNVERIFIED",
                           "capital_reconciled":False, "orders_enabled":False}, sort_keys=True))
         return 2
 
