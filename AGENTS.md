@@ -1,3 +1,8 @@
+## P0 LATEST OWNER HOST CHANGE — CLOUD FIRST / PHONE CONTROL (OVERRIDES LOCAL-ONLY RULE)
+
+Read [docs/V43_CLOUD_RUNTIME_AND_REMOTE_CONTROL.md](docs/V43_CLOUD_RUNTIME_AND_REMOTE_CONTROL.md) and current [Issue #12](https://github.com/rzalags-maker/DAIINAS-pROJ/issues/12). A permanently powered owner computer is **NOT NECESSARY** when DAIINAS Python worker runs on an independently deployed persistent cloud runtime. Codex Cloud writes/tests code but **is not the continuously hosted production execution service**. Cloud-first architecture with persistent account state and mobile authenticated START/PAUSE/DISARM control is the current design goal; local-host rule below is historical/fallback only. Keep all REAL order actions disabled. Persist desired operator state and actual reconciled account state separately; pause entries on lost exchange/worker synchronization; on restart reconcile actual KuCoin orders/fills/positions before resuming anything. No cloud hosting provider is selected or deployed yet; do not claim operational connectivity or request keys in chat/GitHub.
+
+---
 # DAIINAS — instructions for Codex agents
 
 This repository contains a KuCoin **PUBLIC-DATA PAPER trading** project. **LIVE ORDERS DISABLED**. Never attempt authenticated trading, real transactions, private key use, wallet transfers, API-key collection, or activating any exchange account. Do not present unit tests or a short market smoke as demonstrated trading profitability or 24-hour hosting reliability.
