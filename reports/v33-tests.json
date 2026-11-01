@@ -1,11 +1,11 @@
 {
-  "tests_run": 306,
+  "tests_run": 307,
   "failures": 0,
-  "errors": 0,
+  "errors": 1,
   "skipped": 0,
   "expected_failures": 0,
   "unexpected_successes": 0,
-  "successful": true,
-  "tested_commit": "0bc3bafdb5816967383a84c0e265b51baab7db27",
-  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41281466283"
+  "successful": false,
+  "tested_commit": "050f197143bff905fb8fc40a2bc6677fddb889ad",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41302325001"
 }
