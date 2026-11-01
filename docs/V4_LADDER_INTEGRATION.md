@@ -7,7 +7,9 @@ wallet transactions, private connector, secrets or live-mode switch.
 
 Read [AGENTS.md](../AGENTS.md), the [complete 292-line owner source](OWNER_CAPITAL_LADDER_SOURCE_2026-11-01.md),
 [canonical Model A mathematics](V4_CAPITAL_LADDER.md), and draft PR #9.
-The unabridged owner source is preserved byte-for-byte. Alternative fixed-50%
+The unabridged owner source is preserved byte-for-byte. Concurrent owner funding
+corrections `19c533e` / `9940a01` are also included verbatim; read
+[V4_FUNDED_ACCOUNT_BOOTSTRAP.md](V4_FUNDED_ACCOUNT_BOOTSTRAP.md). Alternative fixed-50%
 Model B remains a counterfactual described in that source, not the executable
 allocation policy. This branch starts from issue #8 audit commit `8101e5f`, then
 cherry-picks PR #9's seven source/math/test/instruction commits, including its
@@ -27,7 +29,7 @@ Position/pending symbols become durable pins, up to ten gross legs. No collector
 backtester or legacy account was rebuilt.
 
 New owned SQLite role: `v4-paper-portfolio`, with immutable source/policy/schema
-and execution-version identity (`v4.1-decimal18-v2`). Prototype v4 account files
+and execution-version identity (`v4.2-explicit-funding-decimal18-v1`). Prototype v4 account files
 from earlier execution versions are refused; replay their public sources into a
 new account file instead of deleting identity or silently migrating money. A v3.3 file is rejected, never migrated or reset. Legacy `v33-paper-ledger`
 and Binance backtests remain available. New 8/60/100 scenarios have separate
@@ -47,6 +49,48 @@ This disclosed model rounding prevents association-dependent repeating-decimal
 carry from breaking exact reconciliation. It is not an exchange settlement rule.
 Drawdown and descriptive statistical measurements
 are numerical metrics; risk thresholds use Decimal active-equity calculations.
+
+## Explicit opening funding, no new-account 8-USDT default
+
+New v4 startup requires both an exact Decimal `initial_capital` string and a typed
+`funding` descriptor. Missing source/amount is a startup error, not a fallback to
+8, 29, 60 or 100. Config files are **explicitly selected hypothetical scenarios**;
+`v4-8` is only the opt-in regression/counterfactual, not new verified capital.
+The legacy v3.3 default/guard remains 8 and its own database unchanged.
+
+A paper descriptor records `kind=owner_confirmed_paper_scenario`, named account,
+`FUNDED_V4_PAPER_USDT_PERPETUAL` scope, USDT amount, selection timestamp, source
+reference and evidence. The four shipped configs label these as hypothetical,
+not verified balances. `PaperPolicy`'s numerical initial-capital metadata is not
+the authoritative opening cash; the exact declared string is. Tests include
+29/60/99.99/100/125/300/350/400 and 60.123456789012345678 opening amounts.
+
+At source cursor zero, one SQLite transaction commits INITIAL_FUNDING, the
+immutable initial-funding row, audit, opening cash/Ladder and checkpoint. Event ID,
+policy ID and account identity bind the source/provenance/amount. Its operator
+selection timestamp is separate from the pre-market initialization boundary.
+Subsequent restarts validate that record against policy and starting Ladder cash;
+conflicts block startup instead of reseeding. Full replay creates the same single
+opening event, not a second deposit. Actual SIGKILL midway through initialization
+is tested: no partial credit survives; recovery writes exactly one complete seed.
+Earlier prototype v4 execution versions are refused, never silently migrated.
+
+Later capital-flow commands log EXTERNAL_DEPOSIT / EXTERNAL_WITHDRAWAL and retain
+UNALLOCATED_EXTERNAL_FUNDS. They do not become trading P&L, clear HALT, activate
+100 or fund profit steps. A new approved allocation/activation rule is needed for
+those flows; no transfer or real wallet operation occurs.
+
+`funding.py` contains only an offline `ReadOnlySnapshot`/Protocol boundary and
+validation for account class/scope, USDT, complete/fresh snapshot identity, free
+and settled cash, frozen/locked/pledged/borrowed amounts and margin obligations.
+Marked position equity does not create free cash. In the illustrative 24+36
+case, 24 in the selected account remains 24; another wallet's 36 is not added.
+There is **no private read-only adapter**. A startup source declared
+`verified_readonly_exchange_snapshot` is blocked with NOT_CONNECTED. A public
+market feed cannot verify funding. All new reports expose
+`actual_exchange_balance_status=NOT_CONNECTED` and the hypothetical seed source.
+The previously exposed credential is not used; future connection needs separate
+secure infrastructure/authorization and eligibility review.
 
 ## Authoritative capital mathematics and invariants
 

@@ -180,3 +180,10 @@ up to ten gross independent legs, per-token regimes and whole-campaign accountin
 The original v3.3 account and Binance backtesting remain intact. Funded slots do
 not force trades; a hedge is unsupported without held-out evidence. No economic
 edge or 24h independent hosting is established. **LIVE ORDERS DISABLED.**
+
+
+The owner-funded bootstrap correction is mandatory: new v4 has **no default
+opening balance**. Choose an explicitly named PAPER funding source/amount;
+INITIAL_FUNDING is immutable and credited once. Actual exchange funding remains
+**NOT_CONNECTED**; public data cannot verify balances. See
+[funding requirements](docs/V4_FUNDED_ACCOUNT_BOOTSTRAP.md).

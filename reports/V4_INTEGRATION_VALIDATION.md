@@ -1,12 +1,21 @@
 # Issues #10/#11 — Capital Ladder and adaptive PAPER implementation
 
 **LIVE ORDERS DISABLED. No private exchange requests, secrets, orders or wallet
-transactions.** No stable merge or activation of an actual KuCoin account.
+transactions.**
+
+**Current funding revision:** incorporates the owner
+P0 correction from `9940a01` (no implicit v4 balance, exactly-once typed
+INITIAL_FUNDING). All 251 local tests pass. Fresh complete public-data revalidation
+is running; the 242-test result below is explicitly the previous accepted revision
+until the new evidence is inspected. No stable merge or activation of an actual KuCoin account.
 
 ## Baselines, source and scope
 
 Base: reviewed issue #8 lineage `8101e5f12bc3ecb76e478dc761cb85c7a626e008`.
 Math/source: PR #9 branch `60afe06b346a9f3fca0a55395b2f5ac330520c42`.
+Concurrent source update `9940a01ab224f90b3611a8e0e5127a0da4cff796` adds the
+mandatory funded-bootstrap correction; it is included without changing the original
+292-line owner transcript.
 Stable remains `8587154e67a47c7924c133b1ef859ff675a9a50e`; v3.3 feature remains
 `4644bdd677318a780cd9880933108228f6f39412`. Dedicated branch:
 `feature/v4-ladder-integration`, targeting `feature/v33-risk-acceptance` for review.
@@ -29,7 +38,7 @@ rollback, implicit account migration or rebuilding the public collector/backtest
 | Hedge | One direction -> conditional second leg plus explicit symmetric control | Zero gross ideal pair / negative costs; winner-loser trap; bidirectional path; integrated unfilled losing residual; no premature rung | Current genuine held-out advantage UNSUPPORTED; M3 does not manufacture a certificate |
 | Operations | Existing writer/collector/backup reused | Async pipeline/preflight pins, restart/replay, idempotence, backup; isolated hardened v4 units statically checked | Independent >=24h host BLOCKED; no remote deployment/alerts sent |
 
-Local complete suite: **242 tests passed**, preserving 200 audit-lineage tests,
+Prior integrated suite: **242 tests passed**, preserving 200 audit-lineage tests,
 15 original Ladder tests, and owner timing fix. Tests explicitly label synthetic
 fixtures. The actual SIGKILL test kills after OPENED/fee but before checkpoint,
 then recovers one position/fee from the already-committed source record. A separate
@@ -59,6 +68,24 @@ stale-feed health, backup maintenance locking and existing financial evidence.
 Owner source SHA-256:
 `b5e12d6da3aa663e1c04cd3012a5bac6fa7fdd57de906b7de052d1ce1f5f8a70`.
 
+## Latest owner-funded bootstrap correction
+
+New v4 has no default amount: both exact opening capital and typed provenance
+are mandatory. All explicit PAPER scenarios report NOT_CONNECTED for actual
+exchange balances. INITIAL_FUNDING commits once with account identity, policy,
+source evidence, currency/amount/timestamp and checkpoint in one transaction.
+Repeated restarts/replay cannot reseed. A real SIGKILL during initialization,
+conflicting seed/checkpoint, 29/60/99.99/100/125/300/350/400 and exact fractional
+openings, external flows and 24+36 wallet isolation add nine passing tests.
+The full local suite is 251; all legacy 8-USDT fixtures remain intact.
+
+A future read-only snapshot interface validates free/settled/encumbered cash,
+account/scope/currency, timestamps and completeness without connecting. Actual
+verified-source startup remains blocked: no private adapter/credential exists.
+Paper deposits/withdrawals are separately tagged UNALLOCATED_EXTERNAL_FUNDS,
+never strategy profit or automatic reserve/slot funding. Details and exact config
+fields are in the [integration contract](../docs/V4_LADDER_INTEGRATION.md).
+
 ## Financial interpretation
 
 Authoritative invariants and lifecycle are in [the integration contract](../docs/V4_LADDER_INTEGRATION.md).
@@ -85,9 +112,9 @@ Fee/carry/gross rounding is disclosed at 10^-18 USDT, and the execution version
 is immutable. Older prototype v4 files are refused rather than silently migrated.
 The v3.3 audit results and owned 8-USDT account remain unchanged.
 
-## Real-data validation
+## Prior real-data validation (before the funding-source correction)
 
-**PASSED** — [full acceptance run 41264446798](https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41264446798),
+**PASSED for the prior revision only** — [full acceptance run 41264446798](https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41264446798),
 exact tested revision **`5f1f51c5e6f5b57daf4a32f264e08ce100eab7f2`**.
 The original-source audit, all 242 tests (zero failures/errors/skipped), legacy
 first/restart/replay, independent legacy verification, v4 first/restart/replay,
@@ -179,7 +206,8 @@ complete comparison. Only the final all-stage run above supports this acceptance
   The previously exposed credential must be revoked out of band; it was not used.
 
 **Statuses:** implementation delivered; paper-soak-verified=false;
-economically-validated=false; live-account-authorized=false. Code/test acceptance passed as recorded above. Real open-position soak and
+economically-validated=false; live-account-authorized=false. Prior code/test acceptance passed as recorded above; the new explicit-funding
+revision must pass the fresh all-stage run before final acceptance. Real open-position soak and
 economic validation remain unverified; no live authorization follows.
 
 ## Review / PR

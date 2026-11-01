@@ -45,9 +45,10 @@ jobs:
           revision=validation.get('tested_commit')
           if ready:
               ready=subprocess.run(['git','diff','--quiet',revision,'HEAD','--','daiinas','configs','tests','scripts','.github/workflows/v4-acceptance.yml']).returncode==0
-          if not ready:result['reason']='Full original/audit/portfolio/comparison evidence must pass for unchanged implementation.'
-          elif old.get('http_status')==403 and os.environ.get('RETRY_AFTER_SETTINGS_CHANGE')!='true':
+          if old.get('http_status')==403 and os.environ.get('RETRY_AFTER_SETTINGS_CHANGE')!='true':
               result=old;result['original_denial_run']=old.get('original_denial_run',old.get('github_run_url'));result['retry_skipped']='Prior denial retained; manual retry only after owner changes repository setting.'
+              result['current_validation_ready']=ready
+          elif not ready:result['reason']='Full original/audit/portfolio/comparison evidence must pass for unchanged implementation.'
           else:
               def api(path,data=None):
                   payload=None if data is None else json.dumps(data).encode()

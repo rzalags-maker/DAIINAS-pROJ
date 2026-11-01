@@ -105,7 +105,7 @@ PortfolioLedger(root/'account.sqlite3',source_id,portfolio=policy)
         external_wallet=D(36)
         self.assertNotEqual(validate_readonly_snapshot(s,account_id='kucoin-fixture',now_ms=101),D(24)+external_wallet)
         self.assertEqual(validate_readonly_snapshot(replace(s,settled_cash='60',locked='36'),account_id='kucoin-fixture',now_ms=101),D(24))
-        for bad in [replace(s,complete=False),replace(s,scope_eligible=False),replace(s,account_class='SPOT'),replace(s,timestamp_ms=100000)]:
+        for bad in [replace(s,complete=False),replace(s,complete='false'),replace(s,free_cash='100'),replace(s,scope_eligible=False),replace(s,account_class='SPOT'),replace(s,timestamp_ms=100000)]:
             with self.assertRaises(ValueError):validate_readonly_snapshot(bad,account_id='kucoin-fixture',now_ms=101)
         with self.assertRaises(ValueError):validate_readonly_snapshot(s,account_id='different',now_ms=101)
         with self.assertRaises(ValueError):validate_readonly_snapshot(s,account_id='kucoin-fixture',now_ms=20000)

@@ -62,12 +62,16 @@ def validate_readonly_snapshot(snapshot,*,account_id,now_ms,max_age_ms=15000):
     never increase eligible opening cash. Future adapters must prove semantics.
     """
     s=snapshot
+    if (type(s.complete) is not bool or type(s.scope_eligible) is not bool or
+        type(s.timestamp_ms) is not int or s.timestamp_ms<0 or type(max_age_ms) is not int or max_age_ms<=0):
+        raise ValueError('Invalid typed snapshot completeness or timestamp')
     if (not s.complete or not s.scope_eligible or s.account_id!=account_id or
         s.account_class!='CLASSIC_FUTURES' or s.settlement_asset!='USDT' or not s.snapshot_id):
         raise ValueError('Incomplete/conflicting/ineligible read-only snapshot')
     if not 0<=now_ms-s.timestamp_ms<=max_age_ms:raise ValueError('Stale or future read-only snapshot')
     values={k:dec(getattr(s,k)) for k in ('free_cash','settled_cash','frozen','pledged','locked','borrowed','margin_obligations')}
     if any(v<0 for v in values.values()):raise ValueError('Negative or invalid cash components')
+    if values['free_cash']>values['settled_cash']:raise ValueError('Conflicting free versus settled cash; equity is not funding')
     dec(s.marked_position_equity)
     available=min(values['free_cash'],values['settled_cash']-sum((values[k] for k in ('frozen','pledged','locked','borrowed','margin_obligations')),Decimal(0)))
     if available<=0:raise ValueError('No settled unpledged eligible cash')
