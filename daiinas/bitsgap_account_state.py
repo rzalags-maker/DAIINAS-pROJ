@@ -333,10 +333,13 @@ class AccountState:
         self._save()
 
     def ingest(self, *, topic, value, source, market_id, started_ms, received_ms,
-               quality="VALIDATED", currency="USDT"):
+               quality="VALIDATED", currency="USDT", snapshot_response=False):
         if topic not in TOPICS:
             # Optional history/pair reads are not financial authority here.
             raise AccountStateError("UNSUPPORTED_ACCOUNT_TOPIC")
+        if (type(snapshot_response) is not bool
+                or (snapshot_response and source != "WS")):
+            raise AccountStateError("INVALID_SNAPSHOT_PROVENANCE")
         if (type(market_id) is not int or market_id != self.market_id
                 or currency != "USDT" or source not in SOURCES):
             self.holds.add(topic)
@@ -384,8 +387,9 @@ class AccountState:
         if (previous is not None and previous.generation == self.generation
                 and fingerprint == previous.fingerprint and quality == previous.quality):
             self.duplicates += 1
-            if source == "WS":
-                # Repeated cached frames cannot keep stale evidence alive.
+            if source == "WS" and not snapshot_response:
+                # An unchanged subscription event cannot refresh freshness.
+                # Only a recent explicit read response is a fresh observation.
                 return "DUPLICATE"
         elif (previous is not None and previous.generation == self.generation
               and received_ms == previous.received_ms and previous.quality == "VALIDATED"):
@@ -584,6 +588,7 @@ async def observe_bounded(observer, connect, *, seconds, scope_ref, store=None, 
         service.connection("DISCONNECTED")
         observer.observation_sink = prior_sink
         observer.request_budget = prior_budget
+    service.transport_diagnostics = stream.diagnostic_status()
     return service
 
 
@@ -640,6 +645,9 @@ def main(argv=None):
             service = asyncio.run(observe_bounded(observer, secure_connect,
                 seconds=args.seconds, scope_ref=args.scope_ref, store=store))
         result = service.status(private=args.private_panel)
+        if args.observe:
+            result["transport_diagnostics"] = getattr(
+                service, "transport_diagnostics", {"state": "NOT_COLLECTED"})
         if args.capital_preview:
             preview = service.capital_admission_preview(initial_scenario=args.hypothetical_initial)
             result["capital_admission_preview"] = (
