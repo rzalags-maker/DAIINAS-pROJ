@@ -2,6 +2,6 @@
   "status": "not_verified",
   "error": "FileNotFoundError: [Errno 2] No such file or directory: 'reports/v4-first.json'",
   "live_orders_enabled": false,
-  "tested_commit": "1a2703efc91a2756a8d78fac1b6c18f916199be1",
-  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41281213523"
+  "tested_commit": "828ec9f0e64120c42e9e7c01b6537e4eac519de4",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41281394871"
 }
