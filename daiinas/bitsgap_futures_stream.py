@@ -29,6 +29,31 @@ def _parse_json(raw):
         _fail("WS_BAD_FRAME")
 
 
+def _safe_envelope_shape(value):
+    """Only bounded, fixed vocabulary; never logs remote values or private keys."""
+    if isinstance(value, list):
+        return {"kind": "ARRAY", "size_band": "EMPTY" if not value else "NONEMPTY"}
+    if not isinstance(value, dict):
+        return {"kind": "OTHER"}
+    allowed = ("type", "ok", "topic", "params", "value", "mes", "subs",
+               "sid", "error", "code", "status")
+    return {
+        "kind": "OBJECT",
+        "known_fields": [key for key in allowed if key in value],
+        "other_field_count": sum(1 for key in value if key not in allowed),
+        "topic_class": ("ACCOUNT" if value.get("topic") in _SUBS else
+                        "OTHER" if isinstance(value.get("topic"), str) else "NONE"),
+        "ok_class": ("TRUE" if value.get("ok") is True else
+                     "FALSE" if value.get("ok") is False else "MISSING_OR_OTHER"),
+        "params_class": ("OBJECT" if isinstance(value.get("params"), dict) else
+                         "MISSING_OR_OTHER"),
+        "value_class": ("NULL" if "value" in value and value["value"] is None else
+                        "OBJECT" if isinstance(value.get("value"), dict) else
+                        "ARRAY" if isinstance(value.get("value"), list) else
+                        "OTHER" if "value" in value else "ABSENT"),
+    }
+
+
 class BitsgapFuturesStream:
     def __init__(self, observer: BitsgapFuturesObserver):
         self.observer = observer
@@ -38,6 +63,7 @@ class BitsgapFuturesStream:
         self.updates = 0
         self.disconnects = 0
         self.last_failure = None
+        self.last_frame_shape = None
 
     def auth_frame(self, *, ts=None, nonce=None):
         timestamp = int(time.time()) if ts is None else ts
@@ -116,7 +142,11 @@ class BitsgapFuturesStream:
                     frame = _parse_json(await ws.recv())
                     messages = frame if isinstance(frame, list) else [frame]
                     for msg in messages:
-                        event = self._ingest(msg)
+                        try:
+                            event = self._ingest(msg)
+                        except BitsgapError:
+                            self.last_frame_shape = _safe_envelope_shape(msg)
+                            raise
                         await on_event(event)
                         processed += 1
                         if max_messages is not None and processed >= max_messages:
