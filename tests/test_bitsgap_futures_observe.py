@@ -66,6 +66,7 @@ class FuturesObservationTests(unittest.TestCase):
         result = self.api.snapshot()
         self.assertEqual(result.market_id, 72)
         self.assertEqual(result.total_usdt, "61.07")
+        self.assertNotIn("61.07", repr(result))
         self.assertEqual(result.available_usdt, "61.07")
         self.assertEqual(result.position_mode, "ONE_WAY")
         self.assertEqual(result.margin_mode, "ISOLATED")
