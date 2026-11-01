@@ -36,6 +36,29 @@ then recovers one position/fee from the already-committed source record. A separ
 fixed-precision test demonstrates why recurring carry must not produce a 10^-26
 association discrepancy in an exact cash/allocation identity.
 
+## Audit corrections made during integration
+
+- **P1 — comparison validity:** a reproduced test observed one directional OPENED
+  event in M2 on a persistent UP-only fixture, where the symmetric control must
+  abstain. Mode dispatch now prohibits the directional fallback. Matched-lot
+  pairing is required; failed second entry requests a verified later exit of the
+  unmatched first leg. Tests explicitly distinguish this from a residual leg
+  after a genuine two-leg campaign winner closes.
+- **P2 — exposure measurement:** entry-cost notionals are separately labeled from
+  current gross/net mark exposure. Equal contract lots have zero current net base
+  delta at a common mark. Finalized campaigns explicitly zero remaining exposure;
+  unresolved marks never become executable positive campaign P&L.
+- **P1 — exact-reconciliation liveness:** analytic recurring-carry fixtures show
+  association-dependent Decimal context rounding of 10^-26 can falsely break an
+  exact money identity. Fixed conservative 10^-18 cash precision prevents it.
+  This is a model/fixture finding, not a claim of lost real money or an observed
+  exchange accounting error.
+
+All changes retain the issue #8 SQLITE_FULL memory rollback, flow-adjusted marks,
+stale-feed health, backup maintenance locking and existing financial evidence.
+Owner source SHA-256:
+`b5e12d6da3aa663e1c04cd3012a5bac6fa7fdd57de906b7de052d1ce1f5f8a70`.
+
 ## Financial interpretation
 
 Authoritative invariants and lifecycle are in [the integration contract](../docs/V4_LADDER_INTEGRATION.md).
@@ -64,11 +87,71 @@ The v3.3 audit results and owned 8-USDT account remain unchanged.
 
 ## Real-data validation
 
-Final public-data CI and comparison are running. The final evidence section will
-record exact tested commit, Python matrix, source counts/digests, restarted money,
-net/fees/carry/drawdown and identical-source 8/60/100 M0–M3 results after inspection.
-Cancelled superseded CI attempts are retained as cancelled, never relabeled passed.
-A preliminary actual feed/restart/replay result is not a completed comparison.
+**PASSED** — [full acceptance run 41264446798](https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41264446798),
+exact tested revision **`5f1f51c5e6f5b57daf4a32f264e08ce100eab7f2`**.
+The original-source audit, all 242 tests (zero failures/errors/skipped), legacy
+first/restart/replay, independent legacy verification, v4 first/restart/replay,
+independent v4 money/backup verification and M0–M3 comparison all succeeded.
+[Matrix run 41264446510](https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41264446510)
+also succeeded on Python **3.11, 3.12 and 3.13**. Reported implementation module
+SHA-256 hashes match the final worktree; subsequent documentation/review changes
+do not change the tested engine.
+
+The actual new KuCoin recording spans **230.324 seconds**, observes **717 public
+contracts** across **16 as-of scans**, and retains **72,877 journal records**:
+**81 execution prints**, **67,108 L2 events** and **5,348 ticker events**. The first
+process monitored SOLUSDTM/ETHUSDTM/HYPEUSDTM; the restarted process's final
+selection was ENAUSDTM/ETHUSDTM/TRXUSDTM. These are observed selected markets,
+not a claim of full-market L2/trade-tape completeness.
+
+Both real processes passed integrity checks with different boot IDs. The combined
+run observed heartbeat replies, public renewal/reconnect, 87 subscription ACKs,
+one retired market with 3 unsubscribe ACKs, 68 snapshots and verified book
+recovery. There were **8 snapshot-restore retry-limit errors** across the two
+processes, causing recovery rather than invented fills; 868 normalization-rule
+version frames were rejected. Those events are retained, **not rejected trades**.
+Frequent book recovery is an unresolved uptime/quality concern for the future
+soak; passing a fail-closed infrastructure smoke is not production readiness.
+
+There were **5,279 accepted quote decisions, zero entry signals, zero filled or
+closed legs, and zero remaining positions/pending risk** in the v4 process pair.
+The final observed regimes were UNKNOWN with NO_TRADE because no cost-adjusted
+observable opportunity qualified. Real data did not exercise open multi-leg
+recovery here; that behavior is covered by explicitly synthetic integrated and
+actual-SIGKILL fixtures, not relabeled real observations.
+
+| Separate initial account | Modes evaluated on exactly the same source | Final cash/equity per mode | Net P&L | Fees/carry | Active/account max DD | Trades/open legs |
+| ---: | --- | ---: | ---: | ---: | ---: | ---: |
+| 8 USDT | M0, M1, M2, M3 | 8 USDT | 0 | 0 / 0 | 0 / 0 | 0 / 0 |
+| 60 USDT | M0, M1, M2, M3 | 60 USDT | 0 | 0 / 0 | 0 / 0 | 0 / 0 |
+| 100 USDT | M0, M1, M2, M3 | 100 USDT | 0 | 0 / 0 | 0 / 0 | 0 / 0 |
+
+The 100-USDT account reconciles exactly to **R50 / A50 / P0 / deficit0 / two
+funded candidate slots**. The 8/60 accounts remain bootstrap with one candidate.
+NO_TRADE is a valid safe execution outcome, **not** evidence of positive expected
+returns, validated prediction, feasibility of every 8-USDT contract or a demonstrated
+2%-net campaign. All twelve held-out closed-leg counts are zero; confidence
+intervals are null and multi-day out-of-sample/hedge advantage remain UNSUPPORTED.
+
+Offline replay exactly matched the restarted v4 report; independent Decimal
+cash/net/fees/carry and reserve identities passed, and WAL-safe backup validated.
+Source UUID: `87a1ce505a4a4656a9c31506867200a1`.
+Input chain: `93c6abdac940ec29756c54b072df45d243082c8e5b93860d05c7eaa735d228c2`.
+Backup SHA-256:
+
+- SOURCE: `4daeb5c39b3d879b92d4a0465a40f93bc66a75fcffe9544aa5dbc20e5875184d`
+- PAPER: `f504ecc988fa0c7f1f2701052a14bdf1241ecc0ed73fa63f37c820a91586f94e`
+
+Machine-readable evidence is `v4-validation.json`, `V41_HEDGE_COMPARISON.json`,
+`v33-ci-status.json` and immutable `v4-runs/41264446798/`. The original issue #8
+three-trade source audit and financial replay equality also passed unchanged.
+Raw SQLite sources/accounts/backups and all comparison ledgers are Actions
+artifacts retained **14 days**; download before expiry for independent long-term
+reproduction. Committed reports/hashes do not replace raw datasets.
+
+Earlier superseded runs are retained with their cancelled/skipped/failing stage
+outcomes. Some passed partial feed checks, but none is relabeled a successful
+complete comparison. Only the final all-stage run above supports this acceptance.
 
 ## Research and operational limits
 
@@ -94,14 +177,16 @@ A preliminary actual feed/restart/replay result is not a completed comparison.
   The previously exposed credential must be revoked out of band; it was not used.
 
 **Statuses:** implementation delivered; paper-soak-verified=false;
-economically-validated=false; live-account-authorized=false. Final code/test
-acceptance remains subject to the exact evidence section above.
+economically-validated=false; live-account-authorized=false. Code/test acceptance passed as recorded above. Real open-position soak and
+economic validation remain unverified; no live authorization follows.
 
 ## Review / PR
 
-Existing repository Actions PR policy returned HTTP 403, "GitHub Actions is not
-permitted to create or approve pull requests." No personal-token or policy bypass
-was attempted. Prepare the focused nested **Draft** PR with
+A gated workflow is now preparing the explicitly requested nested Draft PR from
+the verified implementation. The historical repository Actions PR policy returned
+HTTP 403, "GitHub Actions is not permitted to create or approve pull requests."
+The fresh outcome will be preserved in `v4-pr.json`; no personal-token or policy
+bypass is attempted. If that policy still blocks creation, use
 [this exact comparison](https://github.com/rzalags-maker/DAIINAS-pROJ/compare/feature/v33-risk-acceptance...feature/v4-ladder-integration).
 The issue #8 lineage and PR #9 source are included in the review; PRs #7/#9 and
 stable `daiinas-v1` remain unmerged. No private account or real 8/60/100 USDT balance

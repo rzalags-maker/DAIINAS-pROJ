@@ -120,7 +120,10 @@ consume identical records; account policy/eligibility can yield different action
 A few minutes is not a trained multi-day walk-forward study. The report labels
 sparse/dependent samples insufficient, confidence intervals null, hedge advantage
 UNSUPPORTED; it never invents error bars or turns zero trades into a positive edge.
-Longer independent windows/regimes, NO_TRADE and fixed-five comparisons, conditional
+`held_out_mean_net` is a descriptive mean over the explicitly counted closed
+**legs**, not campaign expectancy. Open and settled campaign net/exposure must
+be assessed jointly; a green leg average cannot validate a hedge. Longer
+independent windows/regimes, NO_TRADE and fixed-five comparisons, conditional
 returns, credible uncertainty, correlation and adverse stop-gap tails remain gates.
 
 ## Mandatory negative controls and integrated tests
