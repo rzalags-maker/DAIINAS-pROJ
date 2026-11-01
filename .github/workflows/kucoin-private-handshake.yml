@@ -1,0 +1,74 @@
+name: KuCoin authenticated read-only handshake (manual)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kucoin-readonly-handshake
+  cancel-in-progress: false
+
+jobs:
+  authenticated-get:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Offline signed GET adapter tests
+        run: python -m unittest discover -s tests -p test_kucoin_readonly.py -q
+      - name: KuCoin account-mode signed GET (sanitized status only)
+        shell: bash
+        env:
+          KUCOIN_API_KEY: ${{ secrets.KUCOIN_API_KEY }}
+          KUCOIN_API_SECRET: ${{ secrets.KUCOIN_API_SECRET }}
+          KUCOIN_API_PASSPHRASE: ${{ secrets.KUCOIN_API_PASSPHRASE }}
+          KUCOIN_API_KEY_VERSION: ${{ vars.KUCOIN_API_KEY_VERSION || '2' }}
+        run: |
+          python - <<'PY'
+          import os
+          import sys
+          from daiinas.kucoin_readonly import APIError, Credentials, ReadOnly
+
+          names = ("KUCOIN_API_KEY", "KUCOIN_API_SECRET", "KUCOIN_API_PASSPHRASE")
+          if any(not os.environ.get(name) for name in names):
+              print("KUCOIN_READ_ONLY_AUTH=BLOCKED; CATEGORY=MISSING_GITHUB_ACTIONS_SECRET")
+              sys.exit(2)
+
+          # This job calls only the hardcoded signed GET account-mode endpoint.
+          # Never print credentials, request headers, responses, balances, or IDs.
+          try:
+              mode_response = ReadOnly(Credentials.from_env()).get("mode")
+              mode = mode_response.get("selfAccountMode") if isinstance(mode_response, dict) else None
+              if mode not in ("CLASSIC", "UNIFIED"):
+                  print("KUCOIN_READ_ONLY_AUTH=FAIL; CATEGORY=UNEXPECTED_ACCOUNT_MODE")
+                  sys.exit(1)
+              print("KUCOIN_READ_ONLY_AUTH=PASS")
+              print("ACCOUNT_MODE=" + mode)
+              print("ACCOUNT_DATA_RECONCILED=NO")
+              print("LIVE_ORDERS_ENABLED=NO")
+          except APIError as exc:
+              error = str(exc)
+              if error.startswith("NETWORK_UNAVAILABLE"):
+                  category = "NETWORK_UNAVAILABLE"
+              elif error.startswith("HTTP_"):
+                  category = "HTTP_REJECTION"
+              elif error.startswith("API_"):
+                  category = "EXCHANGE_REJECTION"
+              elif error.startswith("NOT_CONNECTED"):
+                  category = "MISSING_CREDENTIAL"
+              else:
+                  category = "ADAPTER_REJECTION"
+              print("KUCOIN_READ_ONLY_AUTH=FAIL; CATEGORY=" + category)
+              sys.exit(1)
+          except Exception as exc:
+              # An exception's message may contain account data, URLs or headers.
+              print("KUCOIN_READ_ONLY_AUTH=FAIL; CATEGORY=TRANSPORT_OR_RUNTIME; TYPE=" + type(exc).__name__)
+              sys.exit(1)
+          PY
