@@ -78,6 +78,35 @@ class FuturesObservationTests(unittest.TestCase):
                                                          "positions", "positions_settings"])
         self.assertTrue(all(d["payload"] == {"em": 72} for _,d,_ in self.w.calls[2:]))
 
+    def test_real_documented_direct_rest_topic_values(self):
+        # Live manual returned {data: catalog, descr: ...}, not {data: {data: catalog}}.
+        class DirectTopicWire(FakeWire):
+            def __call__(self, url, body, headers):
+                packet = json.loads(body)
+                topic = packet["topic"]
+                self.calls.append((topic, packet, headers))
+                topics = {"manual": self.manual,
+                          "conf_enums": dict(self.enums, aliases={"em":"market"}),
+                          "balance": self.balance, "orders": self.orders,
+                          "positions": self.positions,
+                          "positions_settings": self.settings}
+                return json.dumps(topics[topic]).encode()
+
+        wire = DirectTopicWire()
+        api = BitsgapFuturesObserver(self.pem, transport=wire, clock_ms=lambda:1783000000000)
+        self.assertTrue(api.discover()["futures_market_resolved"])
+        snapshot = api.snapshot()
+        self.assertEqual(snapshot.available_usdt, "61.07")
+        self.assertEqual(snapshot.open_positions, 0)
+        self.assertEqual(snapshot.position_mode, "ONE_WAY")
+        self.assertEqual(len(wire.calls), 6)
+        # Unexpected metadata must not silently pass.
+        original = wire.manual
+        wire.manual = dict(wire.manual, unexpected="never accepted")
+        with self.assertRaisesRegex(BitsgapError, "UNEXPECTED_RESPONSE_SHAPE"):
+            api.discover()
+        wire.manual = original
+
     def test_signatures_are_byte_for_byte_existing_rest_format(self):
         self.api.discover()
         self.api.snapshot()
