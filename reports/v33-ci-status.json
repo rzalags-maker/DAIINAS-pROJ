@@ -5,6 +5,11 @@
   "restart": "success",
   "replay": "success",
   "verify": "success",
-  "tested_commit": "93d9a4b1c00a6de165bacf4cdc2d8c8726ae5366",
-  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41252889266"
+  "v4first": "success",
+  "v4restart": "success",
+  "v4replay": "success",
+  "v4verify": "success",
+  "comparison": "cancelled",
+  "tested_commit": "18f45184bf489054debfac8d126a9fb7f66d490f",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41261492330"
 }

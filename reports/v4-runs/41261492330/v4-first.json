@@ -1,0 +1,1301 @@
+{
+  "status": "PAPER_ONLY",
+  "engine": "v4",
+  "live_orders_enabled": false,
+  "strategy_validated": false,
+  "production_ready": false,
+  "initial_capital": "100",
+  "mode": "M3",
+  "cash": "100",
+  "equity_last_mark": "100",
+  "executable_equity": "100",
+  "mark_status": "FLAT",
+  "active_equity": "50",
+  "ladder": {
+    "starting_total": "100",
+    "realized_net": "0",
+    "active": "50",
+    "reserve": "50",
+    "pending": "0",
+    "deficit": "0",
+    "total": "100",
+    "stage": "EXPAND",
+    "next_step": "RESERVE",
+    "committed_active": "0",
+    "slot_ceiling": 2,
+    "per_position_budget": "25",
+    "policy": {
+      "activation_total": "100",
+      "activation_reserve": "50",
+      "position_budget": "25",
+      "max_slots": 10,
+      "reserve_step": "50",
+      "active_step": "50",
+      "per_trade_planned_risk": "0.0025",
+      "aggregate_planned_risk": "0.01"
+    },
+    "live_orders_enabled": false
+  },
+  "capital_status": {
+    "allowed_slots": 2,
+    "open_positions": 0,
+    "free_slots": 2,
+    "excess_open_to_reduce_safely": 0,
+    "block_new_entries": false,
+    "marked_trading_budget": "50",
+    "reserve_untouched": "50",
+    "manual_safe_exit_required": false
+  },
+  "reserved_margin": "0",
+  "planned_risk": "0",
+  "realized_net_pnl": "0",
+  "fees": "0",
+  "entry_fees": "0",
+  "exit_fees": "0",
+  "modeled_carry": "0",
+  "external_simulated_flows": "0",
+  "maximum_drawdown": 0.0,
+  "halted": false,
+  "paused_new_entries": false,
+  "positions": [],
+  "pending_entries": [],
+  "exit_requests": {},
+  "campaigns": [],
+  "market_states": {
+    "ETHUSDTM": {
+      "history": [
+        [
+          1793497015000,
+          2268.625
+        ],
+        [
+          1793497016000,
+          2268.625
+        ],
+        [
+          1793497017000,
+          2268.625
+        ],
+        [
+          1793497018000,
+          2268.625
+        ],
+        [
+          1793497019000,
+          2268.625
+        ],
+        [
+          1793497020000,
+          2268.625
+        ],
+        [
+          1793497021000,
+          2268.625
+        ],
+        [
+          1793497022000,
+          2268.625
+        ],
+        [
+          1793497023000,
+          2268.625
+        ],
+        [
+          1793497024000,
+          2268.625
+        ],
+        [
+          1793497025000,
+          2268.625
+        ],
+        [
+          1793497026000,
+          2268.625
+        ],
+        [
+          1793497027000,
+          2268.625
+        ],
+        [
+          1793497028000,
+          2268.625
+        ],
+        [
+          1793497029000,
+          2268.5550000000003
+        ],
+        [
+          1793497030000,
+          2268.5550000000003
+        ],
+        [
+          1793497031000,
+          2268.5550000000003
+        ],
+        [
+          1793497032000,
+          2268.5550000000003
+        ],
+        [
+          1793497033000,
+          2268.5550000000003
+        ],
+        [
+          1793497034000,
+          2268.5550000000003
+        ],
+        [
+          1793497035000,
+          2268.435
+        ],
+        [
+          1793497036000,
+          2268.435
+        ],
+        [
+          1793497037000,
+          2268.435
+        ],
+        [
+          1793497038000,
+          2268.435
+        ],
+        [
+          1793497039000,
+          2268.435
+        ],
+        [
+          1793497040000,
+          2268.435
+        ],
+        [
+          1793497041000,
+          2268.435
+        ],
+        [
+          1793497042000,
+          2268.435
+        ],
+        [
+          1793497043000,
+          2268.435
+        ],
+        [
+          1793497044000,
+          2268.435
+        ],
+        [
+          1793497045000,
+          2268.435
+        ],
+        [
+          1793497046000,
+          2268.435
+        ],
+        [
+          1793497047000,
+          2268.435
+        ],
+        [
+          1793497048000,
+          2268.435
+        ],
+        [
+          1793497049000,
+          2268.215
+        ],
+        [
+          1793497050000,
+          2267.935
+        ],
+        [
+          1793497051000,
+          2267.935
+        ],
+        [
+          1793497052000,
+          2267.935
+        ],
+        [
+          1793497053000,
+          2267.935
+        ],
+        [
+          1793497054000,
+          2267.935
+        ],
+        [
+          1793497055000,
+          2267.935
+        ],
+        [
+          1793497056000,
+          2267.935
+        ],
+        [
+          1793497057000,
+          2267.935
+        ],
+        [
+          1793497058000,
+          2268.165
+        ],
+        [
+          1793497059000,
+          2268.165
+        ],
+        [
+          1793497060000,
+          2268.165
+        ],
+        [
+          1793497061000,
+          2268.295
+        ],
+        [
+          1793497062000,
+          2268.295
+        ],
+        [
+          1793497063000,
+          2268.295
+        ],
+        [
+          1793497064000,
+          2268.295
+        ],
+        [
+          1793497065000,
+          2268.295
+        ],
+        [
+          1793497066000,
+          2268.295
+        ],
+        [
+          1793497067000,
+          2268.295
+        ],
+        [
+          1793497068000,
+          2268.295
+        ],
+        [
+          1793497069000,
+          2268.0550000000003
+        ],
+        [
+          1793497070000,
+          2267.935
+        ],
+        [
+          1793497071000,
+          2267.935
+        ],
+        [
+          1793497072000,
+          2267.935
+        ],
+        [
+          1793497073000,
+          2267.935
+        ],
+        [
+          1793497074000,
+          2267.935
+        ],
+        [
+          1793497075000,
+          2267.935
+        ],
+        [
+          1793497076000,
+          2268.125
+        ],
+        [
+          1793497077000,
+          2268.125
+        ],
+        [
+          1793497078000,
+          2268.125
+        ],
+        [
+          1793497079000,
+          2268.125
+        ],
+        [
+          1793497082000,
+          2268.125
+        ],
+        [
+          1793497083000,
+          2268.125
+        ],
+        [
+          1793497084000,
+          2268.005
+        ],
+        [
+          1793497085000,
+          2267.935
+        ],
+        [
+          1793497086000,
+          2267.9849999999997
+        ],
+        [
+          1793497087000,
+          2268.115
+        ],
+        [
+          1793497088000,
+          2267.935
+        ],
+        [
+          1793497089000,
+          2267.935
+        ],
+        [
+          1793497090000,
+          2267.935
+        ],
+        [
+          1793497091000,
+          2267.935
+        ],
+        [
+          1793497092000,
+          2268.115
+        ],
+        [
+          1793497093000,
+          2268.115
+        ],
+        [
+          1793497094000,
+          2268.115
+        ],
+        [
+          1793497095000,
+          2268.115
+        ],
+        [
+          1793497096000,
+          2268.115
+        ],
+        [
+          1793497097000,
+          2267.935
+        ],
+        [
+          1793497098000,
+          2267.935
+        ],
+        [
+          1793497099000,
+          2267.935
+        ],
+        [
+          1793497100000,
+          2267.935
+        ],
+        [
+          1793497101000,
+          2267.935
+        ],
+        [
+          1793497102000,
+          2267.935
+        ],
+        [
+          1793497103000,
+          2267.935
+        ],
+        [
+          1793497104000,
+          2267.935
+        ],
+        [
+          1793497105000,
+          2267.815
+        ],
+        [
+          1793497106000,
+          2267.815
+        ],
+        [
+          1793497107000,
+          2267.815
+        ],
+        [
+          1793497108000,
+          2267.815
+        ],
+        [
+          1793497109000,
+          2267.815
+        ],
+        [
+          1793497110000,
+          2267.815
+        ],
+        [
+          1793497111000,
+          2267.815
+        ],
+        [
+          1793497112000,
+          2267.815
+        ],
+        [
+          1793497113000,
+          2267.815
+        ],
+        [
+          1793497114000,
+          2267.815
+        ],
+        [
+          1793497115000,
+          2267.815
+        ],
+        [
+          1793497118000,
+          2268.0950000000003
+        ],
+        [
+          1793497119000,
+          2268.0950000000003
+        ],
+        [
+          1793497120000,
+          2267.995
+        ],
+        [
+          1793497121000,
+          2267.995
+        ],
+        [
+          1793497122000,
+          2267.995
+        ],
+        [
+          1793497123000,
+          2267.995
+        ],
+        [
+          1793497124000,
+          2267.995
+        ],
+        [
+          1793497125000,
+          2267.995
+        ],
+        [
+          1793497126000,
+          2267.995
+        ],
+        [
+          1793497127000,
+          2267.885
+        ],
+        [
+          1793497128000,
+          2267.775
+        ],
+        [
+          1793497129000,
+          2267.775
+        ],
+        [
+          1793497130000,
+          2267.775
+        ],
+        [
+          1793497131000,
+          2267.775
+        ],
+        [
+          1793497132000,
+          2267.775
+        ],
+        [
+          1793497133000,
+          2267.775
+        ],
+        [
+          1793497134000,
+          2267.775
+        ],
+        [
+          1793497135000,
+          2267.775
+        ],
+        [
+          1793497136000,
+          2267.775
+        ],
+        [
+          1793497137000,
+          2267.775
+        ],
+        [
+          1793497138000,
+          2267.775
+        ],
+        [
+          1793497139000,
+          2267.775
+        ],
+        [
+          1793497140000,
+          2267.775
+        ],
+        [
+          1793497141000,
+          2267.775
+        ],
+        [
+          1793497142000,
+          2267.775
+        ],
+        [
+          1793497143000,
+          2267.585
+        ],
+        [
+          1793497144000,
+          2267.585
+        ],
+        [
+          1793497145000,
+          2267.585
+        ],
+        [
+          1793497146000,
+          2267.585
+        ],
+        [
+          1793497147000,
+          2267.585
+        ],
+        [
+          1793497148000,
+          2267.585
+        ],
+        [
+          1793497149000,
+          2267.585
+        ],
+        [
+          1793497150000,
+          2267.9049999999997
+        ],
+        [
+          1793497151000,
+          2267.9049999999997
+        ],
+        [
+          1793497152000,
+          2267.9049999999997
+        ],
+        [
+          1793497153000,
+          2267.9049999999997
+        ],
+        [
+          1793497154000,
+          2267.9049999999997
+        ],
+        [
+          1793497155000,
+          2268.0950000000003
+        ],
+        [
+          1793497156000,
+          2268.0950000000003
+        ],
+        [
+          1793497157000,
+          2268.0950000000003
+        ],
+        [
+          1793497158000,
+          2268.0950000000003
+        ],
+        [
+          1793497159000,
+          2268.0950000000003
+        ],
+        [
+          1793497160000,
+          2268.0950000000003
+        ],
+        [
+          1793497161000,
+          2267.8450000000003
+        ],
+        [
+          1793497162000,
+          2267.825
+        ],
+        [
+          1793497163000,
+          2267.825
+        ]
+      ],
+      "symbol_time_ms": 1793497163114,
+      "regime": "UNKNOWN",
+      "candidate": "UNKNOWN",
+      "candidate_since": 1793497162085,
+      "last_transition_ms": 1793497162085,
+      "momentum_bps": 0.22048042684907898,
+      "trend_bps": -3.526365088986072,
+      "trend_persistence": 0.06666666666666667,
+      "volatility_bps": 0.33271328568137776,
+      "volatility_regime": "LOW",
+      "cvd_notional": 272.13100000000003,
+      "cvd_ratio": 0.7499874602932252,
+      "observed_print_count": 4,
+      "bbo_imbalance": -0.9181286549707601,
+      "l2_pressure": -0.9181286549707601,
+      "spread_bps": 0.04409511315804144,
+      "round_trip_cost_floor_bps": 16.04409511315804,
+      "range_amplitude_bps": 4.586377136910347,
+      "oscillations": 4,
+      "entry_bid_depth": 0.07,
+      "entry_ask_depth": 1.6400000000000001,
+      "data_fresh": true,
+      "evidence_confidence": "OBSERVATIONAL_ONLY",
+      "expected_net_status": "UNSUPPORTED_UNTIL_HELD_OUT_VALIDATION",
+      "reason": "no_cost_adjusted_structure",
+      "prospective_move_minus_cost_bps": -12.517730024171968,
+      "horizons_ms": {
+        "micro": 30000,
+        "trend": 180000,
+        "volatility": 600000
+      },
+      "last_action": "NO_TRADE",
+      "last_decision_ms": 1793497163114,
+      "decision_reason": "no_cost_adjusted_observable_opportunity",
+      "hedge_evidence_supported": false
+    },
+    "BNBUSDTM": {
+      "history": [
+        [
+          1793497115000,
+          703.355
+        ],
+        [
+          1793497120000,
+          703.355
+        ],
+        [
+          1793497122000,
+          703.355
+        ],
+        [
+          1793497123000,
+          703.355
+        ],
+        [
+          1793497124000,
+          703.355
+        ],
+        [
+          1793497125000,
+          703.355
+        ],
+        [
+          1793497126000,
+          703.355
+        ],
+        [
+          1793497127000,
+          703.355
+        ],
+        [
+          1793497128000,
+          703.355
+        ],
+        [
+          1793497129000,
+          703.355
+        ],
+        [
+          1793497130000,
+          703.355
+        ],
+        [
+          1793497131000,
+          703.355
+        ],
+        [
+          1793497132000,
+          703.355
+        ],
+        [
+          1793497134000,
+          703.355
+        ],
+        [
+          1793497135000,
+          703.355
+        ],
+        [
+          1793497136000,
+          703.355
+        ],
+        [
+          1793497137000,
+          703.355
+        ],
+        [
+          1793497138000,
+          703.355
+        ],
+        [
+          1793497139000,
+          703.355
+        ],
+        [
+          1793497140000,
+          703.355
+        ],
+        [
+          1793497141000,
+          703.355
+        ],
+        [
+          1793497142000,
+          703.355
+        ],
+        [
+          1793497144000,
+          703.355
+        ],
+        [
+          1793497145000,
+          703.355
+        ],
+        [
+          1793497146000,
+          703.355
+        ],
+        [
+          1793497151000,
+          703.355
+        ],
+        [
+          1793497152000,
+          703.355
+        ],
+        [
+          1793497153000,
+          703.355
+        ],
+        [
+          1793497154000,
+          703.355
+        ],
+        [
+          1793497155000,
+          703.355
+        ],
+        [
+          1793497156000,
+          703.355
+        ],
+        [
+          1793497158000,
+          703.355
+        ],
+        [
+          1793497159000,
+          703.355
+        ],
+        [
+          1793497160000,
+          703.35
+        ],
+        [
+          1793497161000,
+          703.35
+        ],
+        [
+          1793497162000,
+          703.305
+        ],
+        [
+          1793497163000,
+          703.305
+        ]
+      ],
+      "symbol_time_ms": 1793497163509,
+      "regime": "UNKNOWN",
+      "candidate": "UNKNOWN",
+      "candidate_since": 1793497160461,
+      "last_transition_ms": 1793497160461,
+      "momentum_bps": -0.7108785748310975,
+      "trend_bps": -0.7108785748310975,
+      "trend_persistence": 0.05555555555555555,
+      "volatility_bps": 0.10545586642971783,
+      "volatility_regime": "LOW",
+      "cvd_notional": -1786.5084000000002,
+      "cvd_ratio": -0.3498621825610473,
+      "observed_print_count": 3,
+      "bbo_imbalance": -0.96529284164859,
+      "l2_pressure": -0.96529284164859,
+      "spread_bps": 0.1421858226514941,
+      "round_trip_cost_floor_bps": 16.14218582265149,
+      "range_amplitude_bps": 0.7109291132589846,
+      "oscillations": 0,
+      "entry_bid_depth": 0.16,
+      "entry_ask_depth": 9.06,
+      "data_fresh": true,
+      "evidence_confidence": "OBSERVATIONAL_ONLY",
+      "expected_net_status": "UNSUPPORTED_UNTIL_HELD_OUT_VALIDATION",
+      "reason": "no_cost_adjusted_structure",
+      "prospective_move_minus_cost_bps": -15.431307247820394,
+      "horizons_ms": {
+        "micro": 30000,
+        "trend": 180000,
+        "volatility": 600000
+      },
+      "last_action": "NO_TRADE",
+      "last_decision_ms": 1793497163509,
+      "decision_reason": "no_cost_adjusted_observable_opportunity",
+      "hedge_evidence_supported": false
+    },
+    "SOLUSDTM": {
+      "history": [
+        [
+          1793497120000,
+          95.7425
+        ],
+        [
+          1793497121000,
+          95.7425
+        ],
+        [
+          1793497122000,
+          95.7425
+        ],
+        [
+          1793497123000,
+          95.7425
+        ],
+        [
+          1793497124000,
+          95.7425
+        ],
+        [
+          1793497125000,
+          95.7425
+        ],
+        [
+          1793497126000,
+          95.7425
+        ],
+        [
+          1793497127000,
+          95.7425
+        ],
+        [
+          1793497128000,
+          95.7305
+        ],
+        [
+          1793497129000,
+          95.7305
+        ],
+        [
+          1793497130000,
+          95.7305
+        ],
+        [
+          1793497131000,
+          95.7305
+        ],
+        [
+          1793497132000,
+          95.7305
+        ],
+        [
+          1793497133000,
+          95.7305
+        ],
+        [
+          1793497134000,
+          95.7305
+        ],
+        [
+          1793497135000,
+          95.7305
+        ],
+        [
+          1793497136000,
+          95.7305
+        ],
+        [
+          1793497139000,
+          95.7305
+        ],
+        [
+          1793497141000,
+          95.7305
+        ],
+        [
+          1793497142000,
+          95.7305
+        ],
+        [
+          1793497143000,
+          95.7115
+        ],
+        [
+          1793497144000,
+          95.7115
+        ],
+        [
+          1793497145000,
+          95.7115
+        ],
+        [
+          1793497146000,
+          95.7115
+        ],
+        [
+          1793497147000,
+          95.7115
+        ],
+        [
+          1793497148000,
+          95.7115
+        ],
+        [
+          1793497149000,
+          95.7165
+        ],
+        [
+          1793497150000,
+          95.7225
+        ],
+        [
+          1793497151000,
+          95.7195
+        ],
+        [
+          1793497152000,
+          95.7195
+        ],
+        [
+          1793497153000,
+          95.7225
+        ],
+        [
+          1793497154000,
+          95.72399999999999
+        ],
+        [
+          1793497155000,
+          95.7325
+        ],
+        [
+          1793497156000,
+          95.72749999999999
+        ],
+        [
+          1793497157000,
+          95.731
+        ],
+        [
+          1793497158000,
+          95.7325
+        ],
+        [
+          1793497159000,
+          95.72749999999999
+        ],
+        [
+          1793497160000,
+          95.72749999999999
+        ],
+        [
+          1793497161000,
+          95.71799999999999
+        ],
+        [
+          1793497162000,
+          95.72749999999999
+        ]
+      ],
+      "symbol_time_ms": 1793497162566,
+      "regime": "UNKNOWN",
+      "candidate": "UNKNOWN",
+      "candidate_since": 1793497162404,
+      "last_transition_ms": 1793497162404,
+      "momentum_bps": -0.3133797483578782,
+      "trend_bps": -1.566702352666649,
+      "trend_persistence": 0.05128205128205128,
+      "volatility_bps": 0.5011846084471596,
+      "volatility_regime": "LOW",
+      "cvd_notional": 1493.2795,
+      "cvd_ratio": 0.9512161407663788,
+      "observed_print_count": 3,
+      "bbo_imbalance": -0.9133333333333333,
+      "l2_pressure": -0.8673469387755102,
+      "spread_bps": 0.10446318978251433,
+      "round_trip_cost_floor_bps": 16.104463189782514,
+      "range_amplitude_bps": 3.238900236648412,
+      "oscillations": 7,
+      "entry_bid_depth": 1.3,
+      "entry_ask_depth": 28.700000000000003,
+      "data_fresh": true,
+      "evidence_confidence": "OBSERVATIONAL_ONLY",
+      "expected_net_status": "UNSUPPORTED_UNTIL_HELD_OUT_VALIDATION",
+      "reason": "no_cost_adjusted_structure",
+      "prospective_move_minus_cost_bps": -14.485013071458308,
+      "horizons_ms": {
+        "micro": 30000,
+        "trend": 180000,
+        "volatility": 600000
+      },
+      "last_action": "NO_TRADE",
+      "last_decision_ms": 1793497162566,
+      "decision_reason": "no_cost_adjusted_observable_opportunity",
+      "hedge_evidence_supported": false
+    }
+  },
+  "closed_summary": {
+    "count": 0,
+    "wins": 0,
+    "losses": 0,
+    "profit": "0",
+    "loss": "0"
+  },
+  "pins": [],
+  "counts": {
+    "SCAN": 7,
+    "HEALTH": 9,
+    "DECISION": 4274,
+    "BOOK_SNAPSHOT": 24,
+    "VERIFIED_BOOK": 10,
+    "REJECTED_EVENT": 160
+  },
+  "reason_counts": {
+    "REJECTED_EVENT:rule_version_mismatch": 160
+  },
+  "recent_closed_positions": [],
+  "source_cursor": 53888,
+  "input_digest": "40046c73fe093313197043e4640af56f35ee40601c1ed9c264e8727b4b38789f",
+  "checkpoint_available_ms": 1793497163550,
+  "scan": {
+    "available_ms": 1793497149835,
+    "report_time_ms": 1793497149748,
+    "watch": {
+      "blocked_new_entries": [],
+      "capacity_exhausted": false,
+      "deep_symbols": [
+        "ETHUSDTM",
+        "BNBUSDTM",
+        "SOLUSDTM"
+      ],
+      "entered_at": {
+        "BNBUSDTM": 1793497114524,
+        "ETHUSDTM": 1793497013945,
+        "SOLUSDTM": 1793497117128
+      },
+      "no_trade": true,
+      "pinned": [],
+      "reason": "Snapshot-based candidate rotation only; no strategy edge validated",
+      "time_ms": 1793497149748,
+      "watch_pool": [
+        "ETHUSDTM",
+        "BNBUSDTM",
+        "SOLUSDTM",
+        "XRPUSDTM",
+        "APTUSDTM",
+        "BCHUSDTM",
+        "NEARUSDTM",
+        "TAOUSDTM",
+        "AAVEUSDTM",
+        "PEPEUSDTM",
+        "ONDOUSDTM",
+        "KCSUSDTM",
+        "DOTUSDTM",
+        "SUIUSDTM",
+        "LINKUSDTM",
+        "ENAUSDTM",
+        "AVAXUSDTM",
+        "DOGEUSDTM",
+        "INJUSDTM",
+        "TIAUSDTM"
+      ]
+    },
+    "specs": {
+      "BNBUSDTM": {
+        "captured_ms": 1793497149748,
+        "rules": {
+          "contract_size": "0.01",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "BNBUSDTM",
+          "tick_size": "0.01"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "ETHUSDTM": {
+        "captured_ms": 1793497149748,
+        "rules": {
+          "contract_size": "0.01",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "ETHUSDTM",
+          "tick_size": "0.01"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "SOLUSDTM": {
+        "captured_ms": 1793497149748,
+        "rules": {
+          "contract_size": "0.1",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "SOLUSDTM",
+          "tick_size": "0.001"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      }
+    },
+    "unavailable": []
+  },
+  "service": {
+    "active": [
+      "BNBUSDTM",
+      "ETHUSDTM",
+      "SOLUSDTM"
+    ],
+    "boot_id": "bc5e91f4c12c4680bd0e7194ad7d272d",
+    "connected": true,
+    "disk_free_bytes": 93535043584,
+    "elapsed_seconds": 149.975016085,
+    "feed_age_ms": {
+      "BNBUSDTM": {
+        "execution": 1010,
+        "level2": 13,
+        "tickerV2": 16
+      },
+      "ETHUSDTM": {
+        "execution": 1605,
+        "level2": 52,
+        "tickerV2": 413
+      },
+      "SOLUSDTM": {
+        "execution": 11275,
+        "level2": 10,
+        "tickerV2": 962
+      }
+    },
+    "host_id": null,
+    "paper_bytes": 9355440,
+    "session_id": "b95320ecdc794e4b99bc49ed97586fd9",
+    "source_bytes": 87451016,
+    "stream_counts": {
+      "book_gaps": 1,
+      "book_resyncs": 11,
+      "connections": 3,
+      "market_scans": 7,
+      "pongs": 9,
+      "reconciliations": 5,
+      "reconnects": 2,
+      "retired_markets": 1,
+      "snapshots": 24,
+      "subscribe_acks": 36,
+      "unsubscribe_acks": 3
+    },
+    "unavailable": [],
+    "verified_books": [
+      "BNBUSDTM",
+      "ETHUSDTM",
+      "SOLUSDTM"
+    ]
+  },
+  "unsettled_campaign_pnl": "0",
+  "stream": {
+    "connected": false,
+    "session_id": "b95320ecdc794e4b99bc49ed97586fd9",
+    "active": [
+      "BNBUSDTM",
+      "ETHUSDTM",
+      "SOLUSDTM"
+    ],
+    "verified_books": [],
+    "feed_age_ms": {
+      "BNBUSDTM": {
+        "execution": 1179,
+        "tickerV2": 185,
+        "level2": 182
+      },
+      "ETHUSDTM": {
+        "execution": 1774,
+        "tickerV2": 582,
+        "level2": 221
+      },
+      "SOLUSDTM": {
+        "execution": 11444,
+        "tickerV2": 1131,
+        "level2": 144
+      }
+    },
+    "stream_counts": {
+      "market_scans": 7,
+      "connections": 3,
+      "subscribe_acks": 36,
+      "snapshots": 24,
+      "book_resyncs": 11,
+      "reconciliations": 5,
+      "pongs": 9,
+      "unsubscribe_acks": 3,
+      "retired_markets": 1,
+      "reconnects": 2,
+      "book_gaps": 1
+    },
+    "unavailable": []
+  },
+  "errors": [
+    "ConnectionError: Scheduled public token renewal",
+    "DataGap: Book restore retry limit exceeded"
+  ],
+  "fatal_error": null,
+  "elapsed_seconds": 150.14460977800002,
+  "boot_id": "bc5e91f4c12c4680bd0e7194ad7d272d",
+  "source_path": "state/v4-source.sqlite3",
+  "paper_path": "state/v4-paper.sqlite3",
+  "observed_contracts": 717,
+  "normalized_event_counts": {
+    "tickerV2": 4280,
+    "level2": 49033,
+    "execution": 387
+  },
+  "source_code_sha256": {
+    "continuous.py": "94e4caef9ab1bca812149d3a1ef661da002bb6d43ac4e724dc5e596755ded6c1",
+    "continuous_paper.py": "04e76e5f85336a369ccd4f986a91ee6341c20f2defd6f703889cd5a5620023fa",
+    "continuous_stream.py": "2a18e78fd5bb0d06e1e040641ee7ec3effea3f25065510d6e5436c0b29de3024",
+    "continuous_store.py": "b1fd3315da192b857af9333a830a5ad722dfac2f34b4acffc427b736e8d9b096"
+  },
+  "24h_host_gate": "BLOCKED \u2014 HOST NOT PROVISIONED",
+  "smoke_status": "passed",
+  "tested_commit": "18f45184bf489054debfac8d126a9fb7f66d490f",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41261492330"
+}

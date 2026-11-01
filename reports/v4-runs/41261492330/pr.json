@@ -1,0 +1,8 @@
+{
+  "status": "blocked_existing_repository_actions_pr_policy",
+  "prior_denial": "GitHub Actions is not permitted to create or approve pull requests.",
+  "manual_compare_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/compare/feature/v33-risk-acceptance...feature/v4-ladder-integration",
+  "note": "No PR API mutation retried. PR #7 and stable branch remain unchanged.",
+  "tested_commit": "18f45184bf489054debfac8d126a9fb7f66d490f",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41261492330"
+}
