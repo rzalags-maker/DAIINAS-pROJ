@@ -81,7 +81,7 @@ def _counter(value, label):
     return value["data"], value["cnt"]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, repr=False)
 class FuturesAccountObservation:
     market_id: int                 # Exchange enum ID, NOT a private account ID.
     observed_unix_ms: int
@@ -95,6 +95,9 @@ class FuturesAccountObservation:
     completeness: str
     strategy_funding_authorized: bool = False
     order_routing_enabled: bool = False
+
+    def __repr__(self):
+        return "FuturesAccountObservation(OBSERVE, PRIVATE_AMOUNTS_REDACTED, NOT_RECONCILED)"
 
     def private_panel(self):
         """Call only in an authenticated private interface, NEVER CI stdout."""
