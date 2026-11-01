@@ -7,7 +7,7 @@ import unittest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from daiinas.bitsgap_readonly import BitsgapError
-from daiinas.bitsgap_futures_observe import BitsgapFuturesObserver, safe_preflight
+from daiinas.bitsgap_futures_observe import BitsgapFuturesObserver, safe_preflight, safe_diagnostic_category
 
 
 def new_pem():
@@ -142,6 +142,63 @@ class FuturesObservationTests(unittest.TestCase):
         with self.assertRaises(BitsgapError):
             self.api.wallet_observation()
         self.assertNotIn("61.07", repr(first))
+
+    def test_real_and_wrapped_null_exposure_report_specific_safe_reason(self):
+        class NullWire(FakeWire):
+            def __call__(self, url, body, headers):
+                packet = json.loads(body)
+                topic = packet["topic"]
+                self.calls.append((topic, packet, headers))
+                if topic in ("orders", "positions"):
+                    return b"null"
+                return super().__call__(url, body, headers)
+        wire = NullWire()
+        api = BitsgapFuturesObserver(self.pem, transport=wire, clock_ms=lambda: 1783000000000)
+        api.discover()
+        result = api.wallet_observation()
+        status = result.safe_status()
+        self.assertEqual(status["balance"], "VALIDATED")
+        self.assertEqual(status["orders_reason"], "PROVIDER_NULL_RESPONSE")
+        self.assertEqual(status["positions_reason"], "PROVIDER_NULL_RESPONSE")
+        self.assertEqual(status["positions_settings_reason"], "NONE")
+        self.assertEqual(status["timestamp_source"], "LOCAL_RECEIPT_CLOCK_NOT_PROVIDER")
+        self.assertEqual(result.private_panel()["currency"], "USDT")
+        self.assertFalse(result.private_panel()["reported_available_is_confirmed_free_margin"])
+        self.assertNotIn("61.07", repr(result) + json.dumps(status))
+        self.assertFalse(status["capital_reconciled"])
+        self.assertFalse(status["orders_enabled"])
+        # Historical envelope null is equally unknown, not an empty order list.
+        self.w.orders = None
+        with self.assertRaisesRegex(BitsgapError, "^PROVIDER_NULL_RESPONSE$"):
+            self.api._signed_read("orders", {"em": 72})
+
+    def test_failure_categories_are_fixed_and_never_echo_remote_messages(self):
+        cases = {
+            "MISSING_GITHUB_ACTIONS_SECRET": "CREDENTIAL_NOT_CONFIGURED_OR_INVALID",
+            "INVALID_PRIVATE_KEY_PEM": "CREDENTIAL_NOT_CONFIGURED_OR_INVALID",
+            "HTTP_401": "AUTHENTICATION_REJECTED",
+            "HTTP_403": "AUTHENTICATION_REJECTED",
+            "NETWORK_UNAVAILABLE": "TRANSPORT_OR_RATE_LIMIT",
+            "HTTP_429": "TRANSPORT_OR_RATE_LIMIT",
+            "KUCOIN_FUTURES_ENUM_UNRESOLVED": "FUTURES_MARKET_UNRESOLVED",
+            "UNVERIFIED_MANUAL_CAPABILITIES": "CAPABILITY_UNVERIFIED",
+            "PROVIDER_NULL_RESPONSE": "PROVIDER_NULL_RESPONSE",
+            "SECRET_VALUE_ABC123": "SCHEMA_OR_RESPONSE_UNVERIFIED",
+        }
+        for category, expected in cases.items():
+            self.assertEqual(safe_diagnostic_category(category), expected)
+            self.assertNotIn("SECRET_VALUE", safe_diagnostic_category(category))
+
+    def test_wrapped_null_exposure_never_becomes_zero(self):
+        self.api.discover()
+        self.w.orders = None
+        self.w.positions = None
+        result = self.api.wallet_observation()
+        self.assertEqual(result.safe_status()["orders_reason"], "PROVIDER_NULL_RESPONSE")
+        self.assertEqual(result.safe_status()["positions_reason"], "PROVIDER_NULL_RESPONSE")
+        self.assertIsNone(result.order_count)
+        self.assertIsNone(result.position_count)
+        self.assertEqual(result.private_panel()["new_entry"], "NO_TRADE_ACCOUNT_NOT_RECONCILED")
 
     def test_signatures_are_byte_for_byte_existing_rest_format(self):
         self.api.discover()

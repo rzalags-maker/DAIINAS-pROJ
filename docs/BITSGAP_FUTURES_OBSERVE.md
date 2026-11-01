@@ -101,3 +101,34 @@ amounts, IDs, keys or order details were printed. The temporary one-off workflow
 was created for live discovery and removed after completion; the
 `bitsgap-futures-observe.yml` **manual** workflow remains.
 
+
+
+## Safe error taxonomy and provenance (2026-11-01)
+
+The integrated observer separates **authenticated observed wallet** from unknown Futures
+exposure scope. Literal JSON `null` for `orders`, `positions` or
+`positions_settings` now yields the fixed `PROVIDER_NULL_RESPONSE` category, not
+a fabricated zero count. Redacted status reports identify which topic failed
+individually. Other fixed categories differentiate missing/invalid key,
+`AUTHENTICATION_REJECTED`, `TRANSPORT_OR_RATE_LIMIT`,
+`FUTURES_MARKET_UNRESOLVED`, `CAPABILITY_UNVERIFIED`, and
+`SCHEMA_OR_RESPONSE_UNVERIFIED`. Remote response content is never reflected in
+these labels.
+
+Private `received_unix_ms` is explicitly labeled
+`LOCAL_RECEIPT_CLOCK_NOT_PROVIDER`. **This is not a provider-signed API
+timestamp.** The private operator output can show the actual authenticated
+`balance.t` and `balance.a` values using `--private-panel` on a trusted
+local machine only; the GitHub Actions workflow deliberately redacts amounts.
+There is no user-facing authenticated web dashboard yet. Until a verified venue
+contract explicitly confirms whether `balance.a` equals the Futures terminal's
+`Available` / actual free-margin value, display it as
+**Bitsgap-reported USDT available**, not withdrawable funds or trading
+allocation. Do not use historical screenshot value 61.07 as current.
+No Model A real funding, order routing, or account write access is enabled.
+
+Codex agent operating on an older checkout MUST read the top P0 status in
+`AGENTS.md`, fetch current GitHub `main`, and stop proposing the
+old Spot-only `_spot_em` solution as though Futures read access did not exist.
+A Codex sandbox without Bitsgap keys or network does not block authenticated
+status checking by the existing GitHub Actions deployment.

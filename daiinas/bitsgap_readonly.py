@@ -135,6 +135,9 @@ class BitsgapReadOnly:
             raise
         except (ValueError, TypeError, UnicodeError):
             raise BitsgapError("INVALID_RESPONSE") from None
+        if obj is None and name in ("orders", "positions", "positions_settings"):
+            # A literal JSON null is an unknown scope, NEVER an empty order/position list.
+            raise BitsgapError("PROVIDER_NULL_RESPONSE")
         if not isinstance(obj, dict) or "data" not in obj:
             raise BitsgapError("UNEXPECTED_RESPONSE_SHAPE")
         keys = set(obj)
@@ -157,6 +160,8 @@ class BitsgapReadOnly:
             return obj
         if keys != {"data"}:
             raise BitsgapError("UNEXPECTED_RESPONSE_SHAPE")
+        if name in ("orders", "positions", "positions_settings") and obj["data"] is None:
+            raise BitsgapError("PROVIDER_NULL_RESPONSE")
         if name == "balance":
             # Direct topic value: {data: {USDT: {t,a}}}.
             # Wrapped envelope: {data: {data: {USDT: {t,a}}}}.

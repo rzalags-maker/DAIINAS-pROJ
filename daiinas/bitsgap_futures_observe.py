@@ -24,6 +24,26 @@ def _fail(category):
     raise BitsgapError(category)
 
 
+def safe_diagnostic_category(category):
+    """Fixed diagnostic labels only. No remote strings or private account data."""
+    if category in ("MISSING_GITHUB_ACTIONS_SECRET", "INVALID_PRIVATE_KEY_PEM",
+                    "WRONG_PRIVATE_KEY_TYPE"):
+        return "CREDENTIAL_NOT_CONFIGURED_OR_INVALID"
+    if category in ("HTTP_401", "HTTP_403"):
+        return "AUTHENTICATION_REJECTED"
+    if category == "NETWORK_UNAVAILABLE" or category in ("HTTP_429", "HTTP_500",
+                                                          "HTTP_502", "HTTP_503", "HTTP_504"):
+        return "TRANSPORT_OR_RATE_LIMIT"
+    if category in ("KUCOIN_FUTURES_ENUM_UNRESOLVED", "UNVERIFIED_FUTURES_ENUM"):
+        return "FUTURES_MARKET_UNRESOLVED"
+    if category in ("UNVERIFIED_MANUAL_CAPABILITIES", "UNVERIFIED_REST_CAPABILITY",
+                    "TOPIC_NOT_IN_LIVE_CATALOG"):
+        return "CAPABILITY_UNVERIFIED"
+    if category == "PROVIDER_NULL_RESPONSE":
+        return "PROVIDER_NULL_RESPONSE"
+    return "SCHEMA_OR_RESPONSE_UNVERIFIED"
+
+
 def _value(value, *, positive=False):
     return BitsgapReadOnly._decimal(value, positive=positive)
 
@@ -137,6 +157,9 @@ class FuturesWalletObservation:
     orders_status: str
     positions_status: str
     settings_status: str
+    orders_reason: str
+    positions_reason: str
+    settings_reason: str
     position_mode: str
     margin_mode: str
 
@@ -152,8 +175,12 @@ class FuturesWalletObservation:
                 "source": "BITSGAP_KUCOIN_FUTURES",
                 "balance": "VALIDATED",
                 "orders": self.orders_status,
+                "orders_reason": self.orders_reason,
                 "positions": self.positions_status,
+                "positions_reason": self.positions_reason,
                 "positions_settings": self.settings_status,
+                "positions_settings_reason": self.settings_reason,
+                "timestamp_source": "LOCAL_RECEIPT_CLOCK_NOT_PROVIDER",
                 "capital_reconciled": False,
                 "orders_enabled": False}
 
@@ -161,6 +188,9 @@ class FuturesWalletObservation:
         """Visible ONLY to the authenticated operator, never CI/public logs."""
         return {"source": "BITSGAP_KUCOIN_FUTURES", "mode": "OBSERVE",
                 "received_unix_ms": self.received_unix_ms,
+                "timestamp_source": "LOCAL_RECEIPT_CLOCK_NOT_PROVIDER",
+                "currency": "USDT",
+                "reported_available_is_confirmed_free_margin": False,
                 "usdt_total_reported": self.total_usdt,
                 "usdt_available_reported": self.available_usdt,
                 "orders": (self.order_count if self.orders_status == "VALIDATED" else "UNVERIFIED"),
@@ -356,10 +386,11 @@ class BitsgapFuturesObserver(BitsgapReadOnly):
                 else:
                     count, mode, margin = self._positions(
                         result, settings=(topic == "positions_settings"))
-                results[topic] = (count, "VALIDATED", mode, margin)
-            except BitsgapError:
-                # A JSON null is NOT an empty inventory, and an error is not a zero.
-                results[topic] = (None, "UNVERIFIED", "UNVERIFIED", "UNVERIFIED")
+                results[topic] = (count, "VALIDATED", mode, margin, "NONE")
+            except BitsgapError as exc:
+                # Null != zero; classify only known internal error categories.
+                results[topic] = (None, "UNVERIFIED", "UNVERIFIED", "UNVERIFIED",
+                                  safe_diagnostic_category(exc.category))
         # If both scopes report a mode, their agreement is mandatory.
         p_mode, s_mode = results["positions"][2], results["positions_settings"][2]
         p_margin, s_margin = results["positions"][3], results["positions_settings"][3]
@@ -376,6 +407,8 @@ class BitsgapFuturesObserver(BitsgapReadOnly):
             setting_count=results["positions_settings"][0],
             orders_status=results["orders"][1], positions_status=results["positions"][1],
             settings_status=results["positions_settings"][1],
+            orders_reason=results["orders"][4], positions_reason=results["positions"][4],
+            settings_reason=results["positions_settings"][4],
             position_mode=p_mode if p_mode != "UNVERIFIED" else s_mode,
             margin_mode=p_margin if p_margin != "UNVERIFIED" else s_margin)
 
