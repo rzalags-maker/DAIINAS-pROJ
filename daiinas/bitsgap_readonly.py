@@ -75,6 +75,8 @@ class BitsgapReadOnly:
         self._transport = transport
         self._spot_em = None
         self._order_types = None
+        self._order_states = None
+        self._order_sides = None
         public_der = key.public_key().public_bytes(
             encoding=serialization.Encoding.DER,
             format=serialization.PublicFormat.SubjectPublicKeyInfo,
@@ -187,6 +189,8 @@ class BitsgapReadOnly:
         """Resolve a real Spot catalog entry, never a connected-account identity."""
         self._spot_em = None
         self._order_types = None
+        self._order_states = None
+        self._order_sides = None
         enums = self.topic("conf_enums")
         market = enums.get("market") if isinstance(enums, dict) else None
         if (not isinstance(market, dict) or market.get("alias") != "em"
@@ -209,6 +213,17 @@ class BitsgapReadOnly:
                 and type(v) is int and v >= 0 for k, v in types.items())
                 and len(set(types.values())) == len(types)):
             self._order_types = types
+        # Unknown catalog tables never earn account-data PASS.
+        for enum_name, alias, dest in (
+                ("order_state", "eost", "_order_states"),
+                ("order_side", "eos", "_order_sides")):
+            table = enums.get(enum_name)
+            entries = table.get("items") if isinstance(table, dict) and table.get("alias") == alias else None
+            if (isinstance(entries, dict) and entries
+                    and all(isinstance(k, str) and k and type(v) is int and v >= 0
+                            for k, v in entries.items())
+                    and len(set(entries.values())) == len(entries)):
+                setattr(self, dest, entries)
         return self._spot_em
 
     @staticmethod
@@ -247,12 +262,17 @@ class BitsgapReadOnly:
         return True
 
     @classmethod
-    def validate_orders(cls, value, order_types=None):
+    def validate_orders(cls, value, order_types=None, order_states=None, order_sides=None):
         if (not isinstance(value, dict) or set(value) != {"data", "cnt"}
                 or not isinstance(value["data"], dict)
                 or type(value["cnt"]) is not int or value["cnt"] < 0):
             raise BitsgapError("UNVERIFIED_ORDERS_RESPONSE_SHAPE")
+        if not order_states:
+            raise BitsgapError("UNVERIFIED_ORDER_STATE_ENUM")
+        if not order_sides:
+            raise BitsgapError("UNVERIFIED_ORDER_SIDE_ENUM")
         count = 0
+        seen_ids = set()
         for pair, orders in value["data"].items():
             if not isinstance(pair, str) or not pair or not isinstance(orders, list):
                 raise BitsgapError("INVALID_ACCOUNT_SCHEMA")
@@ -263,6 +283,16 @@ class BitsgapReadOnly:
                         or any(type(order[k]) is not int or order[k] < 0
                                for k in ("eost", "eot", "eos", "t0"))):
                     raise BitsgapError("INVALID_ACCOUNT_SCHEMA")
+                if order["id"] in seen_ids:
+                    raise BitsgapError("DUPLICATE_ORDER_ID")
+                seen_ids.add(order["id"])
+                if order["eost"] not in order_states.values():
+                    raise BitsgapError("UNVERIFIED_ORDER_STATE_ENUM")
+                if order["eos"] not in order_sides.values():
+                    raise BitsgapError("UNVERIFIED_ORDER_SIDE_ENUM")
+                side_name = next(k for k, v in order_sides.items() if v == order["eos"])
+                if side_name not in ("BUY", "SELL"):
+                    raise BitsgapError("UNVERIFIED_ORDER_SIDE_ENUM")
                 allowed = {"id", "eost", "eot", "eos", "t0", "am", "pr", "eid",
                            "ame", "pre", "tl", "f", "apiid"}
                 if not set(order) <= allowed:
@@ -302,7 +332,7 @@ class BitsgapReadOnly:
         if self._spot_em is None:
             raise BitsgapError("KUCOIN_SPOT_ENUM_UNRESOLVED")
         return self.validate_orders(self.topic("orders", {"em": self._spot_em}),
-                                    self._order_types)
+                                    self._order_types, self._order_states, self._order_sides)
 
 
 def main():
@@ -328,7 +358,8 @@ def main():
                         "UNVERIFIED_BALANCE_RESPONSE_SHAPE", "UNVERIFIED_ORDERS_RESPONSE_SHAPE",
                         "EMPTY_BALANCE_UNVERIFIED", "EMPTY_ORDERS_UNVERIFIED",
                         "INVALID_ACCOUNT_SCHEMA", "UNVERIFIED_ORDER_OPTIONAL_SCHEMA",
-                        "UNVERIFIED_ORDER_TYPE_ENUM",
+                        "UNVERIFIED_ORDER_TYPE_ENUM", "UNVERIFIED_ORDER_STATE_ENUM",
+                        "UNVERIFIED_ORDER_SIDE_ENUM", "DUPLICATE_ORDER_ID",
                         "ORDER_SNAPSHOT_COUNT_UNVERIFIED", "NETWORK_UNAVAILABLE",
                         "INVALID_RESPONSE", "UNEXPECTED_RESPONSE_SHAPE", "OVERSIZED_RESPONSE"}
                 category = exc.category if exc.category in safe or re.fullmatch(
