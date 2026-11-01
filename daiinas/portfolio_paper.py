@@ -18,7 +18,7 @@ from .market_intelligence import update as update_market,correlation,supported_h
 D=lambda v:dec(str(v))
 ZERO=D(0)
 MONEY_QUANTUM=D('0.000000000000000001')
-EXECUTION_VERSION='v4.1-decimal18-v1'
+EXECUTION_VERSION='v4.1-decimal18-v2'
 
 def money(value,*,cost=False):
     # Conservative fixed ledger precision avoids association-dependent repeating carry.
@@ -89,7 +89,7 @@ class PortfolioLedger(PaperLedger):
     def request(self,key,reason):
         p=self.state['positions'].get(key)
         if not p:return
-        priority={'STOP':0,'ACCOUNT_HALT':1,'PORTFOLIO_RISK_CAP':1,'CAMPAIGN_STOP':1,'CONTRACT_CHANGED':1,'CAPITAL_REDUCTION':2,
+        priority={'STOP':0,'ACCOUNT_HALT':1,'PORTFOLIO_RISK_CAP':1,'CAMPAIGN_STOP':1,'UNMATCHED_HEDGE':1,'CONTRACT_CHANGED':1,'CAPITAL_REDUCTION':2,
                   'TARGET':3,'CAMPAIGN_TARGET':3,'REGIME_EXIT':4,'TIME':5,'DATA_HEALTH':6}
         old=self.state['exit_requests'].get(key)
         if old and priority.get(old['reason'],7)<=priority.get(reason,7):return
@@ -112,6 +112,8 @@ class PortfolioLedger(PaperLedger):
         self.add('active_flow_adjustment',ladder.active-before-net)
         campaign['settled']=True;campaign['settled_seq']=self.seq;campaign['net_mark']=str(net)
         campaign['net_return_on_allocation']=str(net/D(campaign['allocated'])) if D(campaign['allocated'])>0 else None
+        campaign.update(mark_status='FINALIZED',gross_base_units='0',net_base_units='0',gross_notional='0',net_notional='0',
+                        reserved_margin='0',open_planned_risk='0',unresolved_legs=[])
         self.db.execute('INSERT INTO campaign_records VALUES (?,?)',(campaign['id'],canonical(campaign)))
         self.state['campaigns'].pop(campaign['id'],None)
         self.audit('CAMPAIGN_SETTLED',campaign_id=campaign['id'],net_pnl=str(net),ladder=ladder.snapshot())
@@ -185,10 +187,17 @@ class PortfolioLedger(PaperLedger):
             legs=[p for p in s['positions'].values() if p['campaign_id']==campaign['id']]
             verified=all(not p.get('unresolved') for p in legs)
             net=D(campaign['realized_net'])+sum((D(p.get('last_mark','0'))-D(p['entry_fee_usdt']) for p in legs),ZERO)
+            gross_units=sum((D(p['quantity_contracts'])*D(p['contract_multiplier']) for p in legs),ZERO)
+            net_units=sum(((1 if p['direction']=='LONG' else -1)*D(p['quantity_contracts'])*D(p['contract_multiplier']) for p in legs),ZERO)
+            quote=s['quotes'].get(campaign['symbol'])
+            mid=(D(quote['bid'])+D(quote['ask']))/2 if quote and self.valid_quote(quote,now) else None
+            campaign.update(gross_base_units=str(gross_units),net_base_units=str(net_units),
+                gross_notional=str(gross_units*mid) if mid is not None and verified else None,
+                net_notional=str(net_units*mid) if mid is not None and verified else None)
             campaign.update(mark_status='VERIFIED' if verified else 'UNRESOLVED',net_mark=str(net) if verified else None,
                 indicative_net_mark=str(net),unresolved_legs=[p['id'] for p in legs if p.get('unresolved')],
-                gross_notional=str(sum((D(p['entry_notional_usdt']) for p in legs),ZERO)),
-                net_notional=str(sum(((1 if p['direction']=='LONG' else -1)*D(p['entry_notional_usdt']) for p in legs),ZERO)),
+                entry_gross_notional=str(sum((D(p['entry_notional_usdt']) for p in legs),ZERO)),
+                entry_net_notional=str(sum(((1 if p['direction']=='LONG' else -1)*D(p['entry_notional_usdt']) for p in legs),ZERO)),
                 reserved_margin=str(sum((D(p['margin_reserved_usdt']) for p in legs),ZERO)),
                 open_planned_risk=str(sum((D(p['planned_loss_usdt']) for p in legs),ZERO)))
             if verified and campaign['allocated'] and legs:
@@ -290,12 +299,17 @@ class PortfolioLedger(PaperLedger):
         if not plan:
             if sym in s['market_states']:s['market_states'][sym].update(rejection_reason=reason,last_rejection_ms=s['now_ms'])
             self.audit('REJECTED',symbol=sym,positionSide=side,reason=reason);return False
+        if self.portfolio.mode=='M2' and campaign_id:
+            peers=[p for p in s['pending_entries'].values() if p['campaign_id']==campaign_id]
+            if peers and D(peers[0]['quantity_contracts'])!=D(plan['quantity_contracts']):
+                self.audit('REJECTED',symbol=sym,reason='symmetric_control_requires_matching_lots')
+                return False
         if sym in s['market_states']:s['market_states'][sym]['rejection_reason']=None
         signal=f'signal:{self.seq}:{sym}:{side}'
         campaign_id=campaign_id or 'campaign:'+signal
         if campaign_id not in s['campaigns']:
             s['campaigns'][campaign_id]={'id':campaign_id,'symbol':sym,'realized_net':'0','settled':False,
-                'allocated':'0','closed_legs':[],'created_ms':s['now_ms'],'net_mark':'0','mark_status':'VERIFIED'}
+                'allocated':'0','closed_legs':[],'filled_leg_count':0,'pairing_required':self.portfolio.mode=='M2','created_ms':s['now_ms'],'net_mark':'0','mark_status':'VERIFIED'}
         campaign=s['campaigns'][campaign_id]
         campaign['allocated']=str(D(campaign['allocated'])+D(plan['allocation_budget_usdt']))
         s['pending_entries'][key]={**plan,'id':signal,'campaign_id':campaign_id,'symbol':sym,'direction':side,
@@ -361,7 +375,8 @@ class PortfolioLedger(PaperLedger):
             # Temporarily remove its own commitments for independent re-sizing at actual fill.
             del s['pending_entries'][key]
             plan,reason=self.plan(sym,p['direction'],q)
-            if plan and D(plan['quantity_contracts'])>D(p['quantity_contracts']):
+            if plan and (D(plan['quantity_contracts'])>D(p['quantity_contracts']) or
+                         self.portfolio.mode=='M2' and D(plan['quantity_contracts'])!=D(p['quantity_contracts'])):
                 # Never enlarge an already admitted intent to chase capital or losses.
                 plan=None;reason='changed_size_requires_new_signal'
             needed=D(plan['quantity_contracts'])*D(plan['contract_multiplier']) if plan else ZERO
@@ -380,8 +395,13 @@ class PortfolioLedger(PaperLedger):
                 'entry_source_seq':self.seq,'entry_provider_ms':int(q['timestamp']),'entry_wire_received_ms':q['observed_ms'],
                 'entry_observed_bid':q['bid'],'entry_observed_ask':q['ask'],'last_mark':str(-D(plan['entry_fee_usdt'])),
                 'last_mark_ms':now,'unresolved':None}
-            s['positions'][key]=pos;self.add('cash',-D(plan['entry_fee_usdt']));self.add('fees',plan['entry_fee_usdt']);self.add('entry_fees',plan['entry_fee_usdt'])
+            s['positions'][key]=pos;s['campaigns'][p['campaign_id']]['filled_leg_count']+=1;self.add('cash',-D(plan['entry_fee_usdt']));self.add('fees',plan['entry_fee_usdt']);self.add('entry_fees',plan['entry_fee_usdt'])
             self.audit('OPENED',position_id=pos['id'],symbol=sym,positionSide=p['direction'],campaign_id=p['campaign_id'])
+        for c in list(s['campaigns'].values()):
+            if c['symbol']==sym and c.get('pairing_required') and c.get('filled_leg_count')==1 and not any(p['campaign_id']==c['id'] for p in s['pending_entries'].values()):
+                c['pairing_status']='UNMATCHED_EXIT_REQUESTED'
+                for key,p in s['positions'].items():
+                    if p['campaign_id']==c['id']:self.request(key,'UNMATCHED_HEDGE')
         self.choose(sym,q)
 
     def choose_pressure(self,sym,q):
@@ -430,7 +450,8 @@ class PortfolioLedger(PaperLedger):
                 cid=s['pending_entries'][self.leg_key(sym,'LONG')]['campaign_id']
                 if self.propose(sym,'SHORT',q,cid):action='ADD_OPPOSITE_LEG';reason='M2_symmetric_negative_control'
                 else:self.cancel(self.leg_key(sym,'LONG'),'two_leg_control_requires_two_funded_slots')
-        elif m.get('regime') in ('UP_TREND','DOWN_TREND'):
+        elif self.portfolio.mode=='M2':reason='symmetric_control_requires_observed_range'
+        elif self.portfolio.mode in ('M1','M3') and m.get('regime') in ('UP_TREND','DOWN_TREND'):
             side='LONG' if m['regime']=='UP_TREND' else 'SHORT'
             aligned=(m.get('cvd_ratio',0)>0 and m.get('bbo_imbalance',0)>0) if side=='LONG' else (m.get('cvd_ratio',0)<0 and m.get('bbo_imbalance',0)<0)
             if aligned and m.get('observed_print_count',0)>=self.shadow.min_trades:

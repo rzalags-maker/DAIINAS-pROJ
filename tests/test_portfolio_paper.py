@@ -164,7 +164,7 @@ class PortfolioTests(unittest.TestCase):
         self.assertFalse(states['S2USDTM']['hedge_evidence_supported'])
         self.paper.invariant()
 
-    def range_candidates(self,capital='400'):
+    def range_candidates(self,capital='400',fill=True):
         import math
         self.start(capital,'M2','adaptive')
         sym='S0USDTM'
@@ -173,13 +173,15 @@ class PortfolioTests(unittest.TestCase):
             self.send(t,self.market(sym,t,'level2',mid-.0001,mid+.0001,size=.001),
                       self.market(sym,t,'tickerV2',mid-.0001,mid+.0001,size=.001))
         self.quote(sym,60000,.9999,1.0001)
-        self.quote(sym,60150,.9999,1.0001)
+        if fill:self.quote(sym,60150,.9999,1.0001)
 
     def test_two_legs_count_slots_and_winner_cannot_promote_campaign(self):
         self.range_candidates()
         self.assertEqual(len(self.paper.state['positions']),2)
+        self.assertEqual(len({D(p['quantity_contracts']) for p in self.paper.state['positions'].values()}),1)
         c=next(c for c in self.paper.state['campaigns'].values() if not c['settled'])
         self.assertEqual(len({p['campaign_id'] for p in self.paper.state['positions'].values()}),1)
+        self.assertEqual(D(c['net_notional']),0)
         # Long can close, but there is no executable ask liquidity for the losing short.
         for t in [60500,60700]:
             self.idx+=1
@@ -193,6 +195,7 @@ class PortfolioTests(unittest.TestCase):
         self.assertIn('S0USDTM',self.paper.pins())
         self.quote('S0USDTM',61000,1.06,1.0602)
         self.assertFalse(self.paper.state['positions']);self.assertTrue(c['settled'])
+        self.assertEqual(D(c['net_base_units']),0)
         self.assertLess(D(c['realized_net']),0)
         self.assertEqual(self.paper.ladder().reserve,D(100))
         self.paper.invariant()
@@ -244,6 +247,31 @@ class PortfolioTests(unittest.TestCase):
         self.send(100000,('CLOCK','stale2',{}));second=D(self.paper.state['marked_unrealized'])
         self.assertLess(second,first);self.assertEqual(self.paper.state['cash'],cash)
         self.assertIsNone(self.paper.report()['executable_equity'])
+
+    def test_symmetric_control_cannot_silently_become_directional_baseline(self):
+        self.start('400','M2','adaptive')
+        for i in range(1,40):
+            t=i*1000;mid=1+i*.0004
+            for j in range(3):
+                event=self.market('S0USDTM',t,'execution');event[2]['normalized']['price']=mid
+                self.send(t,event)
+            self.idx+=1
+            self.send(t,f.market('level2',t,self.idx,sym='S0USDTM',bid=mid-.0001,ask=mid+.0001,bid_size=10000,ask_size=1000),
+                      f.market('tickerV2',t,self.idx,sym='S0USDTM',bid=mid-.0001,ask=mid+.0001,bid_size=10000,ask_size=1000))
+        self.assertEqual(self.paper.state['market_states']['S0USDTM']['regime'],'UP_TREND')
+        self.assertEqual(self.paper.state['counts'].get('OPENED',0),0)
+
+    def test_failed_second_control_leg_requests_real_exit_of_first(self):
+        self.range_candidates(fill=False)
+        self.idx+=1
+        self.send(60150,f.market('level2',60150,self.idx,sym='S0USDTM',bid=.9999,ask=1.0001,bid_size=.001,ask_size=10000),
+                  f.market('tickerV2',60150,self.idx,sym='S0USDTM',bid=.9999,ask=1.0001,bid_size=.001,ask_size=10000))
+        self.assertEqual(self.paper.state['counts'].get('OPENED',0),1)
+        self.assertEqual(next(iter(self.paper.state['exit_requests'].values()))['reason'],'UNMATCHED_HEDGE')
+        self.assertIsNone(self.paper.report()['executable_equity'])
+        self.assertIn('S0USDTM',self.paper.pins())
+        self.quote('S0USDTM',61000,.9999,1.0001)
+        self.assertFalse(self.paper.state['positions']);self.paper.invariant()
 
 import asyncio
 import time
