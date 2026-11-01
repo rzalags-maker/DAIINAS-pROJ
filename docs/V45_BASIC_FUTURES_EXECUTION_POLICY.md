@@ -1,3 +1,9 @@
+## V4.7 OWNER SUPERSESSION — x2 CEILING IS HISTORICAL; ADAPTIVE x1–x5 PAPER RESEARCH
+
+**Newer owner decision dated 2026-11-01:** The original x2 maximum in the below v4.5 document is historical for that earlier PAPER scenario, **NOT** the active new-v4 PAPER strategy ceiling. Read [v4.7 adaptive leverage / full-market conveyor](https://github.com/rzalags-maker/DAIINAS-pROJ/blob/feature/v4-ladder-integration/docs/V47_ADAPTIVE_LEVERAGE_WHOLE_MARKET_CONVEYOR.md) and [updated Issue #11](https://github.com/rzalags-maker/DAIINAS-pROJ/issues/11). New PAPER strategy compares leverage x1, x2, x3, x4 and x5 (maximum 5x, not default), chooses based on full-cost net TP reachability, stop loss and account/campaign/portfolio risk. Preserves Model A, real-account-origin requirements, <=0.5% campaign loss, <=0.25% active per leg, <=1% active aggregate, stop-unit ambiguity, isolated trial, NO_TRADE and LIVE ORDERS DISABLED. The below x2 arithmetic remains valid *as a worked example*, not the upper bound. Below-100 win-gated candidate permits are described in the newer v4.6 documentation and supersede older unconditional one candidate below 100. Never silently switch to Model B or raise risk limits to permit x5.
+
+---
+
 # DAIINAS v4.5 — Owner-approved BASIC Futures trading policy (design / PAPER acceptance)
 
 **Decision source:** owner conversation 2026-11-01. **Priority:** P0; newer than v4.1 generic hedge experimentation and legacy 8-USDT exercises. **Status:** canonical *design and test specification*, NOT proof of a connected account, deployed worker, or live order authorization. LIVE ORDERS DISABLED.
