@@ -140,7 +140,7 @@ class AccountPortfolioTests(unittest.TestCase):
 
     def test_variable_snapshot_cycle_zero_and_budgets(self):
         values=[]
-        for cash in ('17','60','99.99','100','175','450','1000','5000'):
+        for cash in ('17','60','99.99','100','175','200','300','350','400','450','500','1000','5000'):
             p=PortfolioLedger.from_account_snapshot(self.root/(cash+'.sqlite3'),self.source.source_id,
                 mock_snapshot(cash=cash,timestamp_ms=0,snapshot_id=cash))
             try:
@@ -153,9 +153,12 @@ class AccountPortfolioTests(unittest.TestCase):
                 self.assertEqual(D(limits['current_futures_equity']),D(cash))
                 self.assertEqual(p.ladder().realized_net,0)
                 self.assertFalse(limits['orders_enabled']);self.assertEqual(limits['connector_status'],'RECONCILED_MOCK')
+                if cash in ('200','300'):
+                    self.assertEqual(D(limits['reserve']),50) # discriminates against rejected constant-50/50 Model B
+                    self.assertEqual(limits['funded_slot_ceiling'],6 if cash=='200' else 10)
                 self.assertEqual(p.state['initial_funding']['initial_usable_margin'],cash)
             finally:p.close()
-        self.assertEqual(values,[D(x) for x in ('17','60','99.99','50','125','300','600','2600')])
+        self.assertEqual(values,[D(x) for x in ('17','60','99.99','50','125','150','250','250','300','300','350','600','2600')])
 
     def test_continuous_cycles_five_restarts_and_replay(self):
         self.start();opening=self.paper.state['initial_funding'];records=[]
@@ -244,6 +247,15 @@ class AccountPortfolioTests(unittest.TestCase):
         self.assertLessEqual(self.paper.ladder().slot_ceiling,1)
         self.reopen();self.assertEqual(self.paper.state['counts']['ACTIVATE_LADDER'],1)
         self.assertEqual(len(self.paper.state['positions']),3)
+        self.assertEqual(self.paper.state['counts']['INITIAL_FUNDING'],1)
+
+    def test_model_a_post_ten_alternates_reserve_then_active_in_same_account(self):
+        self.start('300')
+        for n,cash,reserve,active in ((1,'350','100','250'),(2,'400','100','300')):
+            self.snapshot(mock_snapshot(cash=cash,timestamp_ms=n*100,snapshot_id=str(n),cash_events=[trade('profit'+str(n),n*100,'50')]))
+            self.assertEqual((self.paper.ladder().reserve,self.paper.ladder().active,self.paper.ladder().slot_ceiling),(D(reserve),D(active),10))
+            self.assertFalse(self.paper.state['halted'])
+            self.reopen()
         self.assertEqual(self.paper.state['counts']['INITIAL_FUNDING'],1)
 
     def test_funded_rungs_loss_recovery_and_restart_without_bootstrap_reset(self):

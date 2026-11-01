@@ -1,7 +1,7 @@
 # v4.6 account-driven capital — Issue #15
 
 Implemented on `feature/v4-ladder-integration`, following integration `1c4c508` and the owner’s concurrent single-runtime
-contract updates through `3e2f7a9`.
+contract updates through `b76f9f2`.
 Read Issue #15 (including its cycle-zero/continuous-loop amendment), updated
 AGENTS, #10/#11/#12/#14, owner Model A source and v4.2/v4.5 policies before this
 change. No stable merge, new engine, GUI, private request or order gateway.
@@ -143,7 +143,8 @@ source replay using the existing ledger. Additional end-to-end tests prove
 300→260→274→275→300 with risk HALT still latched. `status.json` contains exact source
 hashes, opening funding, current equity/free margin, ACTIVE/RESERVE/PENDING/locks,
 unallocated external funds, risk, connector status and `orders_enabled=false`.
-Tests additionally cover the 17/60/99.99/100/175/450/1000/5000 matrix, deposits,
+Tests additionally cover the 17/60/99.99/100/175/200/300/350/400/450/500/1000/5000 matrix (including
+explicit 200=R50/A150/6 and 300=R50/A250/10 Model A counterexamples), deposits,
 costs, stale/malformed/conflicting scope, margin-driven sizing, LONG/SHORT units,
 2/3/5/10 simultaneous paper positions, unknown exposure and actual SIGKILL during
 account reconciliation and after a WIN commit before the next scan. Original
