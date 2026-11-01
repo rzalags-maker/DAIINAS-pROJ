@@ -4,5 +4,7 @@
   "reason": "GitHub Actions is not permitted to create or approve pull requests.",
   "manual_compare_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/compare/feature/v33-risk-acceptance...feature/v4-ladder-integration",
   "tested_commit": "5f1f51c5e6f5b57daf4a32f264e08ce100eab7f2",
-  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41265667565"
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41266076253",
+  "original_denial_run": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41265667565",
+  "retry_skipped": "Prior denial retained; manual retry only after owner changes repository setting."
 }
