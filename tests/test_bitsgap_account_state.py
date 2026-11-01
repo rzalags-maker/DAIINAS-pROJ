@@ -73,6 +73,28 @@ class AccountStateTests(unittest.TestCase):
         self.assertFalse(self.state.model_a_input()["funding_authorized"])
         self.assertIsNone(self.state.model_a_input()["eligible_capital"])
 
+    def test_live_bitsgap_oneway_enum_alias_normalized_without_changing_venue(self):
+        # 2026-11-01 authenticated API returned ONEWAY (not ONE_WAY).
+        self.observer._futures_enums["position_mode"]["items"] = {
+            "ONEWAY": 1, "HEDGE": 2}
+        raw_count, raw_mode, raw_margin = self.observer._positions(
+            self.wire.settings, settings=True)
+        self.assertEqual(raw_mode, "ONEWAY")
+        self.connect()
+        self.pair("positions_settings", self.wire.settings)
+        settings = self.topic("positions_settings")
+        self.assertEqual(settings["state"], "VALIDATED")
+        self.assertEqual(self.state.status()["observed_position_mode"], "ONE_WAY")
+        self.assertEqual(self.state.status()["new_entry"], BLOCKED)
+
+    def test_unknown_bitsgap_mode_stays_unverified_not_relabelled_one_way(self):
+        self.observer._futures_enums["position_mode"]["items"] = {
+            "NET_CUSTOM": 1, "HEDGE": 2}
+        self.connect()
+        self.pair("positions_settings", self.wire.settings)
+        self.assertEqual(self.topic("positions_settings")["state"], "UNVERIFIED")
+        self.assertEqual(self.state.status()["new_entry"], BLOCKED)
+
     def test_active_order_validates_dynamic_enums_and_duplicate_identity(self):
         self.connect()
         orders = {"data": {"BTC_USDT": [{"id": "SYNTHETIC_ORDER", "eost": 4,
