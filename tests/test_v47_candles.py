@@ -82,6 +82,8 @@ class CandleLedgerTests(unittest.TestCase):
             target=float(position['planned_target_mid'])+.002
             case.quote('UPUSDTM',t+600,target);case.quote('UPUSDTM',t+800,target)
             self.assertFalse(case.paper.state['positions']);self.assertGreaterEqual(float(case.paper.state['realized']),.5)
+            case.send(t+1000,f.scan(t=t+1000,symbol='NEXTUSDTM'))
+            self.assertNotIn('UPUSDTM',case.paper.state['candle_contexts'])
             case.reopen();case.paper.invariant()
             replica=replay([case.source.path],case.root/'closed-replay.sqlite3',case.policy,ledger_factory=type(case.paper),ledger_options={'portfolio':case.pp})
             self.assertEqual(replica,case.paper.report());self.assertEqual(replica['counts']['INITIAL_FUNDING'],1)

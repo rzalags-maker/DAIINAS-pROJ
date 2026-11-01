@@ -723,6 +723,7 @@ class PortfolioLedger(SessionMixin,ConveyorMixin,PaperLedger):
                 pulse=p['report'].get('whole_market_pulse',{})
                 s['whole_market_pulse']={**pulse,'markets':{symbol:{k:v for k,v in record.items() if k!='history'} for symbol,record in pulse.get('markets',{}).items()}}
             protected=set(s['scan']['watch']['deep_symbols'])|set(self.pins())
+            if self.v47():s['candle_contexts']={k:v for k,v in s.get('candle_contexts',{}).items() if k in protected}
             for name in ('books','quotes','trades','episodes','last_print','market_states'):
                 s[name]={k:v for k,v in s[name].items() if k in protected}
             for key,pos in list(s['pending_entries'].items()):
