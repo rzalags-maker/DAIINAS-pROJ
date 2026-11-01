@@ -82,3 +82,22 @@ An authenticated `balance` observation remains distinct from proved free
 margin/equity, Capital Ladder reserve/active funding, or valid order scope.
 `UNVERIFIED` orders and positions block every real new-entry decision.
 No mock balances are overwritten; order mutation remains disabled.
+
+
+### Verified partial-wallet runtime check — 2026-11-01 17:59 UTC
+
+[Authenticated GitHub Actions run 41334246585](https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41334246585)
+**succeeded** against the integrated `wallet_observation()` code:
+`FUTURES_CATALOG=PASS`,
+`FUTURES_OBSERVE_STATUS=PARTIAL_OBSERVATION_NOT_RECONCILED`,
+`OBSERVE_BALANCE=VALIDATED`,
+`OBSERVE_ORDERS=UNVERIFIED`,
+`OBSERVE_POSITIONS=UNVERIFIED`,
+`OBSERVE_POSITIONS_SETTINGS=VALIDATED`,
+`MODEL_A_ACCOUNT_RECONCILED=NO`,
+`ORDER_ROUTING=DISABLED`.
+This is **not** a full account or strategy authorization PASS. No financial
+amounts, IDs, keys or order details were printed. The temporary one-off workflow
+was created for live discovery and removed after completion; the
+`bitsgap-futures-observe.yml` **manual** workflow remains.
+
