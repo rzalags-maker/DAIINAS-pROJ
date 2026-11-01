@@ -1,0 +1,81 @@
+{
+  "status": "passed",
+  "live_orders_enabled": false,
+  "tests": {
+    "tests_run": 298,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "expected_failures": 0,
+    "unexpected_successes": 0,
+    "successful": true
+  },
+  "market_scans": 10,
+  "observed_contracts": 717,
+  "public_event_counts": {
+    "execution": 125,
+    "level2": 21545,
+    "tickerV2": 1726
+  },
+  "process_boots": [
+    "8b84b1be4ab449bc83689a70335cc6f2",
+    "0d68b330707f4e70827fb6221d4dd347"
+  ],
+  "source_cursor": 23703,
+  "input_digest": "7c955c686f64533b9300ac73ab1831f99efc421d30321bddb114bfee6fa1bb7a",
+  "cash": 7.976412794754511,
+  "equity_last_mark": 7.976412794754511,
+  "fees": 0.016682568,
+  "modeled_carry": 6.372454891805554e-07,
+  "closed_summary": {
+    "count": 5,
+    "loss": 0.02358720524548885,
+    "losses": 5,
+    "profit": 0.0,
+    "wins": 0
+  },
+  "open_position": null,
+  "pending_entry": null,
+  "pending_exit": null,
+  "decision_counts": {
+    "BOOK_SNAPSHOT": 44,
+    "CLOSED": 5,
+    "EXIT_REQUEST": 6,
+    "HEALTH": 23,
+    "OPENED": 5,
+    "REJECTED": 4,
+    "RESOLVED": 254,
+    "SCAN": 10,
+    "SIGNAL": 9,
+    "UNRESOLVED": 302,
+    "VERIFIED_BOOK": 18,
+    "REJECTED_EVENT": 4
+  },
+  "rejected_and_unresolved_reasons": {
+    "EXIT_REQUEST:DATA_HEALTH": 4,
+    "EXIT_REQUEST:FLOW_INVALIDATION": 2,
+    "REJECTED:unverified_or_unaligned_depth_at_entry": 4,
+    "UNRESOLVED:DISCONNECTED": 2,
+    "UNRESOLVED:insufficient_verified_depth_for_full_exit": 266,
+    "UNRESOLVED:missing_or_stale_executable_mark": 30,
+    "UNRESOLVED:CONNECTED": 2,
+    "UNRESOLVED:BOOK_GAP": 1,
+    "REJECTED_EVENT:normalization_rule_version_mismatch": 4,
+    "UNRESOLVED:CONNECTION_LOSS": 1
+  },
+  "replay_identical": true,
+  "backup": {
+    "source_id": "c36ed6f8c360420b8170350dcaab055c",
+    "paper_cursor": 23703,
+    "source_max_seq": 23703,
+    "paper_input_digest": "7c955c686f64533b9300ac73ab1831f99efc421d30321bddb114bfee6fa1bb7a",
+    "sha256": {
+      "source.sqlite3": "0b2b35f536c3b8a67f9e8be60e04aa89c0ad420a16775e423a4740898716e7bc",
+      "paper.sqlite3": "4698c19ec203280ead1cf6ffb51e62afcb911ca25a290e8c456061a5e4dc4ea3"
+    }
+  },
+  "24h_host_gate": "BLOCKED \u2014 HOST NOT PROVISIONED",
+  "performance_gate": "Not established by bounded infrastructure smoke",
+  "tested_commit": "e443ddc0cc287fcd1c87bf13515a7532d3b49114",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41277153230"
+}

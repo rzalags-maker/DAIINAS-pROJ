@@ -3,6 +3,6 @@
   "prior_denial": "GitHub Actions is not permitted to create or approve pull requests.",
   "manual_compare_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/compare/feature/v33-risk-acceptance...feature/v4-ladder-integration",
   "note": "No PR API mutation retried. PR #7 and stable branch remain unchanged.",
-  "tested_commit": "bf9b30ec127dedea06846ae605f08c33c219c974",
-  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41276729791"
+  "tested_commit": "e443ddc0cc287fcd1c87bf13515a7532d3b49114",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41277153230"
 }
