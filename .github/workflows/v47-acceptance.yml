@@ -10,6 +10,7 @@ on:
       - '.github/workflows/v47-acceptance.yml'
 permissions:
   contents: write
+  actions: read
 concurrency:
   group: v47-paper-${{ github.ref }}
   cancel-in-progress: true
@@ -24,6 +25,49 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install '.[live]'
+      - name: Recover immutable first-failure diagnostics (GitHub artifact only)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PYCODE'
+          import io,json,os,pathlib,urllib.request,zipfile
+          class Redirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self,req,fp,code,msg,headers,newurl):
+                  result=super().redirect_request(req,fp,code,msg,headers,newurl)
+                  if result is not None:result.remove_header('Authorization')
+                  return result
+          opener=urllib.request.build_opener(Redirect())
+          def api(path):
+              req=urllib.request.Request('https://api.github.com/repos/'+os.environ['GITHUB_REPOSITORY']+path,
+                  headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+              return opener.open(req,timeout=60)
+          try:
+              with api('/actions/runs/41276729611/artifacts') as response:items=json.load(response)['artifacts']
+              artifact=next(x for x in items if x['name']=='v47-public-and-synthetic-paper-evidence' and not x['expired'])
+              with api('/actions/artifacts/'+str(artifact['id'])+'/zip') as response:data=response.read()
+              directory=pathlib.Path('reports/v47-runs/41276729611');directory.mkdir(parents=True,exist_ok=True)
+              with zipfile.ZipFile(io.BytesIO(data)) as archive:
+                  for info in archive.infolist():
+                      path=pathlib.PurePosixPath(info.filename)
+                      if path.is_absolute() or '..' in path.parts:raise ValueError('Unsafe artifact path')
+                      if path.name in ('first.json','first.log') and 'v47-public' in path.parts:
+                          (directory/path.name).write_bytes(archive.read(info))
+              (directory/'artifact.json').write_text(json.dumps({'run_id':41276729611,'artifact_id':artifact['id'],
+                  'sha256':__import__('hashlib').sha256(data).hexdigest(),'status':'FAILED_SMOKE_NOT_VERIFIED'},indent=2)+'\n')
+          except Exception as exc:print('Historical artifact recovery unavailable:',type(exc).__name__)
+          PYCODE
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if [ -f reports/v47-runs/41276729611/first.json ]; then
+            export GIT_INDEX_FILE="$RUNNER_TEMP/v47-failed-index"
+            git fetch origin "${{ github.ref_name }}"
+            latest="$(git rev-parse FETCH_HEAD)"
+            git read-tree "$latest"
+            git add reports/v47-runs/41276729611
+            tree="$(git write-tree)"
+            commit="$(git commit-tree "$tree" -p "$latest" -m 'Preserve first failed v4.7 smoke diagnostics')"
+            git push origin "$commit:refs/heads/${{ github.ref_name }}"
+          fi
       - name: Explicit synthetic account and lifecycle proof
         run: python scripts/verify_v47.py --output-dir state/v47-synthetic
       - name: Fresh named MOCK account configuration; no private credentials
@@ -46,7 +90,8 @@ jobs:
             state/v47-public/
             state/v47-synthetic/
           retention-days: 14
-      - name: Preserve successful evidence on the latest branch without changing source
+      - name: Preserve produced evidence including failures without changing source
+        if: always()
         env:
           BRANCH: ${{ github.ref_name }}
         run: |
@@ -59,13 +104,16 @@ jobs:
             git read-tree "$latest"
             for name in first restart replay validation; do
               path="state/v47-public/$name.json"
+              if [ ! -f "$path" ]; then continue; fi
               blob="$(git hash-object -w "$path")"
               git update-index --add --cacheinfo "100644,$blob,reports/v47-runs/$GITHUB_RUN_ID/$name.json"
             done
-            blob="$(git hash-object -w state/v47-synthetic/status.json)"
-            git update-index --add --cacheinfo "100644,$blob,reports/v47-runs/$GITHUB_RUN_ID/synthetic.json"
+            if [ -f state/v47-synthetic/status.json ]; then
+              blob="$(git hash-object -w state/v47-synthetic/status.json)"
+              git update-index --add --cacheinfo "100644,$blob,reports/v47-runs/$GITHUB_RUN_ID/synthetic.json"
+            fi
             tree="$(git write-tree)"
-            commit="$(git commit-tree "$tree" -p "$latest" -m 'Record verified v4.7 public and modeled-account conveyor evidence')"
+            commit="$(git commit-tree "$tree" -p "$latest" -m 'Record v4.7 produced evidence without relabeling failures as verified')"
             if git push origin "$commit:refs/heads/$BRANCH"; then exit 0; fi
           done
           exit 1
