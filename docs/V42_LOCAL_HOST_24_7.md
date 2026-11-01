@@ -1,3 +1,4 @@
+> **Superseded as mandatory default (2026-11-01):** Owner subsequently requested an architecture that does **not** require the home computer running 24/7. The current cloud-first alternative is [V43_CLOUD_RUNTIME_AND_REMOTE_CONTROL.md](V43_CLOUD_RUNTIME_AND_REMOTE_CONTROL.md). This document remains valid ONLY as an optional local-host fallback. Do not follow its statements that local PC operation is required.
 # DAIINAS v4.2 — Owner-selected LOCAL 24/7 hosting (P0)
 
 **Owner deployment decision, 2026-11-01:** DAIINAS will run continuously on the **owner's own computer**, NOT an external VPS or third-party cloud host. KuCoin API connections originate from that local computer's network. The operating system and its version have **NOT YET BEEN CONFIRMED**. Do not invent Linux/VPS requirements or assume the user's old Mac Pro experiments are the execution host.
