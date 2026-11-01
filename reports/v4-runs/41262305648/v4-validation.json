@@ -1,0 +1,7 @@
+{
+  "status": "not_verified",
+  "error": "FileNotFoundError: [Errno 2] No such file or directory: 'reports/v4-first.json'",
+  "live_orders_enabled": false,
+  "tested_commit": "e2ef382db91c20c14cd49c2a479d74dfcad35f19",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41262305648"
+}
