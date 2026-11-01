@@ -81,6 +81,21 @@ class StreamTests(unittest.IsolatedAsyncioTestCase):
             with self.assertRaisesRegex(BitsgapError,"WS_FOREIGN_EXCHANGE_SCOPE|WS_UNVERIFIED_TOPIC_FRAME"):
                 self.stream._ingest(msg)
 
+    async def test_rejected_ws_envelope_diagnostic_never_prints_remote_values(self):
+        from daiinas.bitsgap_futures_stream import _safe_envelope_shape
+        details = _safe_envelope_shape({"ok":True, "topic":"orders",
+                    "params":{"em":72,"account_id":"PRIVATE_ACCOUNT_ID"},
+                    "value":{"USDT":"PRIVATE_BALANCE"},
+                    "secret_key_PRIVATE":"PRIVATE_SESSION"})
+        raw = json.dumps(details)
+        self.assertEqual(details["topic_class"], "ACCOUNT")
+        self.assertEqual(details["params_class"], "OBJECT")
+        self.assertEqual(details["value_class"], "OBJECT")
+        self.assertEqual(details["other_field_count"], 1)
+        for forbidden in ("PRIVATE_ACCOUNT_ID","PRIVATE_BALANCE","PRIVATE_SESSION",
+                          "secret_key_PRIVATE","72", "USDT"):
+            self.assertNotIn(forbidden, raw)
+
     async def test_foreign_exchange_event_is_denied(self):
         ws=FakeWS([{"type":"auth_ok","sid":"ok"},
                    {"ok":True,"topic":"balance","params":{"em":71},"value":self.w.balance}])
