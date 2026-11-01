@@ -19,6 +19,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 _URL = "https://open.bitsgap.com/api/v1/topic"
 _ALLOWED = frozenset(("manual", "conf_enums", "balance", "orders"))
+_SIGNED_READ_ONLY = _ALLOWED | frozenset(("positions", "positions_settings", "orders_history", "conf_pairs"))
 
 
 class BitsgapError(RuntimeError):
@@ -101,6 +102,12 @@ class BitsgapReadOnly:
                 raise BitsgapError("UNEXPECTED_EXCHANGE_PARAMETERS")
         elif params:
             raise BitsgapError("UNEXPECTED_TOPIC_PARAMETERS")
+        return self._signed_read(name, params, timestamp=timestamp, nonce=nonce)
+
+    def _signed_read(self, name, params, *, timestamp=None, nonce=None):
+        # Canonical Ed25519 and transport bytes stay unchanged. Harden internal helper.
+        if name not in _SIGNED_READ_ONLY:
+            raise BitsgapError("NON_READ_ONLY_TOPIC_REFUSED")
         ts = int(time.time()) if timestamp is None else timestamp
         if type(ts) is not int:
             raise BitsgapError("INVALID_TIMESTAMP")
