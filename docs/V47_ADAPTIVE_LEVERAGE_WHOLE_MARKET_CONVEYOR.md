@@ -4,6 +4,34 @@
 
 **Original owner objective:** Human can manually supervise only a few positions; DAIINAS should independently scan the full supported Futures market, identify LONG and SHORT opportunities, choose candidate and leverage, enter with protective stop and profit target, monitor up to TEN simultaneous funded positions, close after a verified net-profit objective or stop, reconcile, then seek a new candidate, continuously. Owner's historical manual maximum has been x5; select leverage via objective cost/risk/forecast assessment, **not permanently x5**. The system must autonomously decide NO_TRADE when risk or opportunity fails.
 
+## Owner-supplied KuCoin fee tier — Futures MAKER 0.02%, TAKER 0.06% (2026-11-01)
+
+**New evidence, not an assumed universal schedule:** Owner provided a KuCoin UI screenshot displaying **SPOT maker/taker = 0.08%/0.08%; FUTURES maker/taker = 0.02%/0.06%**. This is the **user-observed schedule** for planning, not an authenticated current per-contract fee quote or evidence of an individual fill's liquidity status. Fetch actual per-contract/account maker/taker fees through the authenticated allowed fee-rate interface before order preview; reconcile actual charged commission from order/fill records. Never use Spot fees for Futures. Fee tier, VIP changes, contracts and rebates may change effective rates. Until the read-only adapter is connected, store screenshot fees only as an explicitly labeled PAPER scenario.
+
+**25 USDT allocated campaign, FULL x5 margin, 125 USDT notional. Fee-model scenarios (approximate, no spread/slippage/funding):**
+
+| Entry and profit exit liquidity | Maker/taker rate assumption | Round-trip fees | Underlying favorable price movement for +0.50 USDT NET |
+| --- | --- | ---: | ---: |
+| TAKER / TAKER | 0.06% + 0.06% | 0.150 USDT | 0.52% |
+| MAKER / TAKER | 0.02% + 0.06% | 0.100 USDT | 0.48% |
+| MAKER / MAKER | 0.02% + 0.02% | 0.050 USDT | 0.44% |
+
+**Full-size x5 STOP scenarios** (a stop-market exit should generally model **TAKER** unless its actual fill proves otherwise, regardless of optimistic planned take-profit exit):
+
+| Entry / protective stop exit | Round-trip fees | Loss at 0.5% adverse ENTRY PRICE SL | Loss at 1.0% adverse ENTRY PRICE SL |
+| --- | ---: | ---: | ---: |
+| TAKER / TAKER | 0.150 USDT | 0.775 USDT | 1.400 USDT |
+| MAKER / TAKER | 0.100 USDT | 0.725 USDT | 1.350 USDT |
+| MAKER / MAKER (optimistic/unreliable STOP fill) | 0.050 USDT | 0.675 USDT | 1.300 USDT |
+
+All six full-size stop scenarios **breach** the existing `0.005 * 25 = 0.125 USDT` campaign-money planned-loss cap. Therefore the cheaper maker route alone does **NOT** resolve the v4.7 x5 financial-risk contradiction. With the same 0.125 cap and no other costs, conditional max risk-sized notional is `0.125/(stop_price_fraction + entry_fee_rate + stop_exit_fee_rate)`: 0.5% price SL gives T/T **20.16** or M/T **21.55** notional; 1% gives T/T **11.16** or M/T **11.57** notional. The +0.50 USDT campaign target on such smaller size requires a larger market price move; include actual chosen maker/taker target-side and conservative stop-side fees separately. Actual fee billed at exit varies slightly with exit price; exact implementation must use price-dependent quantities and Decimal, not this static-per-notional shortcut.
+
+**Order execution economics:** A normal `LIMIT` order can execute as TAKER if it crosses the resting book. Post-only restricts TAKING liquidity but can be rejected/canceled or left unfilled, causing missed sniper entries; it does not create a guaranteed faster trade. A TAKE PROFIT limit may not fill even after the price touches its trigger. A STOP-MARKET normally incurs taker cost and may slip; a STOP-LIMIT can fail to close on a fast market move. Compare realistic `MAKER entry + MAKER TP + TAKER SL`, `TAKER entry + MAKER TP + TAKER SL` and all-taker alternative, with fill probability **estimated only from evidence**. Record maker/taker status from actual simulated/verified fill and never retroactively credit the lower fee based solely on `type=limit`.
+
+**Required tests:** Fee scenarios M/M, M/T, T/M, T/T on both LONG and SHORT; maker entry not filled before signal expires; limit crossing book charged TAKER; post-only rejected; TP limit nonfill; stop-market TAKER + spread/slippage; correct expected and actual 2% net TP; loss cap and risk-sized small orders; fee change during five-hour session; exact deduplicated fee accounting after WS/REST and restart. Keep Model A and monetary gates unchanged. No live order routing.
+
+---
+
 ## OWNER MICRO-DAY-TRADING RISK DESIGN — 0.5% vs 1% PRICE SL (2026-11-01)
 
 **The owner's latest clarification:** The intended system is a fast, micro-day-trading "sniper" looking for early entries in actionable directional price impulses; aim for +2% **REALIZED NET return on the campaign allocation**, with dynamic x1–x5 (not automatic x5), across up to ten independent Model A-funded slots. The owner suggested widening the PAPER price stop from **0.5% to 1%** to avoid getting stopped out by normal pullbacks. Interpret this as a **new stop-distance candidate for comparative testing**, NOT authorization to double the financial loss budget or silently replace production rules. An increased adverse price-stop distance lowers *noise stop-out frequency under some regimes* but increases loss size at fixed notional, including price gaps and fees.
