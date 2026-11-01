@@ -1,3 +1,9 @@
+## P0 v4.6 — OWNER CAPITAL SOURCE OF TRUTH: CURRENT FUTURES ACCOUNT (SUPERSEDES SEED-CENTRIC THINKING)
+
+**Read [Issue #15](https://github.com/rzalags-maker/DAIINAS-pROJ/issues/15) before any further v4 integration.** Removing the old 8-USDT fallback and persisting INITIAL_FUNDING once were necessary, **not sufficient**. For the NEW funded-v4 engine, every strategy cycle must derive funding identity, current capital availability, ACTIVE/RESERVE allocation, margin commitments, risk and next trade sizing from **actual verified and reconciled KuCoin Futures account state**, not a frozen opening paper seed. Keep initial funding immutable as audit provenance, but current free margin and current settled account capital move with actual fills, costs and external funding. Funding/Spot/MetaMask and uncleared transfers are not Futures tradable capital; current equity is not necessarily free margin. No silent default starting amount or cap; Model A 100/25 thresholds are ladder allocation policy, not a wallet balance or startup cap. External top-ups are distinct from trading profits and need an explicit allocation rule. Account connection missing = NOT_CONNECTED (explicit PAPER simulations only), fail closed on mismatch. Keep original legacy 8-USDT fixture separate, preserve SIGKILL/exact-once tests, and coordinate with v4.2 KuCoin state adapter; no new engine, GUI or live orders. The new task's acceptance matrix, variable-funds test cases and STATUS contract are binding.
+
+---
+
 
 
 ## P0 Owner correction — NEW V4 funded capital is NOT the old 8-USDT paper fixture
