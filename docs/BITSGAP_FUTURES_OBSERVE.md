@@ -132,3 +132,43 @@ Codex agent operating on an older checkout MUST read the top P0 status in
 old Spot-only `_spot_em` solution as though Futures read access did not exist.
 A Codex sandbox without Bitsgap keys or network does not block authenticated
 status checking by the existing GitHub Actions deployment.
+
+
+## WS investigation of orders / positions with actual REST null (2026-11-01)
+
+**Observed:** signed Bitsgap REST `orders` and `positions` each returned JSON
+`null`; the same authenticated account's `balance` and `positions_settings`
+validated. An existing flaw in `BitsgapFuturesStream.watch_once` was that it
+called the strict `snapshot()` **before WS authentication**. Consequently,
+those null REST results prevented even attempting the WS subscriptions.
+This is now changed to `wallet_observation()`, which records the unknown
+scopes without letting unknown positions become zero. The WS handshake and
+subscriptions can proceed independently.
+
+The official provider's trading topic documentation says: **if the
+exchange has no data (e.g. no open orders), there may be no subscription**.
+This is a plausible reason for both null data and silent WS topics, but
+**not a verified zero-exposure conclusion**. REST null could also reflect
+an account-scope mismatch or inaccessible records. A bounded WS test
+distinguishes signed `auth_ok`, subscription acknowledgment, a valid
+value update, a provider-null update, a rejected topic, and no event
+within the observation window. None of these infer a flat account.
+
+Authenticated bounded probe:
+`python -m daiinas.bitsgap_futures_ws_probe`.
+It uses the secure `BITSGAP_PRIVATE_KEY_PEM` environment variable,
+allows only signed authorization and `balance` / `orders` /
+`positions` / `positions_settings` `subs:true` messages, then
+prints fixed redacted status labels; it never prints amounts, account/order
+identifiers, server message text or session IDs. Bounded observation
+is **not** an autonomous session or a trading command.
+
+**Acceptance:** authenticated WS connection may be PASS while a topic
+remains `NO_EVENT_WITHIN_WINDOW` or `PROVIDER_NO_DATA`.
+Order/position `UNVERIFIED` blocks all Model A live funding and orders.
+The only valid next escalation is a source-supported account exposure
+reconciliation, not a fabricated zero or an order placed for testing.
+
+Provider primary source:
+https://github.com/Bitsgap/bitsgap-api-docs/blob/main/docs/topics/trading.md
+and https://github.com/Bitsgap/bitsgap-api-docs/blob/main/docs/ws/README.md.
