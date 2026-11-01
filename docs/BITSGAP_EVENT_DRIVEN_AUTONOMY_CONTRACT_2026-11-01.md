@@ -2,6 +2,56 @@
 
 **Status:** design / acceptance contract, not implemented execution routing. Owner goal: an independently running DAIINAS worker that switches promptly between qualified order opportunities without repeated Codex prompts or GUI clicks. **LIVE_TRADING=DISABLED; DAIINAS_ORDER_ROUTING=DISABLED.** No authenticated account operations or orders are authorized by this document.
 
+## P0 wallet/account visibility — mandatory starting state for DAIINAS (2026-11-01)
+
+**Owner requirement:** Bitsgap is the operator's existing connected KuCoin trading interface. The autonomous DAIINAS worker and its secure private control panel **MUST** observe the account's current balance and all committed exposure before applying Capital Ladder Model A. The previous screenshot "Available: 61.07 USDT" is only historical context; do not hardcode it as current funding. **Use Bitsgap**, not a new direct private KuCoin login.
+
+### Observations — exact provider fields, not invented wallet bookkeeping
+
+For the dynamically identified real **KuCoin Futures** `em` (never Spot/demo), make an authenticated Bitsgap read-only REST snapshot and then subscribe to WS updates. The documented `balance` topic returns `value.data[currency]` with `t` = total and `a` = available, both decimal strings; optional `l` = locked is **Spot only**, not a reliable Futures encumbrance. Use `positions` for actual open position size, entry, leverage, position margin `msize` when isolated, margin type `epm`, side `eps` and liquidation when reported; use `positions_settings` for configured position/margin mode and `orders` for pending order commitments. `orders_history` can contribute execution fees and actual fills after its documented delay. Do **not** claim `t` is Futures equity, that `a` is strategy spendable ACTIVE, or that `t-a` is known open-order margin without verified venue-specific semantics.
+
+All values must be scoped to the exact Bitsgap key / real market identity, settlement currency, timestamp, and reconciliation generation. Decimal arithmetic only. On loss of auth, incomplete/duplicate/foreign data, unexpected mode, stale timestamps, WS sequence uncertainty, or unresolved external orders, flag `ACCOUNT_UNVERIFIED` and block new order intent; continue monitoring any known exposure.
+
+### Three financial layers must remain separate
+
+1. **EXCHANGE OBSERVED:** latest real Bitsgap balance `t/a`, supported position/order records, associated margin, execution costs and explicit `UNVERIFIED` quantities. This answers "what Bitsgap reports now".
+2. **DAIINAS STRATEGY LEDGER:** once a complete account-specific financial identity, actual equity/settled cash, free collateral, existing reservations and open exposure have been **independently reconciled**, apply the **existing** Model A allocation and persistent ledger. Never seed a MOCK account from an exchange read or overwrite earlier initial funding. Reserve and ACTIVE are bookkeeping allocations unless collateral is actually segregated; reserve must not be consumed by any entry.
+3. **ADMISSION BUDGET:** `min(confirmed venue free margin after authoritative obligations, uncommitted Model A ACTIVE, available campaign/portfolio risk budgets)` AFTER avoiding double subtraction of already-net free margin. Apply slot count, min-order costs, contract rules and outstanding positions to determine whether another PAPER candidate can be admitted. Unknown inputs => `NO_TRADE`.
+
+For VERIFIED **eligible settled portfolio capital below 100 USDT**, owner-selected Model A remains in BOOTSTRAP, at most one eligible candidate subject to independent risks; do **not** apply the 100-USDT R50/A50 allocation. At 100 USDT Model A activates R50/A50/2; at 300 R50/A250/10. No amount from an image may activate these transitions.
+
+### Required private control-panel contract
+
+| Field | Origin | Meaning |
+| --- | --- | --- |
+| Provider / exchange / account type | Bitsgap `conf_enums`, authenticated context | Real KuCoin Futures vs Spot vs demo, observed/verified |
+| Last snapshot age and connection state | REST + WS source | LIVE, STALE, UNVERIFIED, DISCONNECTED |
+| **Total reported (`t`) / Available reported (`a`)** | Bitsgap `balance` | Raw exact USDT observation, privately display numeric amounts |
+| Equity / true net free margin | Verified account reconciliation if supported | Never synthesize when Bitsgap API lacks needed fields; display UNVERIFIED |
+| Open positions / pending orders | `positions` / `orders` | Exposure, ownership, known locks |
+| Margin committed / fees / unrealized P&L | Validated position/history/other authoritative sources | Display numeric only when fully supported, else UNVERIFIED |
+| Model A Reserve / ACTIVE / pending / deficit | Existing single Capital Ladder ledger | Protected fund and uncommitted active allocation; not just `available` |
+| Eligible slots / active slots / next candidate | Existing v4.7 conveyor & risk selector | No double-funded orders; max 10 |
+| **Next entry status** | Combined evidence and risk | `PAPER_ELIGIBLE` or `NO_TRADE(reason)`; real order routing DISABLED |
+| Last verified account event | Event journal | Immutable timestamp, deduplicated changes and source |
+
+The user must be able to read **real numeric total and available** in the authenticated **private** control panel once actually retrieved, without manually copying screenshots. Public CI output / issues / PRs must display only sanitized success/failure categories, never private raw balances or keys. On WS disconnect reauthenticate/resubscribe and obtain a fresh authoritative account snapshot before releasing slots or admitting new entries.
+
+### Implement, test, and demonstrate
+
+- Extend the existing **Bitsgap** read-only observation adapter/worker; do not use direct private KuCoin access.
+- Resolve `em` dynamically; read `balance` + `orders` + `positions` + `positions_settings`; verify schema and exchange identity; use snapshot + WS stream for continuity.
+- Map `t`/`a`/Spot-only `l` correctly; validate decimal precision, incomplete/unknown fields, negative amounts, duplicate IDs, mismatched scopes and staleness.
+- Build private (not public log) status output with `t` and `a` as read-only live observation; add explicit provenance and `UNVERIFIED` fields for unsupported equity/free-margin semantics.
+- **Do not** transfer a real observed number into the Model A funded journal until real account financial reconciliation is implemented and owner-reviewed. For PAPER, synthetic funding must remain named `MOCK`.
+- Tests: observed available 61.07 while total/equity or outstanding positions differ; 61.07 example remains below Model A activation **only if eligible capital is independently verified**; both present and absent `l` (Futures), stale/disconnected WS, open order/position, duplicate snapshots, recovery/reconnect, protected reserve, exact-once cash events and source mismatch.
+- Acceptance: after authorized authenticated Bitsgap read, private control panel reports *what balance is observed now*, associated timestamps and open exposure; state clearly whether strategy-financial reconciliation is complete and whether next PAPER intent is eligible. Never claim authentication PASS based on mocked response or UI screenshot.
+- No order writes, position close, leverage/margin changes, deposits, transfers or real trading activation.
+
+Primary evidence: https://github.com/Bitsgap/bitsgap-api-docs/blob/main/docs/topics/trading.md (balance t/a/l, orders, positions) and https://github.com/Bitsgap/bitsgap-api-docs/blob/main/docs/topics/portfolio.md (orders_history).
+
+---
+
 ## P0 verified 2026-11-01 — the exact Bitsgap terminal-to-exchange control protocol
 
 **Owner direction:** the existing linked Bitsgap ↔ KuCoin connection is the chosen integration route. No additional direct private KuCoin API login is a precondition for researching/using the documented Bitsgap API. Do not revive `feature/kucoin-futures-startup-preflight-20261101` as a required path. The operator reports active trading already works through the terminal. Our task is to learn/control the **Bitsgap command interface**, not challenge that observed terminal behavior.
