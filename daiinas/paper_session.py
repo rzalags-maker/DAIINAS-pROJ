@@ -1,11 +1,15 @@
-"""Bounded PAPER session reducer inside the existing ledger; no remote control API."""
+"""Owner-controlled PAPER sessions; no remote control API.
+
+Duration 0 runs until explicit STOP or actual worker exit. Positive durations
+are optional owner-chosen expiry values, not a five-hour upper bound.
+"""
 from .continuous_store import digest
 
 
 class SessionMixin:
     def session_start(self,*,request_id,actor,duration_ms=None):
         s=self.state;duration=self.portfolio.session_duration_ms if duration_ms is None else duration_ms
-        if not isinstance(actor,str) or len(actor)<3 or not isinstance(request_id,str) or not request_id or type(duration) is not int or not 1000<=duration<=18000000:
+        if not isinstance(actor,str) or len(actor)<3 or not isinstance(request_id,str) or not request_id or type(duration) is not int or (duration!=0 and duration<1000):
             self.audit('SESSION_COMMAND_REJECTED',reason='invalid_actor_idempotency_or_duration');return
         identity=digest({'actor':actor,'duration_ms':duration,'action':'START'})
         seen=s.setdefault('session_commands',{})
@@ -13,7 +17,7 @@ class SessionMixin:
             if seen[request_id]!=identity:self.audit('SESSION_COMMAND_REJECTED',reason='conflicting_session_command_id')
             return
         seen[request_id]=identity
-        s['session']={'desired':'ARMED_PAPER','started_ms':s['now_ms'],'expires_ms':s['now_ms']+duration,
+        s['session']={'desired':'ARMED_PAPER','started_ms':s['now_ms'],'expires_ms':None if duration==0 else s['now_ms']+duration,
                       'duration_ms':duration,'actor':actor,'request_id':request_id,'ack_seq':self.seq,
                       'ack':'DURABLY_APPLIED_IN_LEDGER','stop_reason':None,'exchange_connected':False,'remote_control_connected':False}
         self.audit('SESSION_STARTED',request_id=request_id,actor=actor,expires_ms=s['session']['expires_ms'],live_orders_enabled=False)
@@ -28,11 +32,11 @@ class SessionMixin:
 
     def session_step(self):
         session=self.state.get('session')
-        if session and session['desired']=='ARMED_PAPER' and self.state['now_ms']>=session['expires_ms']:self.session_stop('SESSION_EXPIRED')
+        if session and session['desired']=='ARMED_PAPER' and session['expires_ms'] is not None and self.state['now_ms']>=session['expires_ms']:self.session_stop('SESSION_EXPIRED')
 
     def session_armed(self):
         session=self.state.get('session')
-        return bool(session and session['desired']=='ARMED_PAPER' and self.state['now_ms']<session['expires_ms'])
+        return bool(session and session['desired']=='ARMED_PAPER' and (session['expires_ms'] is None or self.state['now_ms']<session['expires_ms']))
 
     def session_status(self):
         s=self.state;session=s.get('session')

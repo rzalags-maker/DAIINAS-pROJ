@@ -1,5 +1,13 @@
 # DAIINAS v4.7 — Adaptive x1–x5 leverage, whole-market LONG/SHORT research, and continuous position conveyor
 
+## OWNER CORRECTION (2026-11-01) — FIVE HOURS IS NOT A TRADING LIMIT
+
+**Binding:** `START` means run the v4.7 PAPER worker as long as it is actually operating and the owner has not issued STOP, subject to safe risk/data/availability gates. FIVE HOURS was only a test example; no automatic expiry is the new profile/CLI default (`duration_ms=0`, `expires_ms=null`). Optional `--session-seconds N` sets an explicit owner-requested expiry and is not capped at five hours. A real Codex task finishing or cloud environment ending still halts scanning; CREDIT usage is not a reliable operating timer. Historical profiles explicitly configured for five-hour expiry are preserved and never re-seeded; use a fresh START with duration zero for the unlimited mode. This changes no money, Model A, exchange connection or LIVE ORDERS DISABLED gate.
+
+---
+
+
+
 **Owner decision:** 2026-11-01. **Priority:** P0 new strategy specification. Implement within the SAME v4.6 account-driven Model A / single-writer PAPER engine, not a second trader. Replaces older v4.5 **x2 maximum pilot** with a new **x5 maximum PAPER research/testing ceiling**. This does NOT enable real Futures orders, override licensing/product-eligibility gates, or constitute evidence that x5 is profitable or safe.
 
 **Original owner objective:** Human can manually supervise only a few positions; DAIINAS should independently scan the full supported Futures market, identify LONG and SHORT opportunities, choose candidate and leverage, enter with protective stop and profit target, monitor up to TEN simultaneous funded positions, close after a verified net-profit objective or stop, reconcile, then seek a new candidate, continuously. Owner's historical manual maximum has been x5; select leverage via objective cost/risk/forecast assessment, **not permanently x5**. The system must autonomously decide NO_TRADE when risk or opportunity fails.

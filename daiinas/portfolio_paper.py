@@ -64,7 +64,7 @@ class PortfolioPolicy:
         if self.require_candle_context and self.strategy_version!='v47':raise ValueError('Closed candle admission is v4.7-only')
         if type(self.require_candle_context) is not bool:raise ValueError('Explicit candle gate flag required')
         if self.entry_kind not in ('MARKET_IOC','LIMIT','POST_ONLY_LIMIT') or not 0<=D(self.maker_fee_rate)<D('.1') or not self.stop_candidates or any(D(x) not in (D('.005'),D('.01')) for x in self.stop_candidates):raise ValueError('Invalid execution/stop/fee scenario')
-        if type(self.session_duration_ms) is not int or not 1000<=self.session_duration_ms<=18000000:raise ValueError('PAPER session must be bounded to <=5 hours')
+        if type(self.session_duration_ms) is not int or (self.session_duration_ms!=0 and self.session_duration_ms<1000):raise ValueError('PAPER session duration must be 0 (until STOP) or >=1000 milliseconds')
         if not 0<=D(self.stop_gap_bps)<=50:raise ValueError('Invalid gap allowance')
         if type(self.account_driven) is not bool:raise ValueError('Explicit account-driven mode required')
         if self.funding.get('kind')=='mock_futures_snapshot' and not self.account_driven:raise ValueError('Account snapshots require account-driven sizing')

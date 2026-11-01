@@ -17,7 +17,8 @@ def configuration(capital,account_id,*,timestamp_ms=None):
     snapshot=mock_snapshot(cash=capital,account_id=account_id,snapshot_id='explicit-v47-paper-origin',
                            timestamp_ms=int(time.time()*1000) if timestamp_ms is None else timestamp_ms)
     portfolio=PortfolioPolicy(initial_capital=str(capital),funding=snapshot_funding(snapshot),
-                               strategy_version='v47',account_driven=True,paper_settlement=True,require_candle_context=True)
+                               strategy_version='v47',account_driven=True,paper_settlement=True,require_candle_context=True,
+                               session_duration_ms=0)
     return dict(engine='v4',portfolio=asdict(portfolio),paper={'initial_capital_usdt':float(capital),
                 'leverage':2,'stop_bps':50},deep=5,refresh_seconds=30,dwell_seconds=60,
                 account_notice='MOCK PAPER account. Real authenticated KuCoin account NOT_CONNECTED. Live orders disabled.')

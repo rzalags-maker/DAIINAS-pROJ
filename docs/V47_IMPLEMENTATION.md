@@ -1,5 +1,8 @@
 # v4.7 executable PAPER conveyor
 
+**Owner correction (2026-11-01): 5h is NOT a limit.** New profiles default to session duration 0 (no expiry). CLI START defaults to 0; positive --session-seconds N remains an optional time-box for tests. Actual worker lifetime and safety gates remain independent. Existing saved accounts keep their recorded policy and original funding; no live orders.
+
+
 This implements the owner specification in the existing continuous engine.
 `PortfolioLedger`, the immutable source journal, the single SQLite writer, funding,
 Capital Ladder Model A and account reconciliation remain the financial runtime.

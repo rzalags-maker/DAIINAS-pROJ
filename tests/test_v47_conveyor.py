@@ -303,6 +303,23 @@ p.apply(src.after(p.state['cursor']))
                     position_quantity=str(remaining),sibling_status=sibling or ('CANCELED' if remaining==0 else 'ACKED'),reduce_only=True,
                     cash=str(D(self.paper.state['cash'])+gross-D(fee)),free_margin='0',unknown_orders=[],order_status='FILLED' if remaining==0 else 'PARTIAL',protected_quantity=str(remaining)))
 
+    def test_owner_indefinite_session_does_not_auto_expire_at_five_hours(self):
+        self.start('60',symbols=('UPUSDTM',),session_duration_ms=0)
+        s=self.paper.state
+        self.assertEqual(s['session']['duration_ms'],0)
+        self.assertIsNone(s['session']['expires_ms'])
+        self.send(6*3600*1000,('CLOCK','past-5h',{}))
+        self.assertTrue(self.paper.session_armed())
+        self.send(6*3600*1000+100,('CONTROL','stop-no-deadline',{'action':'session-stop','reason':'OWNER_STOP'}))
+        self.assertFalse(self.paper.session_armed())
+        opening=s['initial_funding']
+        self.send(6*3600*1000+200,('CONTROL','start-no-deadline',
+            {'action':'session-start','request_id':'no-deadline-new','actor':'test-owner','duration_ms':0}))
+        self.assertTrue(self.paper.session_armed())
+        self.assertIsNone(s['session']['expires_ms'])
+        self.assertEqual(s['initial_funding'],opening)
+        self.assertEqual(self.paper.report()['counts']['INITIAL_FUNDING'],1)
+
     def test_five_hour_expiry_preserves_protection_and_requires_explicit_restart(self):
         self.start('60',symbols=('UPUSDTM',));t=self.train();s=self.paper.state
         deadline=s['session']['expires_ms'];funding=s['initial_funding'];p=next(iter(s['positions'].values()))

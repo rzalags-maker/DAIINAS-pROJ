@@ -144,6 +144,8 @@ class SessionCliTests(unittest.IsolatedAsyncioTestCase):
                     with patch('daiinas.continuous_store.clock_ms',return_value=time):await pipe.append([('CLOCK','clock:'+command,{})])
                     report=await pipe.report()
                     if command=='stop':self.assertEqual(report['session']['state'],'STOPPED_FLAT')
-                    if command=='start':self.assertEqual(report['session']['desired'],'ARMED_PAPER');self.assertTrue(report['paused_new_entries'])
+                    if command=='start':
+                        self.assertEqual(report['session']['desired'],'ARMED_PAPER');self.assertTrue(report['paused_new_entries'])
+                        self.assertIsNone(report['session']['expires_ms'])
                 self.assertEqual(report['counts']['INITIAL_FUNDING'],1)
             finally:pipe.close()

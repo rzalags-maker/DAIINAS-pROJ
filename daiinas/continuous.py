@@ -130,7 +130,7 @@ async def service(args,config,paper,shadow,*,account_adapter=None):
                 if not armed:stop.set();return
             await asyncio.sleep(1)
     if getattr(args,'start_session',False):
-        await pipeline.append([('CONTROL','session-start:'+boot,{'action':'session-start','request_id':boot,'actor':'local-cli'})])
+        await pipeline.append([('CONTROL','session-start:'+boot,{'action':'session-start','request_id':boot,'actor':'local-cli','duration_ms':0})])
     runner=asyncio.create_task(loops());clock=asyncio.create_task(clocks());waiting=asyncio.create_task(stop.wait())
     try:
         done,_=await asyncio.wait([runner,clock,waiting],timeout=args.seconds or None,return_when=asyncio.FIRST_COMPLETED)
@@ -179,12 +179,12 @@ def main(argv=None):
     p.add_argument('--source-archive',type=Path,action='append',default=[])
     p.add_argument('--report',type=Path)
     p.add_argument('--seconds',type=int,default=0)
-    p.add_argument('--start-session',action='store_true',help='Explicitly arm a bounded v4.7 PAPER session; never clears pause/risk halt')
+    p.add_argument('--start-session',action='store_true',help='Explicitly arm v4.7 PAPER until STOP/worker exit; never clears pause/risk halt')
     p.add_argument('--renew-seconds',type=int,default=72000)
     p.add_argument('--review-note',default='')
     p.add_argument('--actor',default='local-cli')
     p.add_argument('--command-id')
-    p.add_argument('--session-seconds',type=int,default=18000)
+    p.add_argument('--session-seconds',type=int,default=0,help='Optional session expiry (0=until STOP, default)')
     p.add_argument('--amount',type=float)
     p.add_argument('--destination',type=Path)
     p.add_argument('--host-id')
@@ -221,7 +221,7 @@ def main(argv=None):
     action=('session-stop' if is_v47 else 'pause') if a.command=='stop' else 'session-start' if a.command=='start' else a.command
     payload={'action':action}
     if action=='session-start':
-        if not 1<=a.session_seconds<=18000 or len(a.actor.strip())<3:p.error('Session duration 1..18000 seconds and actor required')
+        if a.session_seconds<0 or len(a.actor.strip())<3:p.error('Session duration must be >=0 seconds (0 means until STOP) and actor required')
         payload.update(request_id=a.command_id or uuid4().hex,actor=a.actor,duration_ms=a.session_seconds*1000)
     if action=='session-stop':payload.update(reason='LOCAL_OWNER_STOP',actor=a.actor)
     if action=='reset-halt':
