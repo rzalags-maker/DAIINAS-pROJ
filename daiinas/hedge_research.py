@@ -75,7 +75,7 @@ def compare(sources,output_dir,capitals=('8','60','100')):
             finally:con.close()
             held=[float(p['net_pnl_usdt']) for p in closed if p['entry_received_ms']>=split]
             results[capital][mode]={k:report[k] for k in ('cash','equity_last_mark','executable_equity','mark_status','ladder',
-                'realized_net_pnl','fees','modeled_carry','maximum_drawdown','positions','campaigns','closed_summary','reason_counts','counts')}
+                'realized_net_pnl','fees','modeled_carry','maximum_drawdown','account_maximum_drawdown','positions','campaigns','closed_summary','reason_counts','counts')}
             results[capital][mode].update(held_out_closed_legs=len(held),held_out_mean_net=statistics.mean(held) if held else None,
                 confidence_interval=None,expected_net_advantage='UNSUPPORTED',abstention_count=report['counts'].get('DECISION',0)-report['counts'].get('SIGNAL',0),
                 source_cursor=report['source_cursor'],input_digest=report['input_digest'],

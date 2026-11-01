@@ -58,6 +58,7 @@ class PortfolioLedger(PaperLedger):
                 campaigns={},quarantined_flows='0',realized='0',fees='0',entry_fees='0',exit_fees='0',carry='0',
                 cooldowns={},market_states={},evidence={},active_equity=active,active_flow_adjustment='0',
                 last_active_base=active,capital_status={},marked_unrealized='0',equity_verified=True,
+                account_peak=self.portfolio.initial_capital,account_flow_adjustment='0',account_max_drawdown=0.,
                 closed_summary={'count':0,'wins':0,'losses':0,'profit':'0','loss':'0'})
 
     def ladder(self):return CapitalLadder.restore(self.state['ladder'])
@@ -149,6 +150,9 @@ class PortfolioLedger(PaperLedger):
         active_equity=ladder.active+self.unsettled()-entryfees+marks
         s['active_equity']=str(active_equity);s['marked_unrealized']=str(marks)
         s['last_equity']=str(D(s['cash'])+marks);s['equity_verified']=all_valid
+        account_peak=max(D('.000000001'),D(s.get('account_peak',self.portfolio.initial_capital))+D(s.get('account_flow_adjustment','0')),D(s['last_equity']))
+        s['account_peak']=str(account_peak);s['account_flow_adjustment']='0'
+        s['account_max_drawdown']=max(s.get('account_max_drawdown',0.),float(max(ZERO,(account_peak-D(s['last_equity']))/account_peak)))
         s['mark_status']='FLAT' if not s['positions'] else 'VERIFIED_MODELED_COST_MARK' if all_valid else 'UNRESOLVED_INDICATIVE_ONLY'
         peak=max(D('0.000000001'),D(s['peak'])+D(s['active_flow_adjustment']),active_equity)
         s['active_flow_adjustment']='0';s['peak']=str(peak)
@@ -445,7 +449,7 @@ class PortfolioLedger(PaperLedger):
             elif action=='capital-flow':
                 amount=D(p['amount'])
                 if D(s['quarantined_flows'])+amount<0:self.audit('CONTROL_REJECTED',reason='external_flows_quarantined_not_ladder_profit')
-                else:self.add('quarantined_flows',amount);self.add('cash',amount);self.audit('CONTROL',operator_action=action,amount=str(amount))
+                else:self.add('quarantined_flows',amount);self.add('cash',amount);self.add('account_flow_adjustment',amount);self.audit('CONTROL',operator_action=action,amount=str(amount))
             elif action=='install-research-evidence':
                 record=p.get('evidence',{});sym=p.get('symbol')
                 if sym and supported_hedge(record,available,digest(asdict(self.portfolio))):
@@ -483,7 +487,10 @@ class PortfolioLedger(PaperLedger):
             'mark_status':s['mark_status'],'active_equity':s['active_equity'],'ladder':ladder.snapshot(),
             'capital_status':s['capital_status'],'reserved_margin':str(self.reserved()),'planned_risk':str(self.planned()),
             'realized_net_pnl':s['realized'],'fees':s['fees'],'entry_fees':s['entry_fees'],'exit_fees':s['exit_fees'],'modeled_carry':s['carry'],
-            'external_simulated_flows':s['quarantined_flows'],'maximum_drawdown':s['max_drawdown'],'halted':s['halted'],
+            'external_simulated_flows':s['quarantined_flows'],
+            'account_maximum_drawdown':s['account_max_drawdown'],'account_peak':s['account_peak'],
+            'maximum_drawdown_basis':'Active equity risk gate; total account metric is account_maximum_drawdown',
+            'maximum_drawdown':s['max_drawdown'],'halted':s['halted'],
             'paused_new_entries':s['paused'],'positions':positions,'pending_entries':list(s['pending_entries'].values()),
             'exit_requests':s['exit_requests'],'campaigns':list(s['campaigns'].values())+[json.loads(r[0]) for r in self.db.execute('SELECT payload FROM campaign_records ORDER BY rowid DESC LIMIT 20')],
             'market_states':s['market_states'],

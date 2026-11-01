@@ -45,7 +45,7 @@ def verify():
         'replay_identical':True,'money_reconciled_independently':True,'cash':second['cash'],
         'executable_equity':second['executable_equity'],'equity_last_mark':second['equity_last_mark'],
         'net_realized_pnl':str(net),'fees':second['fees'],'carry':second['modeled_carry'],'ladder':l,
-        'drawdown':second['maximum_drawdown'],'positions':second['positions'],'campaigns':second['campaigns'],
+        'active_risk_drawdown':second['maximum_drawdown'],'account_drawdown':second['account_maximum_drawdown'],'positions':second['positions'],'campaigns':second['campaigns'],
         'counts':second['counts'],'reason_counts':second['reason_counts'],'input_digest':second['input_digest'],
         'backup':backup,'24h_host_gate':'BLOCKED — HOST NOT PROVISIONED'}
 

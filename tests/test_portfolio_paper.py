@@ -122,6 +122,8 @@ class PortfolioTests(unittest.TestCase):
         self.assertEqual(self.paper.state['cash'],'160')
         self.assertEqual(self.paper.observation_equity(),60)
         self.assertEqual(self.paper.ladder().slot_ceiling,1)
+        self.assertEqual(self.paper.report()['account_maximum_drawdown'],0)
+        self.assertEqual(D(self.paper.report()['account_peak']),D(160))
 
     def test_disk_full_rolls_back_decimal_money_and_ladder(self):
         from copy import deepcopy
