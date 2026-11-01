@@ -134,15 +134,27 @@ class BitsgapReadOnly:
             + "; DESCR=" + cls._safe_shape(payload.get("descr"))
             + "; OK=" + ("PRESENT" if "ok" in payload else "ABSENT")
             + "; TOPIC=" + ("PRESENT" if "topic" in payload else "ABSENT")
+            + "; MANUAL=" + cls._safe_shape(payload.get("manual"))
+            + "; CONF_ENUMS=" + cls._safe_shape(payload.get("conf_enums"))
+            + "; MARKET=" + cls._safe_shape(payload.get("market"))
         )
 
     def handshake(self):
+        # REST /api/v1/topic returns {"data": <topic value>}.
+        # topic() has already unwrapped that one outer envelope.
+        # The manual value is a mapping of topic names directly to descriptors;
+        # the conf_enums value maps enum names to their reference tables.
         manual = self.topic("manual")
-        if not isinstance(manual, dict) or not isinstance(manual.get("data"), dict):
+        if (not isinstance(manual, dict)
+                or not isinstance(manual.get("manual"), dict)
+                or not isinstance(manual.get("conf_enums"), dict)):
             raise self._shape_error("UNEXPECTED_MANUAL_RESPONSE", manual)
         enums = self.topic("conf_enums")
-        if not isinstance(enums, dict) or not isinstance(enums.get("data"), dict):
+        if (not isinstance(enums, dict)
+                or not isinstance(enums.get("market"), dict)
+                or not isinstance(enums["market"].get("items"), dict)):
             raise self._shape_error("UNEXPECTED_ENUMS_RESPONSE", enums)
-        # A successful signed handshake validates Bitsgap access, NOT KuCoin balances.
+        # These two static metadata topics prove Bitsgap API access only.
+        # Neither KuCoin scope nor account balance is authenticated yet.
         return {"bitsgap_authenticated": True, "kucoin_account_reconciled": False,
                 "order_routing_enabled": False}
