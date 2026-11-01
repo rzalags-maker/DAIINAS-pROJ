@@ -1,6 +1,48 @@
-# DAIINAS × Bitsgap — autonomous event-driven control contract (PAPER-only)
+# DAIINAS × Bitsgap — autonomous event-driven control contract (capability discovery + explicit command gating)
 
-**Status:** design / acceptance contract, not implemented execution routing. Owner goal: an independently running DAIINAS worker that switches promptly between qualified order opportunities without repeated Codex prompts or GUI clicks. **LIVE_TRADING=DISABLED; DAIINAS_ORDER_ROUTING=DISABLED.** No authenticated account operations or orders are authorized by this document.
+**Status:** design / acceptance contract, not yet implemented execution routing. Owner goal: an independently running DAIINAS worker that monitors Bitsgap/KuCoin and, only after an authenticated owner command, manages qualified orders under the existing v4.7 strategy. **Current code remains LIVE_TRADING=DISABLED and DAIINAS_ORDER_ROUTING=DISABLED; no real order action is authorized or being executed in this design task.** Future architecture must expose the documented trade-control capabilities but default to OBSERVE, not globally READ_ONLY. The distinction between making a function available and actually invoking it is mandatory.
+
+## P0 owner control policy — full Bitsgap capabilities, default OBSERVE (2026-11-01)
+
+**Owner instruction superseding the earlier "read-only forever" architecture direction:** DAIINAS must know and be architecturally capable of using **all documented Bitsgap trading controls supported by the actual connected market**, including order place/cancel/detail, position close, position settings, and account observations, without needing UI click automation. READ_ONLY is an appropriate **default operating gate / limited observation adapter**, but **must not be the permanent system-wide functional ceiling**. Merely discovering a command does not call it, and having a trade-capable API key does not authorize a trade.
+
+**Do not remove the safe existing read-only adapter or relax its allowlist.** Instead build a distinct, reviewable **mode-gated execution gateway** on the SAME v4.7 engine, single ledger and order state machine; the gateway can recognize documented commands and only sends those individually allowed by the owner-authorized session policy. No extra bot, duplicate wallet, parallel order ledger, or direct KuCoin private account reconnect.
+
+### Runtime states and commands
+
+| State | Data / monitoring | Order-creating, canceling, position-closing or margin-changing actions |
+| --- | --- | --- |
+| `OBSERVE` (power-up, restart, no owner command) | **ON**: signed Bitsgap `manual`/`conf_enums`, connected-market balance/orders/positions/settings/history, market streams, risk calculations, private panel | **OFF**: absolutely no trade-changing API commands, even if a signal qualifies; record `DRY_PREVIEW/NO_ACTION` |
+| `START_PAPER` | **ON**: same live observations where approved plus simulated v4.7 conveyor state | **MOCK only**: simulated entries/exits, never venue writes |
+| `START_LIVE` (future explicit authenticated owner authorization only) | **ON**: verified reconciled account, market/risk/position monitoring | **SESSION-SCOPED ONLY**: permit relevant documented trading commands after exact account, venue, instrument, capital/risk, native protection and capability gates pass; no automatic transfers/withdrawals; no live routing implemented or authorized in this design phase |
+| `PAUSE` | **ON**: remain connected and manage/observe existing exposure under authorized protective policy | **NO NEW ENTRIES**; protect/monitor positions and reconcile in-flight actions, do not assume PAUSE implies close |
+| `STOP` / `HALT` | **ON until reconciled**: latch no-new-entry, persist status and determine remaining exposure | **NO NEW ENTRIES**; only previously authorized safety handling of pending/protective orders; return authenticated ACK and `STOPPED_FLAT` or `STOPPED_WITH_EXPOSURE` with verified meaning; never pretend chat/Codex is runtime ACK |
+
+A generic text message `START` must not silently convert PAPER to real execution. The owner's **explicit session command** must state intended mode (`START_PAPER` vs `START_LIVE`) and a bounded risk/scope policy. Within a successfully authorized live session, the existing DAIINAS engine may automatically cycle from one qualified order to the next **without prompting for each order**, as long as every decision passes current account reconciliation, risk, loss and protection gates. Restart and connection loss reset **new-entry authorization to OBSERVE / HALT**, without silently discarding known positions or their exchange-native protection.
+
+**Initial activation is not a command to act immediately:** on `START_LIVE`, first complete the signed Bitsgap authentication, live `manual` + `conf_enums` capability discovery, real exchange/account identity, positions/settings/orders/history and capital snapshot reconciliation; verify operator-authorized trade scope, correct Futures mode, free capital, native protective SL/TP mechanism and emergency STOP transport. If any proof fails, the system stays `NO_TRADE`. Account mode or margin changes are NEVER performed simply to make the trade possible.
+
+### Capability discovery versus execution rights
+
+- Dynamic `manual` reports the **actual available commands**, supported `transport.ws/rest`, parameter schemas and rate limits. `conf_enums` resolves market/state/side/type codes. Codex must construct a complete **capability registry**: `topic, supported_transport, required_fields, enum_table, venue_scope, safety_class, owner_permission, runtime_enabled, last_validation`.
+- Expose commands in the private control panel even while `OBSERVE`, **clearly marked INACTIVE**. Never attempt a command to test its presence.
+- Keep public signing helpers reusable. Treat a Bitsgap API key with trading rights as a sensitive credential; do not publish it, and ensure the runtime policy is enforced on the server side immediately before each command.
+- **Execution methods must not be reachable through the pure observer's data path**. All writes must pass one auditable gateway and the existing durable single-writer journal. Order intents use unique `apiid`, prevent duplicates on reconnect, correlate Bitsgap `id` and venue `eid`, and wait for authoritative fill/protection/settlement evidence.
+- The existing `PR #18` is a **safe Spot observation component**, not the upper limit of the entire platform. `PR #19` defines this separate **full-function architecture**.
+- Never send withdrawals, funds transfers or account-wide mode changes as part of autonomous trading. Only implement functions documented as supported and applicable to this exact exchange; "all controls" means all **applicable documented trading controls**, not invented privileges.
+
+### Acceptance before real-order activation
+
+1. Cold start with valid trade-capable Bitsgap credentials + moving market + qualified signal: **zero** outgoing trading commands; wallet and control panel continue observing.
+2. `START_PAPER` drives repeated modeled turnover and risk updates with **zero venue writes**.
+3. `START_LIVE` on an **offline mock transport**: verified authorized command policy admits a properly protected, financially feasible simulated order once; duplicate `START` or reconnect cannot repeat it.
+4. Missing required protective order API capability, stale account, incorrect venue, missing free-margin reconciliation, market data gap, unauthorized margin change, or risk breach: **zero outgoing order commands**.
+5. `PAUSE`, `STOP` and restart: new-entry gate closes synchronously; existing exposure handling and operator ACK are tested and reported separately.
+6. No real money order, live cancellation, position close, leverage or margin mutation in this implementation review. The real `START_LIVE` deployment gate requires a **separate explicit owner decision** after reviewed code and test evidence.
+
+**Deliverable to Codex:** an integrated `BitsgapCapabilityRegistry` + private OBSERVE account panel + command-mode state machine + mode-gated execution gateway **interface** and tests. Implement trading **command serialization and mocks** separately from the existing allowlisted observer, but do not add an authenticated, enabled live-write transport in this draft. This makes functions programmatically understood and available for future activation while preventing unintended orders.
+
+---
 
 ## P0 wallet/account visibility — mandatory starting state for DAIINAS (2026-11-01)
 
