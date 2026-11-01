@@ -115,3 +115,15 @@ The probe also emits `LIVE_TRADING=DISABLED`, `FUTURES_POSITION_MODE=ONE_WAY`, a
 `FUTURES_POSITION_MODE_SOURCE=OWNER_CONFIGURATION_NOT_API_VERIFIED`.
 These report this adapter's no-write boundary and the owner's Futures requirement,
 not an authenticated Futures mode observation or a global audit of every engine.
+
+
+### Order snapshot integrity (PR #18 follow-up)
+
+The `eost` state and `eos` buy/sell side must match the dynamically retrieved
+`conf_enums.order_state.items` and `conf_enums.order_side.items` with aliases
+`eost` and `eos`, respectively. Missing, malformed, ambiguous, or unsupported
+reference values produce `UNVERIFIED_ORDER_STATE_ENUM` or
+`UNVERIFIED_ORDER_SIDE_ENUM`, never an account-access PASS.
+Order IDs must be unique across all pairs in a single snapshot;
+duplicates produce `DUPLICATE_ORDER_ID` even if the record count matches `cnt`.
+These are strictly read-only validation changes, not permission to place orders.
