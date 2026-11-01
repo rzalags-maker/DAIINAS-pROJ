@@ -11,7 +11,7 @@ from .capital_ladder import CapitalLadder, dec
 from .continuous_store import digest
 
 ZERO = Decimal(0)
-VERSION = 'v4.6-classic-usdt-account-v1'
+VERSION = 'v4.6-unified-win-gated-account-v2'
 
 
 def exact(value):
@@ -61,8 +61,8 @@ class FuturesAccountSnapshot:
             raise ValueError('Unsupported Futures account scope; UTA requires verified normalization')
         if any(not isinstance(v,str) or not v.strip() for v in (self.account_id,self.snapshot_id)):
             raise ValueError('Missing account/snapshot identity')
-        if (type(self.timestamp_ms) is not int or type(now_ms) is not int
-                or not 0 <= now_ms-self.timestamp_ms <= max_age_ms):
+        if (type(self.timestamp_ms) is not int or type(now_ms) is not int or self.timestamp_ms<0
+                or type(max_age_ms) is not int or max_age_ms<=0 or not 0 <= now_ms-self.timestamp_ms <= max_age_ms):
             raise ValueError('Stale/future account snapshot')
         if any(type(v) is not bool or not v for v in
                (self.complete,self.transport_validated,self.signature_validated)):
@@ -94,11 +94,14 @@ class FuturesAccountSnapshot:
         for name,margin in (('orders','order_margin'),('positions','position_margin')):
             total=ZERO
             for record in getattr(self,name):
-                if set(record)!={'id','symbol','margin','planned_loss','margin_mode','leverage'}:
+                if set(record)!={'id','symbol','margin','planned_loss','margin_mode','leverage','position_side','campaign_id','protected'}:
                     raise ValueError('Incomplete exposure/risk record')
                 if (not isinstance(record['symbol'],str) or not record['symbol']
                     or record['margin_mode']!='ISOLATED' or not 1<=exact(record['leverage'])<=2):
                     raise ValueError('Unsupported account exposure')
+                if (record['position_side'] not in ('LONG','SHORT') or type(record['protected']) is not bool
+                    or record['campaign_id'] is not None and (not isinstance(record['campaign_id'],str) or not record['campaign_id'])):
+                    raise ValueError('Incomplete side/campaign/protection semantics')
                 if exact(record['margin'])<0 or exact(record['planned_loss'])<0:
                     raise ValueError('Negative exposure/risk')
                 total+=exact(record['margin'])
@@ -150,7 +153,8 @@ def initial_account_state(opening,account_id):
     return dict(version=VERSION,account_id=account_id,ladder=CapitalLadder(opening).export_state(),
                 cash=str(opening),unallocated='0',events={},snapshots={},snapshot=None,
                 status='NOT_CONNECTED',reason='No complete account snapshot',peak=None,
-                max_drawdown='0',halted=False)
+                max_drawdown='0',halted=False,earned_early_ports=1,closed_campaigns={},
+                pending_campaigns={},early_active_ceiling=str(CapitalLadder(opening).active))
 
 
 def reconcile(state, snapshot, *, now_ms, owned_ids=()):
@@ -169,6 +173,7 @@ def reconcile(state, snapshot, *, now_ms, owned_ids=()):
         return out,[]
     if old and s.timestamp_ms<=old['timestamp_ms']:raise ValueError('Nonmonotonic account snapshot')
     ladder=CapitalLadder.restore(out['ladder']);cash=exact(out['cash']);unallocated=exact(out['unallocated']);audit=[]
+    finalized_net=ZERO
     for event in sorted(s.cash_events,key=lambda x:(x.get('timestamp_ms',-1),x['id'])):
         eid=event['id'];sha=digest(event)
         if eid in out['events']:
@@ -179,15 +184,30 @@ def reconcile(state, snapshot, *, now_ms, owned_ids=()):
             raise ValueError('Out-of-scope or nonchronological settled cash event')
         kind=event.get('type');net=exact(event.get('net'))
         if kind=='REALIZED_NET_TRADE':
-            if set(event)!={'id','account_id','timestamp_ms','type','net','gross','fees','funding'}:
+            if set(event)!={'id','account_id','timestamp_ms','type','net','gross','fees','funding','campaign_id','campaign_complete'}:
                 raise ValueError('Missing finalized net trade cost attribution')
             if exact(event['fees'])<0 or net!=exact(event['gross'])-exact(event['fees'])+exact(event['funding']):
                 raise ValueError('Realized trade costs do not reconcile')
-            ladder.realized_result(net)
+            cid=event['campaign_id']
+            if not isinstance(cid,str) or not cid or type(event['campaign_complete']) is not bool:
+                raise ValueError('Explicit campaign identity/completeness required')
+            if cid in out['closed_campaigns']:raise ValueError('Campaign already finalized; cannot book twice')
+            combined=exact(out['pending_campaigns'].get(cid,'0'))+net
+            if event['campaign_complete']:
+                if any(x['campaign_id']==cid for x in s.positions+s.orders):raise ValueError('Campaign still has open exposure/orders')
+                before_stage=ladder.stage
+                ladder.realized_result(combined);finalized_net+=combined
+                out['pending_campaigns'].pop(cid,None);out['closed_campaigns'][cid]=str(combined)
+                if before_stage=='BOOTSTRAP' and combined>0:
+                    out['earned_early_ports']=min(10,out['earned_early_ports']+1)
+                    audit.append(dict(event_type='EARLY_WIN_PORT',campaign_id=cid,earned_early_ports=out['earned_early_ports']))
+                if before_stage=='BOOTSTRAP' and ladder.stage!='BOOTSTRAP':
+                    audit.append(dict(event_type='ACTIVATE_LADDER',campaign_id=cid,active=str(ladder.active),reserve=str(ladder.reserve)))
+            else:out['pending_campaigns'][cid]=str(combined)
         elif kind=='CASH_COST':
             if set(event)!={'id','account_id','timestamp_ms','type','net','category'} or event['category'] not in ('FEE','FUNDING'):
                 raise ValueError('Unclassified cash settlement')
-            ladder.realized_result(net)
+            ladder.realized_result(net);finalized_net+=net
         elif kind=='EXTERNAL_FLOW':
             if set(event)!={'id','account_id','timestamp_ms','type','net'}:raise ValueError('Invalid external flow')
             # Withdrawals cannot silently consume protected/allocated funds.
@@ -195,28 +215,34 @@ def reconcile(state, snapshot, *, now_ms, owned_ids=()):
             unallocated+=net
         else:raise ValueError('Unknown cash event; external allocation policy NOT_APPROVED')
         cash+=net;out['events'][eid]=sha;audit.append(dict(event_type=kind,**event))
-    if cash!=exact(s.settled_cash) or cash!=ladder.total+unallocated:
+    pending_net=sum((exact(x) for x in out['pending_campaigns'].values()),ZERO)
+    if cash!=exact(s.settled_cash) or cash!=ladder.total+unallocated+pending_net:
         raise ValueError('Unexplained settled cash discrepancy')
-    active=max(ZERO,ladder.active+min(ZERO,exact(s.unrealized_pnl))-exact(s.liabilities))
+    active=max(ZERO,ladder.active+min(ZERO,exact(s.unrealized_pnl))+min(ZERO,pending_net)-exact(s.liabilities))
+    if ladder.stage=='BOOTSTRAP':
+        ceiling=active if finalized_net>0 else min(exact(out['early_active_ceiling']),active)
+        out['early_active_ceiling']=str(ceiling)
+        active=min(active,ceiling)
     # External flows and reserve reclassification cannot hide trading drawdown.
     previous_active=CapitalLadder.restore(out['ladder']).active
-    trading=sum((exact(x['net']) for x in audit if x['type']!='EXTERNAL_FLOW'),ZERO)
+    trading=finalized_net
     peak=max(active,exact(out['peak'])+ladder.active-previous_active-trading if out['peak'] is not None else active)
     dd=max(ZERO,(peak-active)/peak) if peak>0 else ZERO
     out['peak']=str(peak);out['max_drawdown']=str(max(dec(out['max_drawdown']),dd))
     out['halted']=out['halted'] or dd>=Decimal('.06')
     ladder.mark_to_market(str(min(ZERO,active-ladder.active)),len(s.positions)+len(s.orders))
     unknown=[x['id'] for x in s.orders+s.positions if x['id'] not in owned_ids]
-    status='EXTERNAL_INTERVENTION' if unknown else 'RECONCILED_MOCK'
+    unprotected=any(not x['protected'] for x in s.positions)
+    status='EXTERNAL_INTERVENTION' if unknown else 'UNPROTECTED_EXPOSURE' if unprotected else 'RECONCILED_MOCK'
     out.pop('observed_unreconciled',None)
     out.update(ladder=ladder.export_state(),cash=str(cash),unallocated=str(unallocated),
-               snapshot=s.payload(),status=status,reason='Unknown account exposure: '+','.join(unknown) if unknown else None)
+               snapshot=s.payload(),status=status,reason='Unknown account exposure: '+','.join(unknown) if unknown else 'Missing confirmed protection' if unprotected else None)
     snapshots[sid]=s.source_digest
     audit.append(dict(event_type='ACCOUNT_RECONCILED',snapshot_id=sid,source_digest=s.source_digest,status=status))
     return out,audit
 
 
-def capital_status(state, *, now_ms, local_margin=ZERO, local_risk=ZERO, local_fees=ZERO):
+def capital_status(state, *, now_ms, local_margin=ZERO, local_risk=ZERO, local_fees=ZERO, local_count=0):
     """Current account admission limits; paper commitments are incremental to account.
 
     Exchange-held margin is deducted from ACTIVE, but already-net exchange free
@@ -228,9 +254,11 @@ def capital_status(state, *, now_ms, local_margin=ZERO, local_risk=ZERO, local_f
     if snap and not 0<=now_ms-snap['timestamp_ms']<=15000:
         status='STALE';reason='Account snapshot expired'
     ready=bool(snap) and status=='RECONCILED_MOCK' and not state['halted']
+    pending_net=sum((exact(x) for x in state['pending_campaigns'].values()),ZERO)
     u=exact(snap['unrealized_pnl']) if snap else ZERO
     liability=exact(snap['liabilities']) if snap else ZERO
-    active=max(ZERO,ladder.active+min(ZERO,u)-liability)
+    active=max(ZERO,ladder.active+min(ZERO,u)+min(ZERO,pending_net)-liability)
+    if ladder.stage=='BOOTSTRAP':active=min(active,exact(state['early_active_ceiling']))
     locked=sum((exact(snap[k]) for k in ('position_margin','order_margin','restricted_collateral')),ZERO) if snap else ZERO
     free=exact(snap['free_margin']) if snap else ZERO
     external_risk=sum((exact(x['planned_loss']) for x in snap['positions']+snap['orders']),ZERO) if snap else ZERO
@@ -238,12 +266,16 @@ def capital_status(state, *, now_ms, local_margin=ZERO, local_risk=ZERO, local_f
     dd=max(ZERO,(peak-active)/peak) if peak>0 else ZERO
     risk=max(ZERO,active*Decimal('.01')-external_risk-local_risk)
     marginal=max(ZERO,min(active-locked-local_margin-local_fees,free-local_margin-local_fees)) if ready else ZERO
-    return dict(opening_funding=str(ladder.starting_total),current_futures_equity=snap['equity'] if snap else None,
+    return dict(account_policy_version=state['version'],opening_funding=str(ladder.starting_total),current_futures_equity=snap['equity'] if snap else None,
                 current_settled_cash=snap['settled_cash'] if snap else None,actual_free_margin=snap['free_margin'] if snap else None,
                 active_budget=str(active),reserve=str(ladder.reserve),pending=str(ladder.pending),locked=str(locked),
                 unallocated_external=state['unallocated'],risk_budget=str(risk if ready else ZERO),
                 per_leg_risk_budget=str(active*Decimal('.0025')*(Decimal('.5') if dd>=Decimal('.03') else 1)),
-                marginal_margin=str(marginal),allowed_slots=ladder.slot_ceiling,deficit=str(ladder.deficit),
+                marginal_margin=str(marginal),allowed_slots=(state['earned_early_ports'] if ladder.stage=='BOOTSTRAP' else ladder.slot_ceiling),deficit=str(ladder.deficit),
+                allocation_stage=ladder.stage,earned_early_ports=state['earned_early_ports'],
+                funded_slot_ceiling=ladder.slot_ceiling if ladder.stage!='BOOTSTRAP' else None,
+                risk_allowed_slot_ceiling=None,open_and_pending_slots=local_count+(len(snap['positions'])+len(snap['orders']) if snap else 0),capacity_basis='Per-instrument minimum lot/full-cost risk checked at entry',
+                closed_campaign_ids=sorted(state['closed_campaigns']),unsettled_campaign_net=str(pending_net),
                 connector_status=status,reason=reason,orders_enabled=False,ready_for_paper=ready,
                 source_kind='MOCK' if snap else None,authenticated_account_connected=False,
                 observed_unreconciled=state.get('observed_unreconciled'),

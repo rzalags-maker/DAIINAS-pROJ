@@ -22,15 +22,15 @@ import test_portfolio_paper as portfolio_f
 
 def trade(i,t,net,fees='.01'):
     return dict(id=i,account_id='MOCK-FUTURES',timestamp_ms=t,type='REALIZED_NET_TRADE',
-                net=net,gross=str(D(net)+D(fees)),fees=fees,funding='0')
+                net=net,gross=str(D(net)+D(fees)),fees=fees,funding='0',campaign_id='campaign:'+i,campaign_complete=True)
 
 
 def flow(i,t,net):
     return dict(id=i,account_id='MOCK-FUTURES',timestamp_ms=t,type='EXTERNAL_FLOW',net=net)
 
 
-def exposure(id='external',margin='10',risk='.1'):
-    return dict(id=id,symbol='S0USDTM',margin=margin,planned_loss=risk,margin_mode='ISOLATED',leverage='2')
+def exposure(id='external',margin='10',risk='.1',**changes):
+    return dict(id=id,symbol='S0USDTM',margin=margin,planned_loss=risk,margin_mode='ISOLATED',leverage='2',position_side='LONG',campaign_id=None,protected=True) | changes
 
 
 class AccountBoundaryTests(unittest.TestCase):
@@ -39,7 +39,7 @@ class AccountBoundaryTests(unittest.TestCase):
         valid.validate(now_ms=100)
         for change in ({'account_mode':'UTA'},{'account_mode':'CLASSIC_SPOT'},
                        {'complete':False},{'complete':1},{'signature_validated':False},
-                       {'transport_validated':False},{'timestamp_ms':True},
+                       {'transport_validated':False},{'timestamp_ms':True},{'timestamp_ms':-1},
                        {'source_kind':'AUTHENTICATED'}, {'free_margin':'61'},
                        {'equity':'100'}, {'settled_cash':60.0},{'leverage':'3'},
                        {'margin_mode':'CROSS'},{'liabilities':'-1'},
@@ -95,6 +95,16 @@ class AccountBoundaryTests(unittest.TestCase):
         self.assertEqual(capital_status(state,now_ms=3)['allowed_slots'],1)
         self.assertEqual(D(capital_status(state,now_ms=3)['unallocated_external']),100)
 
+    def test_unprotected_and_still_open_campaign_cannot_unlock_win(self):
+        state=initial_account_state('60','MOCK-FUTURES')
+        snap=mock_snapshot(cash='60',timestamp_ms=0,snapshot_id='a',positions=[exposure('owned',protected=False,campaign_id='campaign:win')])
+        state,_=reconcile(state,snap,now_ms=0,owned_ids={'owned'})
+        self.assertEqual(capital_status(state,now_ms=0)['connector_status'],'UNPROTECTED_EXPOSURE')
+        next_snapshot=mock_snapshot(cash='60.5',timestamp_ms=1,snapshot_id='b',positions=[exposure('owned',campaign_id='campaign:win')],cash_events=[trade('win',1,'.5')])
+        with self.assertRaisesRegex(ValueError,'still has open'):
+            reconcile(state,next_snapshot,now_ms=1,owned_ids={'owned'})
+        self.assertEqual(state['earned_early_ports'],1)
+
     def test_adverse_marks_drawdown_halt_and_profit_recovery(self):
         state=initial_account_state('175','MOCK-FUTURES')
         for n,cash,events in [(0,'175',[]),(1,'171',[trade('loss',1,'-4')]),(2,'167',[trade('loss2',2,'-4')])]:
@@ -137,8 +147,8 @@ class AccountPortfolioTests(unittest.TestCase):
                 snap=p.portfolio.funding['snapshot'];self.assertEqual(p.portfolio.initial_capital,cash)
                 # Separate source prefix is intentional: apply only this account's event.
                 # Direct reducer validated here; journal integration covered below.
-                state,_=reconcile(p.state['account_capital'],FuturesAccountSnapshot(**snap),now_ms=0)
-                p.state['account_capital']=state;p.state['now_ms']=0
+                state,_=reconcile(p.account_context(),FuturesAccountSnapshot(**snap),now_ms=0)
+                p.state['ladder']=state.pop('ladder');p.state['account_capital']=state;p.state['now_ms']=0
                 limits=p.account_limits();values.append(D(limits['active_budget']))
                 self.assertEqual(D(limits['current_futures_equity']),D(cash))
                 self.assertEqual(p.ladder().realized_net,0)
@@ -149,6 +159,7 @@ class AccountPortfolioTests(unittest.TestCase):
 
     def test_continuous_cycles_five_restarts_and_replay(self):
         self.start();opening=self.paper.state['initial_funding'];records=[]
+        self.assertNotIn('ladder',self.paper.state['account_capital']) # exactly one durable allocator
         cycles=[('450.50','.50','400'),('450.30','-.20','300'),('451.30','1.00','250'),('451.20','-.10','200'),('451.25','.05','150')]
         for n,(cash,net,free) in enumerate(cycles,1):
             self.snapshot(mock_snapshot(cash=cash,free_margin=free,timestamp_ms=n*100,snapshot_id='cycle'+str(n),cash_events=[trade('trade'+str(n),n*100,net)]))
@@ -156,29 +167,95 @@ class AccountPortfolioTests(unittest.TestCase):
             self.assertEqual(self.paper.report(),before);self.assertEqual(self.paper.state['initial_funding'],opening)
             self.assertEqual(self.paper.state['counts']['INITIAL_FUNDING'],1)
             self.assertEqual(D(self.paper.account_limits()['current_futures_equity']),D(cash))
-        self.assertEqual(D(self.paper.state['account_capital']['ladder'] and json.loads(self.paper.state['account_capital']['ladder'])['realized_net']),D('1.25'))
+        self.assertEqual(D(self.paper.state['ladder'] and json.loads(self.paper.state['ladder'])['realized_net']),D('1.25'))
         replica=replay([self.source.path],self.root/'replica.sqlite3',self.policy,ledger_factory=PortfolioLedger,ledger_options={'portfolio':self.pp})
         self.assertEqual(replica,self.paper.report());self.paper.invariant()
         self.assertEqual(self.paper.db.execute("SELECT count(*) FROM audit WHERE action='REALIZED_NET_TRADE'").fetchone()[0],5)
 
     def test_dynamic_sizing_and_margin_reduction_long_and_short(self):
-        self.start('60');self.signal('S0USDTM')
+        self.start('17');self.signal('S0USDTM')
         q=self.paper.state['quotes']['S0USDTM'];self.paper.state['pending_entries'].clear();self.paper.state['campaigns'].clear()
         before,reason=self.paper.plan('S0USDTM','LONG',q);self.assertIsNotNone(before,reason)
-        self.snapshot(mock_snapshot(cash='85',timestamp_ms=122,snapshot_id='profit',cash_events=[trade('profit',122,'25')]))
+        self.snapshot(mock_snapshot(cash='42',timestamp_ms=122,snapshot_id='profit',cash_events=[trade('profit',122,'25')]))
         after,reason=self.paper.plan('S0USDTM','LONG',q);self.assertIsNotNone(after,reason)
         self.assertGreater(D(after['risk_budget_usdt']),D(before['risk_budget_usdt']))
         self.assertGreater(D(after['quantity_contracts']),D(before['quantity_contracts']))
-        self.snapshot(mock_snapshot(cash='85',free_margin='.1',timestamp_ms=123,snapshot_id='margin'))
+        self.snapshot(mock_snapshot(cash='42',free_margin='.1',timestamp_ms=123,snapshot_id='margin'))
         small,reason=self.paper.plan('S0USDTM','LONG',q);self.assertIsNone(small)
         self.assertEqual(D(self.paper.account_limits()['marginal_margin']),D('.1'))
-        self.snapshot(mock_snapshot(cash='85',timestamp_ms=124,snapshot_id='restored'))
+        self.snapshot(mock_snapshot(cash='42',timestamp_ms=124,snapshot_id='restored'))
         for side in ('LONG','SHORT'):
             plan,reason=self.paper.plan('S0USDTM',side,q);self.assertIsNotNone(plan,reason)
             entry=D(plan['entry_price']);stop=D(plan['planned_stop_mid'])
             self.assertAlmostEqual(float(abs(entry-stop)/entry),.005,places=12)
             self.assertLessEqual(D(plan['planned_loss_usdt']),D(plan['allocation_budget_usdt'])*D('.005'))
             self.assertEqual(D(plan['planned_target_net_usdt']),D(plan['allocation_budget_usdt'])*D('.02'))
+
+    def test_early_wins_unique_campaigns_partial_hedges_and_financed_entries(self):
+        self.start('60')
+        for n,cash in ((1,'60.5'),(2,'61')):
+            event=trade('win'+str(n),n*100,'.5')
+            self.snapshot(mock_snapshot(cash=cash,timestamp_ms=n*100,snapshot_id='win'+str(n),cash_events=[event]))
+            self.assertEqual(self.paper.account_limits()['earned_early_ports'],n+1)
+            self.assertEqual(self.paper.account_limits()['allocation_stage'],'BOOTSTRAP')
+            self.reopen()
+        # Same finalized campaign cannot be paid again under a different cash ID.
+        duplicate={**trade('new-id',250,'.5'),'campaign_id':'campaign:win2'}
+        self.snapshot(mock_snapshot(cash='61.5',timestamp_ms=250,snapshot_id='duplicate',cash_events=[duplicate]))
+        self.assertEqual(self.paper.account_limits()['connector_status'],'DEGRADED')
+        self.assertEqual(self.paper.account_limits()['earned_early_ports'],3)
+        self.snapshot(mock_snapshot(cash='61',timestamp_ms=251,snapshot_id='recover'))
+        # Positive partially closed hedge leg is not a campaign WIN or allocator profit.
+        first={**trade('leg1',300,'2'),'campaign_id':'hedge','campaign_complete':False}
+        self.snapshot(mock_snapshot(cash='63',timestamp_ms=300,snapshot_id='partial',cash_events=[first]))
+        self.assertEqual(self.paper.account_limits()['earned_early_ports'],3)
+        self.assertEqual(self.paper.ladder().total,D(61))
+        last={**trade('leg2',400,'-3'),'campaign_id':'hedge'}
+        self.snapshot(mock_snapshot(cash='60',timestamp_ms=400,snapshot_id='final-loss',cash_events=[last]))
+        self.assertEqual(self.paper.account_limits()['earned_early_ports'],3)
+        self.assertEqual(self.paper.ladder().total,D(60))
+        self.assertEqual(self.paper.state['account_capital']['closed_campaigns']['hedge'],'-1')
+        # Three earned permissions are not a fictitious fixed two-slot cap;
+        # actual contract minimum, fees, risk, depth and shared margin decide.
+        for n in range(3):self.open(f'S{n}USDTM',500+n*200)
+        self.assertEqual(len(self.paper.state['positions']),3)
+        self.assertLessEqual(self.paper.reserved(),D(60))
+        before=self.paper.report();self.reopen();self.assertEqual(self.paper.report(),before)
+
+    def test_activation_once_same_account_preserves_over_cap_positions(self):
+        self.start('98')
+        for n,cash in ((1,'98.5'),(2,'99')):
+            self.snapshot(mock_snapshot(cash=cash,timestamp_ms=n*100,snapshot_id='win'+str(n),cash_events=[trade('w'+str(n),n*100,'.5')]))
+        for n in range(3):self.open(f'S{n}USDTM',300+n*200)
+        self.assertEqual(len(self.paper.state['positions']),3)
+        opening=self.paper.state['initial_funding']
+        self.snapshot(mock_snapshot(cash='99.5',timestamp_ms=950,snapshot_id='pre-cross',cash_events=[trade('pre',950,'.5')]))
+        self.snapshot(mock_snapshot(cash='100',timestamp_ms=1000,snapshot_id='activate',cash_events=[trade('cross',1000,'.5')]))
+        limits=self.paper.account_limits()
+        self.assertEqual((limits['allocation_stage'],D(limits['reserve']),D(limits['active_budget']),limits['funded_slot_ceiling']),('EXPAND',D(50),D(50),2))
+        self.assertEqual(len(self.paper.state['positions']),3) # no invented liquidation
+        self.assertTrue(self.paper.state['exit_requests'])
+        self.assertEqual(self.paper.state['counts']['ACTIVATE_LADDER'],1)
+        self.assertFalse(self.paper.state['halted']) # reserve allocation is not a 50% trading loss
+        self.assertEqual(self.paper.state['initial_funding'],opening)
+        self.snapshot(mock_snapshot(cash='99.99',timestamp_ms=1100,snapshot_id='loss',cash_events=[trade('loss',1100,'-.01')]))
+        self.assertEqual(self.paper.ladder().stage,'EXPAND');self.assertEqual(self.paper.ladder().reserve,D(50))
+        self.assertEqual(self.paper.ladder().active,D('49.99'))
+        self.assertLessEqual(self.paper.ladder().slot_ceiling,1)
+        self.reopen();self.assertEqual(self.paper.state['counts']['ACTIVATE_LADDER'],1)
+        self.assertEqual(len(self.paper.state['positions']),3)
+        self.assertEqual(self.paper.state['counts']['INITIAL_FUNDING'],1)
+
+    def test_funded_rungs_loss_recovery_and_restart_without_bootstrap_reset(self):
+        self.start('100')
+        for n,(cash,net,active,slots) in enumerate((('125','25','75',3),('300','175','250',10),('260','-40','210',8),('274','14','224',8),('275','1','225',9),('300','25','250',10)),1):
+            self.snapshot(mock_snapshot(cash=cash,timestamp_ms=n*100,snapshot_id=str(n),cash_events=[trade('result'+str(n),n*100,net)]))
+            self.assertEqual(self.paper.ladder().reserve,D(50));self.assertEqual(self.paper.ladder().active,D(active))
+            self.assertEqual(self.paper.ladder().slot_ceiling,slots);self.assertNotEqual(self.paper.ladder().stage,'BOOTSTRAP')
+            self.assertEqual(self.paper.account_limits()['earned_early_ports'],1)
+            self.reopen()
+        self.assertTrue(self.paper.state['halted']) # 16% active loss cannot auto-rearm
+        self.assertEqual(self.paper.state['counts']['INITIAL_FUNDING'],1)
 
     def test_account_driven_concurrent_two_three_five_ten_positions(self):
         for count,cash in ((2,'126'),(3,'151'),(5,'201'),(10,'400')):
@@ -224,6 +301,33 @@ class AccountPortfolioTests(unittest.TestCase):
         self.assertEqual(self.paper.state['positions'],positions)
         self.assertIn('S0USDTM',self.paper.pins());self.reopen()
         self.assertFalse(self.paper.account_limits()['ready_for_paper'])
+
+    def test_sigkill_after_win_commit_before_next_scan_cannot_unlock_twice(self):
+        self.start('60');self.paper.close();self.paper=None
+        snap=mock_snapshot(cash='60.5',timestamp_ms=100,snapshot_id='win',cash_events=[trade('win',100,'.5')])
+        with patch('daiinas.continuous_store.clock_ms',return_value=100):
+            self.source.append([('CONTROL','win',{'action':'account-snapshot','snapshot':snap.payload()})])
+        from dataclasses import asdict
+        code="""
+import json,os,signal,sys
+from pathlib import Path
+from daiinas.portfolio_paper import PortfolioLedger
+from daiinas.paper_micro import PaperPolicy
+from daiinas.continuous_store import SourceJournal
+root=Path(sys.argv[1]);src=SourceJournal(root/'source.sqlite3')
+p=PortfolioLedger(root/'portfolio.sqlite3',src.source_id,PaperPolicy(**json.loads(sys.argv[3])),portfolio=json.loads(sys.argv[2]))
+p.apply(src.after(p.state['cursor']))
+os.kill(os.getpid(),signal.SIGKILL)
+"""
+        r=subprocess.run([sys.executable,'-c',code,str(self.root),json.dumps(asdict(self.pp)),json.dumps(asdict(self.policy))],capture_output=True,text=True,timeout=10)
+        self.assertEqual(r.returncode,-signal.SIGKILL,r.stderr)
+        self.paper=PortfolioLedger(self.root/'portfolio.sqlite3',self.source.source_id,self.policy,portfolio=self.pp)
+        self.assertEqual(self.paper.account_limits()['earned_early_ports'],2)
+        self.assertEqual(D(self.paper.account_limits()['current_futures_equity']),D('60.5'))
+        self.assertEqual(self.paper.state['counts']['EARLY_WIN_PORT'],1)
+        self.assertEqual(self.paper.state['counts']['INITIAL_FUNDING'],1)
+        self.paper.apply(self.source.after(0))
+        self.assertEqual(self.paper.account_limits()['earned_early_ports'],2)
 
     def test_sigkill_account_transaction_rolls_back_and_replays_once(self):
         self.start();self.paper.close();self.paper=None

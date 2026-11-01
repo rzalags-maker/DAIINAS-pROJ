@@ -1,6 +1,7 @@
 # v4.6 account-driven capital — Issue #15
 
-Implemented on `feature/v4-ladder-integration`, following integration `1c4c508`.
+Implemented on `feature/v4-ladder-integration`, following integration `1c4c508` and the owner’s concurrent single-runtime
+contract updates through `3e2f7a9`.
 Read Issue #15 (including its cycle-zero/continuous-loop amendment), updated
 AGENTS, #10/#11/#12/#14, owner Model A source and v4.2/v4.5 policies before this
 change. No stable merge, new engine, GUI, private request or order gateway.
@@ -44,8 +45,16 @@ committed in the original checkpoint transaction. The existing local PAPER cash
 and simulated campaign results remain separate from the exchange-account mirror:
 a simulated fill must never be booked as an actual exchange balance change.
 
-The account Model A ladder advances only from identified settled net trade/cost
-events. Opening capital is not earned P&L. `REALIZED_NET_TRADE` requires gross,
+There is **one durable allocator**: the existing portfolio `state.ladder`.
+The account reducer consumes a projection of that same state and returns its
+replacement inside the same transaction; `account_capital` contains no second
+ladder. Paper cash/campaign attribution remains diagnostic and cannot manufacture
+actual exchange earnings. The current account Model A ladder advances only from identified settled net trade/cost
+events. Opening capital is not earned P&L. Finalized campaign IDs are deduplicated
+independently of cash-event IDs. Partial leg settlements remain separately
+unallocated to the ladder until the whole campaign closes; an open order/position
+for that campaign prevents finalization. A winning leg plus a losing remaining
+leg never earns a WIN permission. `REALIZED_NET_TRADE` requires gross,
 fees and signed funding attribution matching net. Separate `CASH_COST` handles
 fees/funding settled independently (never submit the same cost both ways).
 `EXTERNAL_FLOW` changes true observed cash, not earned profit; deposits remain
@@ -61,6 +70,36 @@ retains `observed_unreconciled` separately. Unknown orders/positions immediately
 pause entries; no cancellation, adoption or fake closing occurs. A fresh complete
 consistent snapshot can recover reconciliation, but never clears risk HALT or
 operator pause. Repeated old snapshots do not renew freshness or clear disconnect.
+
+## Early WIN eligibility and Model A activation: one continuous state machine
+
+Only account-driven v4 profiles extend bootstrap: initial one earned candidate;
+each distinct fully finalized **positive net campaign** earns one more permission,
+up to ten. Neither partial winners, zero/cost-negative campaigns, funding credits,
+deposits nor positive marks earn WINs. Permissions do not create money. Per-market
+minimum lot, fully costed risk, shared ACTIVE/free margin and existing commitments
+determine actual financeable entries; no new fixed two-slot sub-100 limit exists.
+Nominal bootstrap allocation is at most 25 and divided across earned permissions,
+while actual exposure can be smaller. A loss/adverse mark restricts capacity and
+latches the early effective-capital ceiling until realized recovery.
+
+The first settled crossing of 100 emits exactly one `ACTIVATE_LADDER`, within the
+same ledger and transaction, splitting R50/A50 at exactly 100. Early wins remain
+historical; subsequent funded slots obey Model A monetary rungs, not winner count.
+An account starting above 100 initializes directly in the proper stage without
+invented wins. A subsequent 100→99.99 loss remains activated, R50/A49.99; reserve
+is never released by resetting bootstrap. Existing exposure above a reduced cap
+is pinned and receives controlled later-quote exit requests, never erased.
+The existing explicit research-expansion guard remains for historical research
+profiles; account profiles use this newer owner-selected eligibility policy and
+all financial/market/expectancy NO_TRADE gates, without an opening-balance cap.
+
+`account_status` reports stage, earned early ports, Model A funded ceiling and
+open/pending count. Bootstrap funded and risk ceilings need a current instrument:
+unknown global values are `null`, not invented tradability. `entry_capacity`
+records the last as-of per-instrument minimum-margin/full-stop-risk calculation,
+financial/risk ceilings and remaining entry slots. It is a diagnostic of that
+specific decision, not permission to skip fresh admission checks.
 
 ## Account-driven sizing and v4.5 units
 
@@ -98,13 +137,17 @@ python scripts/verify_v46_account.py --output-dir /tmp/daiinas-v46-proof
 Use a fresh output directory. The bounded acceptance driver uses explicitly
 synthetic account observations and a fixed test clock, **not real KuCoin data**.
 It runs six changing-equity cycles, five restarts, duplicate delivery and full
-source replay using the existing ledger. `status.json` contains exact source
+source replay using the existing ledger. Additional end-to-end tests prove
+60→60.5→61 candidate permissions 1→2→3, 99.5→100 activation (including existing
+>2 paper positions), 100→99.99 without reset, 100→125→300 and reverse
+300→260→274→275→300 with risk HALT still latched. `status.json` contains exact source
 hashes, opening funding, current equity/free margin, ACTIVE/RESERVE/PENDING/locks,
 unallocated external funds, risk, connector status and `orders_enabled=false`.
 Tests additionally cover the 17/60/99.99/100/175/450/1000/5000 matrix, deposits,
 costs, stale/malformed/conflicting scope, margin-driven sizing, LONG/SHORT units,
 2/3/5/10 simultaneous paper positions, unknown exposure and actual SIGKILL during
-account reconciliation. Original funding SIGKILL tests are retained.
+account reconciliation and after a WIN commit before the next scan. Original
+funding SIGKILL tests are retained.
 
 ## Remaining authenticated-connection work
 

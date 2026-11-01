@@ -54,7 +54,7 @@ def status(source_path,paper_path):
     account_status=None
     if 'account_capital' in state:
         from .account_capital import capital_status
-        account_status=capital_status(state['account_capital'],now_ms=now,
+        account_status=capital_status({**state['account_capital'],'ladder':state['ladder']},now_ms=now,local_count=len(portfolio_positions)+len(state.get('pending_entries',{})),
             local_margin=sum((Decimal(p['margin_reserved_usdt']) for p in portfolio_positions+list(state.get('pending_entries',{}).values())),Decimal(0)),
             local_risk=sum((Decimal(p.get('current_planned_loss_usdt',p['planned_loss_usdt'])) for p in portfolio_positions+list(state.get('pending_entries',{}).values())),Decimal(0)))
         healthy=healthy and account_status['ready_for_paper']

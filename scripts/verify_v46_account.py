@@ -28,7 +28,7 @@ def run(output):
     account='MOCK-FUTURES';observations=[]
     for n,(cash,net,free) in enumerate([('450',None,'450'),('450.50','.50','400'),('450.30','-.20','300'),('451.30','1','250'),('451.20','-.10','200'),('451.25','.05','150')]):
         events=[] if net is None else [dict(id=f'trade-{n}',type='REALIZED_NET_TRADE',
-            account_id=account,timestamp_ms=n*1000,net=net,gross=str(Decimal(net)+Decimal('.01')),fees='.01',funding='0')]
+            account_id=account,timestamp_ms=n*1000,net=net,gross=str(Decimal(net)+Decimal('.01')),fees='.01',funding='0',campaign_id=f'campaign-{n}',campaign_complete=True)]
         observations.append(mock_snapshot(cash=cash,timestamp_ms=n*1000,snapshot_id=f'cycle-{n}',free_margin=free,cash_events=events))
     statuses=[];adapter=MockFuturesAdapter(observations);policy=portfolio=None
     try:
