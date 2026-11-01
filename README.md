@@ -228,3 +228,5 @@ the deep shortlist, in addition to actual public trade/L2 evidence. Missing,
 stale or countertrend context yields NO_TRADE. Use `continuous pause` to retain
 worker monitoring, `continuous stop` to disarm the v4.7 session, and `continuous
 start` to queue another bounded session; queued commands are not a runtime ACK.
+
+Latest v4.7 completion evidence: [306-test matrix, closed OHLCV and session controls](reports/V47_FOLLOWUP_VALIDATION.md). Historical v4.6/v4.7 reports retain their original tested revisions and results.

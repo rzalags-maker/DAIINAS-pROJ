@@ -1,0 +1,787 @@
+{
+  "status": "PASS_CODE_TESTS_AND_PUBLIC_PAPER_ACCEPTANCE",
+  "tested_source_commit": "0bc3bafdb5816967383a84c0e265b51baab7db27",
+  "previous_verified_delivery": "b65fe4a",
+  "request_sha256": "fa21849f0325d6af16890e30a39ac7a02dd41010b8028cca87e8280b1542a759",
+  "changes": [
+    "Closed public 1m/5m/15m OHLCV confirmation with 16 contiguous bars, no live/future candle input, provenance, bounded cache/concurrency and watch/pin checkpoint retention.",
+    "Per-token slow-candle contradiction, ATR/noise and last-three-closed-swing filters integrated into the existing x1..x5/full-cost risk selector.",
+    "Distinct local START/PAUSE/STOP queue controls and truthful source-accepted versus effective worker ACK status."
+  ],
+  "tests": {
+    "count": 306,
+    "preserved_v46": 271,
+    "preserved_previous_v47": 298,
+    "new_tests": 8,
+    "python_matrix_run": 41281466259,
+    "python_matrix_jobs": [
+      {
+        "python": "3.13",
+        "url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41281466259/job/124774077960",
+        "steps": [
+          {
+            "name": "All preserved and account-driven regression tests",
+            "conclusion": "success"
+          },
+          {
+            "name": "Reproducible MOCK account cycles and restart/replay proof",
+            "conclusion": "success"
+          },
+          {
+            "name": "v4.7 synthetic leverage and position-conveyor proof",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "python": "3.12",
+        "url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41281466259/job/124774078184",
+        "steps": [
+          {
+            "name": "All preserved and account-driven regression tests",
+            "conclusion": "success"
+          },
+          {
+            "name": "Reproducible MOCK account cycles and restart/replay proof",
+            "conclusion": "success"
+          },
+          {
+            "name": "v4.7 synthetic leverage and position-conveyor proof",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "python": "3.11",
+        "url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41281466259/job/124774078231",
+        "steps": [
+          {
+            "name": "All preserved and account-driven regression tests",
+            "conclusion": "success"
+          },
+          {
+            "name": "Reproducible MOCK account cycles and restart/replay proof",
+            "conclusion": "success"
+          },
+          {
+            "name": "v4.7 synthetic leverage and position-conveyor proof",
+            "conclusion": "success"
+          }
+        ]
+      }
+    ],
+    "local": {
+      "3.12": {
+        "status": "PASS",
+        "count": 306,
+        "seconds": 44.733,
+        "log_sha256": "38c387b4999344eeac8ad711a309fca59b430a6455e61d2470d484f62103e0b2"
+      },
+      "3.13": {
+        "status": "PASS",
+        "count": 306,
+        "seconds": 46.626,
+        "log_sha256": "2299b991c3afe9df8d772f9cbbbaadb118e72695ab36d789b85322022c7d971b"
+      }
+    }
+  },
+  "public_run": 41281466260,
+  "preserved_v4_run": 41281466283,
+  "superseded_attempts": [
+    {
+      "run_id": 41281213481,
+      "status": "CANCELLED",
+      "note": "Produced real candle reports; superseded by bounded context-retention update, not labeled accepted."
+    },
+    {
+      "run_id": 41281394896,
+      "status": "FAILURE",
+      "note": "New test fixture alias shadowed a helper module; corrected in final source, no failed test relabeled."
+    },
+    {
+      "run_id": 41281394928,
+      "status": "CANCELLED",
+      "note": "Superseded by corrected final regression revision."
+    }
+  ],
+  "model_a_and_risk_unchanged_from_377eb34": true,
+  "actual_exchange_account": "NOT_CONNECTED",
+  "private_api_enabled": false,
+  "live_orders_enabled": false,
+  "remaining_sequence": [
+    "Authenticated General-only KuCoin read-only adapter and complete account/fee/funding/position reconciliation; not activated here.",
+    "Supervised durable hosting, effective authenticated operator control and independent 24-hour acceptance; not run here."
+  ],
+  "unsupported": [
+    "No profitable-edge claim or out-of-sample economic validation.",
+    "Five-hour acceptance uses a virtual clock; no guaranteed Codex uptime.",
+    "Native TP/SL remains modeled/MOCK; the real order gateway is inert.",
+    "New generated profiles require OHLCV; existing saved profile identities are preserved, not silently migrated or reseeded."
+  ],
+  "pr_policy": "Existing 403 affects draft PR creation only, not source commits or CI; not an implementation blocker.",
+  "public_validation": {
+    "status": "PASS",
+    "evidence_kind": "REAL_PUBLIC_KUCOIN_MARKET_WITH_EXPLICIT_MOCK_PAPER_ACCOUNT",
+    "tested_commit": "0bc3bafdb5816967383a84c0e265b51baab7db27",
+    "actual_account": "NOT_CONNECTED",
+    "live_orders_enabled": false,
+    "strategy_validated": false,
+    "production_ready": false,
+    "public_event_counts": {
+      "execution": 137,
+      "level2": 32041,
+      "tickerV2": 3339
+    },
+    "duration_seconds": 130.428,
+    "observed_contracts": 717,
+    "source_cursor": 35873,
+    "input_digest": "2fa9be93093bbc79563aa2c6c2875c4449b4bce7bf8ac84fd9d8fa8a2ee9ebfa",
+    "initial_funding": {
+      "kind": "mock_futures_snapshot",
+      "account_id": "CI-v47-41281466260",
+      "scope": "CLASSIC_FUTURES",
+      "currency": "USDT",
+      "amount": "200",
+      "timestamp_ms": 1793514990983,
+      "opening_equity": "200",
+      "initial_usable_margin": "200",
+      "source_reference": "explicit-v47-paper-origin",
+      "source_digest": "40fcb073d267eab07dff421318efc409612bf02dacab83edd50975ff655cc721",
+      "source_evidence": "MOCK Futures account; not authenticated KuCoin",
+      "snapshot": {
+        "exchange": "KUCOIN",
+        "account_id": "CI-v47-41281466260",
+        "account_mode": "CLASSIC_FUTURES",
+        "settlement_currency": "USDT",
+        "snapshot_id": "explicit-v47-paper-origin",
+        "timestamp_ms": 1793514990983,
+        "complete": true,
+        "transport_validated": true,
+        "signature_validated": true,
+        "source_kind": "MOCK",
+        "settled_cash": "200",
+        "equity": "200",
+        "free_margin": "200",
+        "position_margin": "0",
+        "order_margin": "0",
+        "unrealized_pnl": "0",
+        "liabilities": "0",
+        "restricted_collateral": "0",
+        "margin_mode": "ISOLATED",
+        "leverage": "2",
+        "orders": [],
+        "positions": [],
+        "cash_events": [],
+        "source_digest": "40fcb073d267eab07dff421318efc409612bf02dacab83edd50975ff655cc721"
+      },
+      "event_type": "INITIAL_FUNDING",
+      "policy_id": "37d92e23171dffea96b499fa76e02e880186fcdf7254d455104e0d8586c71138",
+      "account_identity": "e013c3478cf6fdaaa5a839cd97c375f15091d0df71c22b8f6e665e8c2f531af7",
+      "journal_source_id": "9a1541a934e542058d3e751cfffe93cb",
+      "verified_exchange_balance": false,
+      "asof_source_cursor": 0,
+      "event_id": "INITIAL_FUNDING:d1a69664101005ecd9de27ac6ace3519f6eff2e553b34f2eccb5551116674776"
+    },
+    "cash": "200",
+    "realized_net_pnl": "0",
+    "fees": "0",
+    "modeled_carry": "0",
+    "maximum_drawdown": 0.0,
+    "closed_summary": {
+      "count": 0,
+      "wins": 0,
+      "losses": 0,
+      "profit": "0",
+      "loss": "0"
+    },
+    "open_positions": [],
+    "pending_entries": [],
+    "exit_requests": {},
+    "selected_leverages": [],
+    "closed_candle_contexts": {
+      "HYPEUSDTM": {
+        "status": "VERIFIED_CLOSED_OHLCV",
+        "asof_ms": 1793515117581,
+        "frames": {
+          "1": {
+            "status": "VERIFIED_CLOSED_OHLCV",
+            "minutes": 1,
+            "asof_ms": 1793515117581,
+            "closed_through_ms": 1793515080000,
+            "count": 16,
+            "direction": "SHORT",
+            "move_bps": "-20.33582513462543455045329600",
+            "atr_bps": "6.552884122810013319217239848",
+            "recent_high": "88.053",
+            "recent_low": "87.746",
+            "swing_low": "87.843",
+            "swing_high": "87.906",
+            "base_volume": "2387.3",
+            "raw_rows_sha256": "9682431967776af1265e0d48dfeba30ae18285d23221a57211575ec9c01241e2",
+            "order_flow_status": "NOT_OBSERVED_IN_OHLCV"
+          },
+          "5": {
+            "status": "VERIFIED_CLOSED_OHLCV",
+            "minutes": 5,
+            "asof_ms": 1793515117581,
+            "closed_through_ms": 1793514900000,
+            "count": 16,
+            "direction": "SHORT",
+            "move_bps": "-13.97393803751377512184592300",
+            "atr_bps": "17.47053402807799949941978202",
+            "recent_high": "88.347",
+            "recent_low": "87.746",
+            "swing_low": "87.746",
+            "swing_high": "88.084",
+            "base_volume": "11779.7",
+            "raw_rows_sha256": "3ba1881a508564636d253995fcfbd61ce9aae353facc4d7d1039551f4df1071d",
+            "order_flow_status": "NOT_OBSERVED_IN_OHLCV"
+          },
+          "15": {
+            "status": "VERIFIED_CLOSED_OHLCV",
+            "minutes": 15,
+            "asof_ms": 1793515117581,
+            "closed_through_ms": 1793514600000,
+            "count": 16,
+            "direction": "SHORT",
+            "move_bps": "-19.77857094141450883215495500",
+            "atr_bps": "31.17881548974943052391799544",
+            "recent_high": "88.347",
+            "recent_low": "87.577",
+            "swing_low": "87.8",
+            "swing_high": "88.347",
+            "base_volume": "35940.2",
+            "raw_rows_sha256": "91b2c243983133f8926c9b64e213e2c07283503f43161bbd238de849a90632b4",
+            "order_flow_status": "NOT_OBSERVED_IN_OHLCV"
+          }
+        },
+        "packet_sha256": "94dd0c8e831b9b573351f397a866e2090a5d3b725ffd8547f1a3b0403b10a72f"
+      },
+      "PEPEUSDTM": {
+        "status": "VERIFIED_CLOSED_OHLCV",
+        "asof_ms": 1793515117581,
+        "frames": {
+          "1": {
+            "status": "VERIFIED_CLOSED_OHLCV",
+            "minutes": 1,
+            "asof_ms": 1793515117581,
+            "closed_through_ms": 1793515080000,
+            "count": 16,
+            "direction": "SHORT",
+            "move_bps": "-29.49083176182642539020182200",
+            "atr_bps": "11.92176904967906798929555927",
+            "recent_high": "0.0000049903",
+            "recent_low": "0.0000049677",
+            "swing_low": "0.0000049699",
+            "swing_high": "0.00000498",
+            "base_volume": "47750040000.0",
+            "raw_rows_sha256": "3179b64881283d2a987b1978b8393d1dacb39044632b0c4fc85d590fafc8d85b",
+            "order_flow_status": "NOT_OBSERVED_IN_OHLCV"
+          },
+          "5": {
+            "status": "VERIFIED_CLOSED_OHLCV",
+            "minutes": 5,
+            "asof_ms": 1793515117581,
+            "closed_through_ms": 1793514900000,
+            "count": 16,
+            "direction": "SHORT",
+            "move_bps": "-45.63285565607237210791770100",
+            "atr_bps": "28.09835933730094901077690204",
+            "recent_high": "0.0000050173",
+            "recent_low": "0.0000049677",
+            "swing_low": "0.0000049677",
+            "swing_high": "0.0000049903",
+            "base_volume": "245044280000.0",
+            "raw_rows_sha256": "f718b0dd2d01dd00e59c763fa7dc23f7aed7ea98a3a6c0affb9ce3988fb6e178",
+            "order_flow_status": "NOT_OBSERVED_IN_OHLCV"
+          },
+          "15": {
+            "status": "VERIFIED_CLOSED_OHLCV",
+            "minutes": 15,
+            "asof_ms": 1793515117581,
+            "closed_through_ms": 1793514600000,
+            "count": 16,
+            "direction": "SHORT",
+            "move_bps": "-31.59557661927330173775671400",
+            "atr_bps": "71.34044815342333848221629321",
+            "recent_high": "0.0000050608",
+            "recent_low": "0.0000049785",
+            "swing_low": "0.0000049785",
+            "swing_high": "0.0000050173",
+            "base_volume": "783162640000.0",
+            "raw_rows_sha256": "d28f324f892bbd6bc9c7b6bdce5f5b9f2d60e9dce02b8180084e18a4573579e3",
+            "order_flow_status": "NOT_OBSERVED_IN_OHLCV"
+          }
+        },
+        "packet_sha256": "2942deacaf7ef31fb804042bb1d07ad0f12c81992ae8879490726fcd8bddb760"
+      },
+      "WETUSDTM": {
+        "status": "VERIFIED_CLOSED_OHLCV",
+        "asof_ms": 1793515117581,
+        "frames": {
+          "1": {
+            "status": "VERIFIED_CLOSED_OHLCV",
+            "minutes": 1,
+            "asof_ms": 1793515117581,
+            "closed_through_ms": 1793515080000,
+            "count": 16,
+            "direction": "LONG",
+            "move_bps": "54.53905700211118930330753000",
+            "atr_bps": "23.51268591426071741032370954",
+            "recent_high": "0.05727",
+            "recent_low": "0.05673",
+            "swing_low": "0.05703",
+            "swing_high": "0.05726",
+            "base_volume": "3703600.0",
+            "raw_rows_sha256": "5d02455b009cd3f02e917b0b2d4b77cd2bb0cba69f76e7df2bcacb7bcd8fd394",
+            "order_flow_status": "NOT_OBSERVED_IN_OHLCV"
+          },
+          "5": {
+            "status": "VERIFIED_CLOSED_OHLCV",
+            "minutes": 5,
+            "asof_ms": 1793515117581,
+            "closed_through_ms": 1793514900000,
+            "count": 16,
+            "direction": "LONG",
+            "move_bps": "91.90526687875574407917992000",
+            "atr_bps": "71.36602451838879159369527145",
+            "recent_high": "0.05731",
+            "recent_low": "0.05623",
+            "swing_low": "0.05672",
+            "swing_high": "0.05727",
+            "base_volume": "17435310.0",
+            "raw_rows_sha256": "749ccfa09c7202d27fdd4ab63c7588e9726455583e0a909a46094a926bac2002",
+            "order_flow_status": "NOT_OBSERVED_IN_OHLCV"
+          },
+          "15": {
+            "status": "VERIFIED_CLOSED_OHLCV",
+            "minutes": 15,
+            "asof_ms": 1793515117581,
+            "closed_through_ms": 1793514600000,
+            "count": 16,
+            "direction": "LONG",
+            "move_bps": "14.03016485443703963521571000",
+            "atr_bps": "121.2784588441330998248686515",
+            "recent_high": "0.05731",
+            "recent_low": "0.05565",
+            "swing_low": "0.05623",
+            "swing_high": "0.05731",
+            "base_volume": "53124520.0",
+            "raw_rows_sha256": "49bd88360ad36c52b52f691e18114aefd7cfda8ae475cfe03ab2da0fa3bfaf12",
+            "order_flow_status": "NOT_OBSERVED_IN_OHLCV"
+          }
+        },
+        "packet_sha256": "ce552798143f374a0759a04cc315a163f52cda793fa50a8a8e9318fb79bee9fe"
+      },
+      "ZECUSDTM": {
+        "status": "VERIFIED_CLOSED_OHLCV",
+        "asof_ms": 1793515117581,
+        "frames": {
+          "1": {
+            "status": "VERIFIED_CLOSED_OHLCV",
+            "minutes": 1,
+            "asof_ms": 1793515117581,
+            "closed_through_ms": 1793515080000,
+            "count": 16,
+            "direction": "SHORT",
+            "move_bps": "-50.23520297737419236329076500",
+            "atr_bps": "9.080364739689521760768008219",
+            "recent_high": "1252.79",
+            "recent_low": "1245.77",
+            "swing_low": "1245.77",
+            "swing_high": "1247.62",
+            "base_volume": "186.72",
+            "raw_rows_sha256": "46cbdf3e2d0906e0b89ec976dfd6b49e40f9bd79b25717dc2d00f3ab674f2a58",
+            "order_flow_status": "NOT_OBSERVED_IN_OHLCV"
+          },
+          "5": {
+            "status": "VERIFIED_CLOSED_OHLCV",
+            "minutes": 5,
+            "asof_ms": 1793515117581,
+            "closed_through_ms": 1793514900000,
+            "count": 16,
+            "direction": "SHORT",
+            "move_bps": "-5.130425023648052843377744000",
+            "atr_bps": "20.48210647888227651144511638",
+            "recent_high": "1254.81",
+            "recent_low": "1243.35",
+            "swing_low": "1246.82",
+            "swing_high": "1252.79",
+            "base_volume": "1413.28",
+            "raw_rows_sha256": "479c3d144ff1341f447c536d96d325cf0f46975162b11a17543833048ee0b7d6",
+            "order_flow_status": "NOT_OBSERVED_IN_OHLCV"
+          },
+          "15": {
+            "status": "VERIFIED_CLOSED_OHLCV",
+            "minutes": 15,
+            "asof_ms": 1793515117581,
+            "closed_through_ms": 1793514600000,
+            "count": 16,
+            "direction": "LONG",
+            "move_bps": "11.06265632014365420380940000",
+            "atr_bps": "43.77132012619913198058967665",
+            "recent_high": "1254.81",
+            "recent_low": "1238.84",
+            "swing_low": "1243.35",
+            "swing_high": "1254.81",
+            "base_volume": "4093.56",
+            "raw_rows_sha256": "77d08df66c517700c6a67e1d64b3befe09804e4d8b2ae5ae25097dc4e854a843",
+            "order_flow_status": "NOT_OBSERVED_IN_OHLCV"
+          }
+        },
+        "packet_sha256": "bccf3b66aab1158674f2fdcca0c973574ec01401d050bb4af38808d6016edd86"
+      },
+      "ENAUSDTM": {
+        "status": "VERIFIED_CLOSED_OHLCV",
+        "asof_ms": 1793515117581,
+        "frames": {
+          "1": {
+            "status": "VERIFIED_CLOSED_OHLCV",
+            "minutes": 1,
+            "asof_ms": 1793515117581,
+            "closed_through_ms": 1793515080000,
+            "count": 16,
+            "direction": "SHORT",
+            "move_bps": "-98.21522864082796493821945300",
+            "atr_bps": "17.19816552901023890784982935",
+            "recent_high": "0.18978",
+            "recent_low": "0.18752",
+            "swing_low": "0.18752",
+            "swing_high": "0.18836",
+            "base_volume": "1040311.0",
+            "raw_rows_sha256": "c3791ead1e2eba4cb5e2ff8180fa8f893f6eedc63202be80ecdd289d328c2b34",
+            "order_flow_status": "NOT_OBSERVED_IN_OHLCV"
+          },
+          "5": {
+            "status": "VERIFIED_CLOSED_OHLCV",
+            "minutes": 5,
+            "asof_ms": 1793515117581,
+            "closed_through_ms": 1793514900000,
+            "count": 16,
+            "direction": "LONG",
+            "move_bps": "43.20921796649951989757815000",
+            "atr_bps": "36.28432570244861103733999044",
+            "recent_high": "0.19059",
+            "recent_low": "0.18727",
+            "swing_low": "0.18811",
+            "swing_high": "0.18978",
+            "base_volume": "5049913.0",
+            "raw_rows_sha256": "163886ba4560145809f84df0740152010266496d89104872aebc495acdf1143a",
+            "order_flow_status": "NOT_OBSERVED_IN_OHLCV"
+          },
+          "15": {
+            "status": "VERIFIED_CLOSED_OHLCV",
+            "minutes": 15,
+            "asof_ms": 1793515117581,
+            "closed_through_ms": 1793514600000,
+            "count": 16,
+            "direction": "LONG",
+            "move_bps": "90.47593554258793297285722000",
+            "atr_bps": "66.75111417657045840407470289",
+            "recent_high": "0.19059",
+            "recent_low": "0.1857",
+            "swing_low": "0.18737",
+            "swing_high": "0.19059",
+            "base_volume": "14027868.0",
+            "raw_rows_sha256": "47aa7a819470e13411b97d388f115a8cbf6285526dbf83b3af3a200427817ffa",
+            "order_flow_status": "NOT_OBSERVED_IN_OHLCV"
+          }
+        },
+        "packet_sha256": "c050a2e5793f3344be8e8138abc27be0840c0919d2d8f35429b0e1bf2106cf65"
+      }
+    },
+    "closed_candle_verified_symbols": [
+      "ENAUSDTM",
+      "HYPEUSDTM",
+      "PEPEUSDTM",
+      "WETUSDTM",
+      "ZECUSDTM"
+    ],
+    "session": {
+      "desired": "DISARMED",
+      "started_ms": 1793515071448,
+      "expires_ms": 1793533071448,
+      "duration_ms": 18000000,
+      "actor": "local-cli",
+      "request_id": "19c29cbb580a4a2fa579531d7f717253",
+      "ack_seq": 35873,
+      "ack": "DURABLY_APPLIED_IN_LEDGER",
+      "stop_reason": "WORKER_EXIT",
+      "exchange_connected": false,
+      "remote_control_connected": false,
+      "stopped_ms": 1793515121572,
+      "state": "STOPPED_FLAT",
+      "open_positions": 0,
+      "pending_entries": 0,
+      "protection": {},
+      "pending_native_receipts": {},
+      "worker_checkpoint_ms": 1793515121572
+    },
+    "decision_counts": {
+      "INITIAL_FUNDING": 1,
+      "ACCOUNT_RECONCILED": 124,
+      "MODELED_ACCOUNT_ONLY": 124,
+      "SESSION_STARTED": 2,
+      "SCAN": 6,
+      "CANDLE_CONTEXT_VERIFIED": 30,
+      "HEALTH": 18,
+      "DECISION": 3339,
+      "BOOK_SNAPSHOT": 51,
+      "VERIFIED_BOOK": 22,
+      "SESSION_STOPPED": 2
+    },
+    "reason_counts": {},
+    "account_status": {
+      "account_policy_version": "v4.6-unified-win-gated-account-v2",
+      "opening_funding": "200",
+      "current_futures_equity": "200",
+      "current_settled_cash": "200",
+      "actual_free_margin": "200",
+      "active_budget": "150",
+      "reserve": "50",
+      "pending": "0",
+      "locked": "0",
+      "unallocated_external": "0",
+      "risk_budget": "1.50",
+      "per_leg_risk_budget": "0.3750",
+      "marginal_margin": "150",
+      "allowed_slots": 6,
+      "deficit": "0",
+      "allocation_stage": "EXPAND",
+      "earned_early_ports": 1,
+      "funded_slot_ceiling": 6,
+      "risk_allowed_slot_ceiling": null,
+      "open_and_pending_slots": 0,
+      "capacity_basis": "Per-instrument minimum lot/full-cost risk checked at entry",
+      "closed_campaign_ids": [],
+      "unsettled_campaign_net": "0",
+      "connector_status": "RECONCILED_MOCK",
+      "reason": null,
+      "orders_enabled": false,
+      "ready_for_paper": true,
+      "source_kind": "MOCK",
+      "authenticated_account_connected": false,
+      "observed_unreconciled": null,
+      "account_drawdown": "0",
+      "halted": false,
+      "snapshot_id": "PAPER-MODELED:35853:heartbeat",
+      "effective_active_after_paper_marks": "150",
+      "paper_equity_with_exit_costs": "200",
+      "paper_margin_reserved": "0",
+      "position_scope": "Local virtual positions; snapshot is MOCK cash/external scope, not real KuCoin positions"
+    },
+    "conveyor": {
+      "decisions": 3339,
+      "entries": 0,
+      "partial_entries": 0,
+      "partial_exits": 0,
+      "last_decision_ms": 1793515121453,
+      "last_selected": null,
+      "ranked_candidates": [],
+      "last_reason": "no_qualified_candidate"
+    },
+    "errors": [
+      "ConnectionError: Scheduled public token renewal",
+      "ConnectionError: Scheduled public token renewal",
+      "ConnectionError: Scheduled public token renewal",
+      "ConnectionError: Scheduled public token renewal"
+    ],
+    "replay_identical": true,
+    "cash_independently_reconciled": true,
+    "backup": {
+      "source_id": "9a1541a934e542058d3e751cfffe93cb",
+      "paper_cursor": 35873,
+      "source_max_seq": 35873,
+      "paper_input_digest": "2fa9be93093bbc79563aa2c6c2875c4449b4bce7bf8ac84fd9d8fa8a2ee9ebfa",
+      "sha256": {
+        "source.sqlite3": "57ccda327aabdd7686efa390df3ee0c364a01c1e6b7d7273f2a211c362141f0b",
+        "paper.sqlite3": "1fb277adc3b92e2079281a32bde77369f98182aaebfd9ef60c734ec4cdf12ccb"
+      }
+    },
+    "out_of_sample_status": "SHORT_INFRASTRUCTURE_SMOKE_NOT_ECONOMIC_VALIDATION",
+    "24h_host_gate": "NOT_RUN_HOST_NOT_PROVISIONED",
+    "report_sha256": {
+      "state/v47-public/first.json": "3d3267f4910129250ebc1c1bbef4fa7d49df4dae7e27bddeaf5ef4ac60bd2757",
+      "state/v47-public/restart.json": "9183e77ede1b9806693449e34416901f36b88d3440dc08bf8f3528f531b059fb",
+      "state/v47-public/replay.json": "da427408220c56fc9c6032a8633a909f759465e75d604e3ef66e3bbb39c37fe6"
+    }
+  },
+  "public_evidence_sha256": {
+    "first.json": "3d3267f4910129250ebc1c1bbef4fa7d49df4dae7e27bddeaf5ef4ac60bd2757",
+    "replay.json": "da427408220c56fc9c6032a8633a909f759465e75d604e3ef66e3bbb39c37fe6",
+    "restart.json": "9183e77ede1b9806693449e34416901f36b88d3440dc08bf8f3528f531b059fb",
+    "synthetic.json": "bcb40ede36dfca38d0d2a418a7d63a30c1550dcbf4179e965af05fe06849d648",
+    "validation.json": "7131ac87b847c12ced4ea2e3be02c21cf0578f0238845b60cc5bd109d186d582"
+  },
+  "preserved_v4_run_status": "SUCCESS_ALL_11_STAGES",
+  "source_sha256": {
+    "daiinas/candle_context.py": "d1f6c600ac2da995355d15cb44eddc2385176cfb064e311e539abf8b880cbd39",
+    "daiinas/portfolio_paper.py": "a91684ec3b717b573663a869600fe5885bb2822b764a2d114f7aaebb682d111f",
+    "daiinas/adaptive_execution.py": "787d0892e155797afc1c0d3400cadd29efecbb4efce2dfb0c27f598c9a5f4e08",
+    "daiinas/continuous.py": "9a6f7596d5905f069be234af66b86ac809081fa6cdb9cb3e9cbb60ab5d6bde3e",
+    "daiinas/continuous_stream.py": "826b7973c50e014f3c903a22fb1b9ec4573e958317fdb3a590a8815e0753155e",
+    "tests/test_v47_candles.py": "4af7830278fa21b8b3fe52cbe8960a7b08e402cd96d3d15e8f977bbef00cfe53"
+  },
+  "definition_of_done_evidence": {
+    "adaptive_leverage_fees_and_price_stops": "Preserved verified v4.7 tests and coupled 40-path matrix",
+    "capital_ten_positions_loss_replacement_and_crash": "Preserved verified shared-ledger and SIGKILL regression tests",
+    "closed_candle_confirmed_full_cycle": "test_v47_candles.CandleLedgerTests.test_missing_context_blocks_entry_then_verified_context_enables_full_net_close_and_replay",
+    "local_session_controls": "test_v47_candles.SessionCliTests.test_start_pause_stop_queue_then_durable_runtime_ack_and_no_reseed",
+    "real_public_candles_and_market": "41281466260: PASS; no qualified real-public-market PAPER trades in this bounded window"
+  },
+  "preserved_v4_stage_outcomes": {
+    "original": "success",
+    "tests": "success",
+    "first": "success",
+    "restart": "success",
+    "replay": "success",
+    "verify": "success",
+    "v4first": "success",
+    "v4restart": "success",
+    "v4replay": "success",
+    "v4verify": "success",
+    "comparison": "success",
+    "tested_commit": "0bc3bafdb5816967383a84c0e265b51baab7db27",
+    "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41281466283"
+  },
+  "preserved_v4_tests": {
+    "tests_run": 306,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "expected_failures": 0,
+    "unexpected_successes": 0,
+    "successful": true,
+    "tested_commit": "0bc3bafdb5816967383a84c0e265b51baab7db27",
+    "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41281466283"
+  },
+  "preserved_v4_validation": {
+    "status": "passed",
+    "initial_capital": "100",
+    "live_orders_enabled": false,
+    "strategy_validated": false,
+    "production_ready": false,
+    "initial_funding": {
+      "account_id": "paper-v4-100",
+      "account_identity": "11835fdef0f8a72e235523d5b26565c434cd66b4824c3529162e7ce660ca72c0",
+      "amount": "100",
+      "asof_source_cursor": 0,
+      "currency": "USDT",
+      "event_id": "INITIAL_FUNDING:bd0443e9883e84b3cb04e8a7e60031c3d5a6442251b17c7ebcb0a4fba9693ba6",
+      "event_type": "INITIAL_FUNDING",
+      "journal_source_id": "f6d3645dd8514823b59eaf9865312b6a",
+      "kind": "owner_confirmed_paper_scenario",
+      "policy_id": "b36770b8c3b5d842c9c85649fdddd992c80f10a5f7432a402c5b8153b9d70fb3",
+      "scope": "FUNDED_V4_PAPER_USDT_PERPETUAL",
+      "source_evidence": "Explicit hypothetical PAPER scenario; no exchange balance verified.",
+      "source_reference": "User-selected hypothetical scenario v4-smoke; not verified exchange capital",
+      "timestamp_ms": 1793491200000,
+      "verified_exchange_balance": false
+    },
+    "actual_exchange_balance_status": "NOT_CONNECTED",
+    "actual_public_events": {
+      "execution": 198,
+      "level2": 47817,
+      "tickerV2": 2801
+    },
+    "journal_records": 51104,
+    "duration_seconds": 230.3,
+    "replay_identical": true,
+    "money_reconciled_independently": true,
+    "cash": "100",
+    "executable_equity": "100",
+    "equity_last_mark": "100",
+    "net_realized_pnl": "0",
+    "fees": "0",
+    "carry": "0",
+    "ladder": {
+      "starting_total": "100",
+      "realized_net": "0",
+      "active": "50",
+      "reserve": "50",
+      "pending": "0",
+      "deficit": "0",
+      "total": "100",
+      "stage": "EXPAND",
+      "next_step": "RESERVE",
+      "committed_active": "0",
+      "slot_ceiling": 2,
+      "per_position_budget": "25",
+      "policy": {
+        "activation_total": "100",
+        "activation_reserve": "50",
+        "position_budget": "25",
+        "max_slots": 10,
+        "reserve_step": "50",
+        "active_step": "50",
+        "per_trade_planned_risk": "0.0025",
+        "aggregate_planned_risk": "0.01"
+      },
+      "live_orders_enabled": false
+    },
+    "active_risk_drawdown": 0.0,
+    "account_drawdown": 0.0,
+    "positions": [],
+    "campaigns": [],
+    "counts": {
+      "BOOK_SNAPSHOT": 37,
+      "DECISION": 2774,
+      "HEALTH": 16,
+      "INITIAL_FUNDING": 1,
+      "REJECTED_EVENT": 253,
+      "SCAN": 8,
+      "VERIFIED_BOOK": 19
+    },
+    "reason_counts": {
+      "REJECTED_EVENT:rule_version_mismatch": 253
+    },
+    "input_digest": "e0946a61ca494cfaf8e67f95edd3eeaf2bd9c18900fcfccd38605a2c834f1b6b",
+    "backup": {
+      "source_id": "f6d3645dd8514823b59eaf9865312b6a",
+      "paper_cursor": 51104,
+      "source_max_seq": 51104,
+      "paper_input_digest": "e0946a61ca494cfaf8e67f95edd3eeaf2bd9c18900fcfccd38605a2c834f1b6b",
+      "sha256": {
+        "source.sqlite3": "312ec0a6aa1c247cf162cc794cb4f1f325107c2b7e1960bf5d21280be199dd5f",
+        "paper.sqlite3": "fcf7852fb435f916fc9792a87a4979133c7a17b70b482495456600427f6b00d1"
+      }
+    },
+    "24h_host_gate": "BLOCKED \u2014 HOST NOT PROVISIONED",
+    "tested_commit": "0bc3bafdb5816967383a84c0e265b51baab7db27",
+    "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41281466283"
+  },
+  "separate_legacy_8_usdt_result": {
+    "cash": 7.974137965075355,
+    "realized_net_pnl": -0.02586203492464404,
+    "fees": 0.0133493904,
+    "modeled_carry": 6.445246435972222e-07,
+    "maximum_drawdown": 0.003382155220196026,
+    "closed_summary": {
+      "count": 4,
+      "loss": 0.02586203492464404,
+      "losses": 4,
+      "profit": 0.0,
+      "wins": 0
+    },
+    "open_position": null,
+    "input_digest": "98bc42736c99e60e4bb4b71b62e9e36c20f6d85f339c061f371665c19ff089b9"
+  },
+  "preserved_v4_evidence_sha256": {
+    "pr.json": "4d9a88ccdbf29eae834101060e4388136b9af9745559ab7be2496601900c3c51",
+    "v4-restart.json": "4712eeb88ea598a10cb8383f039db5df919057a2e05564d17f468e97b7021b9f",
+    "acceptance.json": "07886b5561f96c875ac924e2020b8b65b227939ecf1921acb9327b5f150d0562",
+    "first.json": "77b3be5359a51736e981a3134dab1af4c9bb5249f9c7f91a077b2bf3d1f5e073",
+    "original-artifact.json": "85e7af960df3d3bafdf32ce6ef523c2419eccfbe8769647ea1a027962dc7bb20",
+    "replay.json": "c4bc7e741142037c4532b90b04130aa1362cf06172288b41234b519b248bccbd",
+    "tests.json": "17e0b8d6f01676d9db67869378528e2833172fb3447ae4d480790efeafb21b7d",
+    "V41_HEDGE_COMPARISON.json": "cea57d7143669909c4e823693a5e716ee3e200dff9823ca0206cb874d2d10709",
+    "host-pricing.json": "6d20b9e1a55cff64a782d37471454f6e8ec11193b9d3dc7fb58e8a14f8e2ef19",
+    "restart.json": "070e6c8b1bf9da7e54cbe8a62947098c38bff1daec4e40df128d56c62ea40b0d",
+    "risk-audit.json": "c21d61236f5edb99b9a833edd3f079fc3501f5b01e77667d53d8f614d4f16ef6",
+    "v4-replay.json": "d4034a55601db3c17b710b5cd4897c5280d18f4318a0a6b93882c9a792a38abf",
+    "ci-status.json": "37a3635349b9c960c332954c8bd59eabd2c635289827d66bfba891ec1d2c2c96",
+    "original-parity.json": "6ef39e16280bef3896fcfdfaf4633fa8ee7e1d51ad2ff4dc25703b16cf14212a",
+    "v4-validation.json": "a9e62ca61aa23eb5d8b882bfad2c580718b2b5003fce869ce8eaa2df7f005390",
+    "v4-first.json": "0e4dfc0cfd771f5bc116e8f76abe99bb64b98b7d14c362c8d9c5a91f0a285444"
+  }
+}
