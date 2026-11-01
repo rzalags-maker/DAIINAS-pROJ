@@ -1,0 +1,109 @@
+{
+  "status": "passed",
+  "live_orders_enabled": false,
+  "tests": {
+    "tests_run": 251,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "expected_failures": 0,
+    "unexpected_successes": 0,
+    "successful": true
+  },
+  "market_scans": 15,
+  "observed_contracts": 717,
+  "public_event_counts": {
+    "execution": 147,
+    "level2": 29734,
+    "tickerV2": 2288
+  },
+  "process_boots": [
+    "882589898ac34142b93bf9c2d4d4fdb7",
+    "0cc9526ebaf94155b4ad8d8153f45cbd"
+  ],
+  "source_cursor": 32505,
+  "input_digest": "09ed424e3bec2cec3ea12833710596defad8400d45f6b063282ed4f5e6a737f3",
+  "cash": 7.963214531279678,
+  "equity_last_mark": 7.9608695214187835,
+  "fees": 0.0204203376,
+  "modeled_carry": 1.1311203234722223e-06,
+  "closed_summary": {
+    "count": 6,
+    "loss": 0.03522106952032343,
+    "losses": 6,
+    "profit": 0.0,
+    "wins": 0
+  },
+  "open_position": {
+    "direction": "SHORT",
+    "quantity_contracts": 1.0,
+    "contract_multiplier": 520000.0,
+    "price_tick_size": "1e-10",
+    "entry_price": 5.0141e-06,
+    "entry_fee_usdt": 0.0015643991999999998,
+    "fee_rate": 0.0006,
+    "planned_stop_mid": 5.0333051250000004e-06,
+    "planned_target_mid": 4.98063975e-06,
+    "planned_stop_quote": 5.033855125000001e-06,
+    "planned_target_net_usdt": 0.013469154399999813,
+    "planned_loss_usdt": 0.013951287999999932,
+    "risk_budget_usdt": 0.019911947326199195,
+    "margin_reserved_usdt": 0.8691106666666667,
+    "entry_notional_usdt": 2.607332,
+    "id": "position:signal:30362:PEPEUSDTM:SHORT",
+    "symbol": "PEPEUSDTM",
+    "rules_hash": "3c2497b23e61385ffb9eea52c0e57dabeffa27aa198baf85bee6518679a91613",
+    "signal_received_ms": 1793502397265,
+    "entry_received_ms": 1793502399530,
+    "entry_observed_bid": 5.0152e-06,
+    "entry_observed_ask": 5.0163e-06,
+    "entry_wire_received_ms": 1793502399530,
+    "entry_provider_ms": 1793502399460,
+    "entry_source_seq": 30529,
+    "unresolved": "missing_or_stale_executable_mark",
+    "last_good_mark_ms": 1793502415288
+  },
+  "pending_entry": null,
+  "pending_exit": null,
+  "decision_counts": {
+    "BOOK_SNAPSHOT": 60,
+    "CLOSED": 6,
+    "EXIT_REQUEST": 6,
+    "HEALTH": 31,
+    "OPENED": 7,
+    "REJECTED": 3,
+    "REJECTED_EVENT": 131,
+    "RESOLVED": 665,
+    "SCAN": 15,
+    "SIGNAL": 10,
+    "UNRESOLVED": 711,
+    "VERIFIED_BOOK": 22
+  },
+  "rejected_and_unresolved_reasons": {
+    "EXIT_REQUEST:DATA_HEALTH": 2,
+    "EXIT_REQUEST:FLOW_INVALIDATION": 3,
+    "EXIT_REQUEST:SPREAD": 1,
+    "REJECTED:unverified_or_unaligned_depth_at_entry": 3,
+    "REJECTED_EVENT:normalization_rule_version_mismatch": 131,
+    "UNRESOLVED:CONNECTED": 3,
+    "UNRESOLVED:CONNECTION_LOSS": 3,
+    "UNRESOLVED:DISCONNECTED": 4,
+    "UNRESOLVED:insufficient_verified_depth_for_full_exit": 671,
+    "UNRESOLVED:missing_or_stale_executable_mark": 30
+  },
+  "replay_identical": true,
+  "backup": {
+    "source_id": "8ef80ed2b3c64a19ac7c2d275391edae",
+    "paper_cursor": 32505,
+    "source_max_seq": 32505,
+    "paper_input_digest": "09ed424e3bec2cec3ea12833710596defad8400d45f6b063282ed4f5e6a737f3",
+    "sha256": {
+      "source.sqlite3": "a2004833ae2bb41761d4e68839d5a915e865e9d6b1703aa5c49b6516ad03c7d2",
+      "paper.sqlite3": "dc83ed3daddb9268fd85379d678a1c381636e5f27c88ffdc07b2aa6533dbd1a0"
+    }
+  },
+  "24h_host_gate": "BLOCKED \u2014 HOST NOT PROVISIONED",
+  "performance_gate": "Not established by bounded infrastructure smoke",
+  "tested_commit": "99616210c506553e10a7463ed52c5f71bacafb96",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41267549977"
+}

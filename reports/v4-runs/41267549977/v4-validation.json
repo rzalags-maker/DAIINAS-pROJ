@@ -1,0 +1,95 @@
+{
+  "status": "passed",
+  "initial_capital": "100",
+  "live_orders_enabled": false,
+  "strategy_validated": false,
+  "production_ready": false,
+  "initial_funding": {
+    "account_id": "paper-v4-100",
+    "account_identity": "d93debd70c1c122f7f6f5bb592c7b102b23410c0e0964b0205dfdaf7a9c503eb",
+    "amount": "100",
+    "asof_source_cursor": 0,
+    "currency": "USDT",
+    "event_id": "INITIAL_FUNDING:3f2570f22a54862d12e90a0a47350bd5d1ff40265038b3bd13086c85125dd049",
+    "event_type": "INITIAL_FUNDING",
+    "journal_source_id": "2b0892979e4f4ffe863dc4b518c481b8",
+    "kind": "owner_confirmed_paper_scenario",
+    "policy_id": "b36770b8c3b5d842c9c85649fdddd992c80f10a5f7432a402c5b8153b9d70fb3",
+    "scope": "FUNDED_V4_PAPER_USDT_PERPETUAL",
+    "source_evidence": "Explicit hypothetical PAPER scenario; no exchange balance verified.",
+    "source_reference": "User-selected hypothetical scenario v4-smoke; not verified exchange capital",
+    "timestamp_ms": 1793491200000,
+    "verified_exchange_balance": false
+  },
+  "actual_exchange_balance_status": "NOT_CONNECTED",
+  "actual_public_events": {
+    "execution": 112,
+    "level2": 55850,
+    "tickerV2": 6312
+  },
+  "journal_records": 62602,
+  "duration_seconds": 230.264,
+  "replay_identical": true,
+  "money_reconciled_independently": true,
+  "cash": "100",
+  "executable_equity": "100",
+  "equity_last_mark": "100",
+  "net_realized_pnl": "0",
+  "fees": "0",
+  "carry": "0",
+  "ladder": {
+    "starting_total": "100",
+    "realized_net": "0",
+    "active": "50",
+    "reserve": "50",
+    "pending": "0",
+    "deficit": "0",
+    "total": "100",
+    "stage": "EXPAND",
+    "next_step": "RESERVE",
+    "committed_active": "0",
+    "slot_ceiling": 2,
+    "per_position_budget": "25",
+    "policy": {
+      "activation_total": "100",
+      "activation_reserve": "50",
+      "position_budget": "25",
+      "max_slots": 10,
+      "reserve_step": "50",
+      "active_step": "50",
+      "per_trade_planned_risk": "0.0025",
+      "aggregate_planned_risk": "0.01"
+    },
+    "live_orders_enabled": false
+  },
+  "active_risk_drawdown": 0.0,
+  "account_drawdown": 0.0,
+  "positions": [],
+  "campaigns": [],
+  "counts": {
+    "BOOK_SNAPSHOT": 58,
+    "DECISION": 6269,
+    "HEALTH": 26,
+    "INITIAL_FUNDING": 1,
+    "REJECTED_EVENT": 306,
+    "SCAN": 14,
+    "VERIFIED_BOOK": 24
+  },
+  "reason_counts": {
+    "REJECTED_EVENT:rule_version_mismatch": 306
+  },
+  "input_digest": "26aa1557bf0e98b6bd07699bcabd0096d6022e2b35d794cbc0733a842d828b8e",
+  "backup": {
+    "source_id": "2b0892979e4f4ffe863dc4b518c481b8",
+    "paper_cursor": 62602,
+    "source_max_seq": 62602,
+    "paper_input_digest": "26aa1557bf0e98b6bd07699bcabd0096d6022e2b35d794cbc0733a842d828b8e",
+    "sha256": {
+      "source.sqlite3": "39f15db21a055f310eb4fe95762566f0bf361a54716df7448674d1c3c0e1b6f9",
+      "paper.sqlite3": "be4a588eb9b9a40805b2525ad905c9dac96bd28fa48e029e4247b2e60cd037ac"
+    }
+  },
+  "24h_host_gate": "BLOCKED \u2014 HOST NOT PROVISIONED",
+  "tested_commit": "99616210c506553e10a7463ed52c5f71bacafb96",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41267549977"
+}
