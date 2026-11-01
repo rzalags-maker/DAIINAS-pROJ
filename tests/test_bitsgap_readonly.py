@@ -79,6 +79,19 @@ class BitsgapReadOnlyTests(unittest.TestCase):
         self.assertEqual([json.loads(c[1])["topic"] for c in self.calls],
                          ["manual", "conf_enums"])
 
+    def test_shape_diagnostics_never_include_api_response_values(self):
+        account_marker = "NEVER_SHOW_ACCOUNT_INFO_923"
+        def unexpected(url, body, headers):
+            return json.dumps({"data": {"value": {"descr": account_marker}, "topic": account_marker}}).encode()
+        api = BitsgapReadOnly(self.pem, unexpected)
+        with self.assertRaises(BitsgapError) as caught:
+            api.handshake()
+        category = str(caught.exception)
+        self.assertIn("UNEXPECTED_MANUAL_RESPONSE", category)
+        self.assertIn("VALUE=DICT", category)
+        self.assertIn("TOPIC=PRESENT", category)
+        self.assertNotIn(account_marker, category)
+
     def test_server_http_rejection_uses_only_status_code(self):
         def fail(url, body, headers):
             raise BitsgapError("HTTP_403")
