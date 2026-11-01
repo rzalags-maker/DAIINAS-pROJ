@@ -6,14 +6,14 @@
   "strategy_validated": false,
   "production_ready": false,
   "source_sha256": {
-    "state/v4-source.sqlite3": "4781195af1e368c4eeccf736b76d95fd104ac9050a59908aafa752782556d5c3"
+    "state/v4-source.sqlite3": "aa325014815ebb1a914ec39d18e9d0b624de5dae8550eed921ebb04978840d19"
   },
-  "first_available_ms": 1793502956084,
-  "last_available_ms": 1793503186294,
-  "duration_seconds": 230.21,
+  "first_available_ms": 1793505014023,
+  "last_available_ms": 1793505244306,
+  "duration_seconds": 230.283,
   "walk_forward": {
-    "training_end_ms": 1793503071188,
-    "held_out_start_ms": 1793503071189,
+    "training_end_ms": 1793505129163,
+    "held_out_start_ms": 1793505129164,
     "thresholds": "Online per-symbol cost/volatility/structure estimates; no fitted return probabilities",
     "status": "INSUFFICIENT_MULTIDAY_OUT_OF_SAMPLE_EVIDENCE",
     "confidence_intervals": "Not estimated from sparse dependent legs"
@@ -27,16 +27,16 @@
           "scope": "FUNDED_V4_PAPER_USDT_PERPETUAL",
           "currency": "USDT",
           "amount": "8",
-          "timestamp_ms": 1793502956083,
+          "timestamp_ms": 1793505014022,
           "source_reference": "Explicit recorded-public-data counterfactual comparison",
           "source_evidence": "Explicit hypothetical PAPER scenario; no exchange balance verified.",
           "event_type": "INITIAL_FUNDING",
-          "policy_id": "caa145d8434f48e772d6d5e7b74c3c5bfc0f96e19af8959bffc8101dfd195097",
-          "account_identity": "44beea2fd06572e3221cd7c9ae317a47e0b75cdfdc37f9c90036db5d76d57342",
-          "journal_source_id": "5358a0e27da7484d8eb2e656ec0aaa5a",
+          "policy_id": "e860f2f431d01e0df2793fe635c6b017c7499b5b22ce76401a821ecb9959c8b1",
+          "account_identity": "464c6b927acd081ddaadf3bc40d26f044f3d34bee4d4bb17e7fd375c57f0d7a6",
+          "journal_source_id": "61428f430681404280c7e352109d3e7c",
           "verified_exchange_balance": false,
           "asof_source_cursor": 0,
-          "event_id": "INITIAL_FUNDING:4e3286603b07befe3f5edea5cc62e958f80815437b5bcb17b8b43e9b0456009c"
+          "event_id": "INITIAL_FUNDING:90b3d51e76909bf6edfbb952a0d8d2f7c0574d8aa493724b4fce814a80b944fc"
         },
         "actual_exchange_balance_status": "NOT_CONNECTED",
         "cash": "8",
@@ -83,24 +83,24 @@
           "loss": "0"
         },
         "reason_counts": {
-          "REJECTED_EVENT:rule_version_mismatch": 122
+          "REJECTED_EVENT:rule_version_mismatch": 799
         },
         "counts": {
           "INITIAL_FUNDING": 1,
-          "SCAN": 15,
-          "HEALTH": 23,
-          "BOOK_SNAPSHOT": 46,
-          "DECISION": 3921,
-          "VERIFIED_BOOK": 19,
-          "REJECTED_EVENT": 122
+          "SCAN": 14,
+          "HEALTH": 25,
+          "BOOK_SNAPSHOT": 59,
+          "DECISION": 4397,
+          "VERIFIED_BOOK": 22,
+          "REJECTED_EVENT": 799
         },
         "held_out_closed_legs": 0,
         "held_out_mean_net": null,
         "confidence_interval": null,
         "expected_net_advantage": "UNSUPPORTED",
-        "abstention_count": 3921,
-        "source_cursor": 67316,
-        "input_digest": "2afc62a4b29005ea87b76678b53f3e139558c4eb68717db85a3e8ab23052f01d",
+        "abstention_count": 4397,
+        "source_cursor": 102083,
+        "input_digest": "312c7b99f11b2e4efb00152cee00e9c779b8b08b3b85b02e9b9f11f1781cb2b3",
         "comparison_policy": "Same as-of observations, same initial capital and risk model; M2 is a negative control"
       },
       "M1": {
@@ -110,16 +110,16 @@
           "scope": "FUNDED_V4_PAPER_USDT_PERPETUAL",
           "currency": "USDT",
           "amount": "8",
-          "timestamp_ms": 1793502956083,
+          "timestamp_ms": 1793505014022,
           "source_reference": "Explicit recorded-public-data counterfactual comparison",
           "source_evidence": "Explicit hypothetical PAPER scenario; no exchange balance verified.",
           "event_type": "INITIAL_FUNDING",
-          "policy_id": "b40f8774c83338444acfd628020eb6be5649654aa3a71ac1be34aac6f171c5d5",
-          "account_identity": "5a11a3e63234cac16b9d921bb225b5b40953985830bf555ac1d699235fd589a7",
-          "journal_source_id": "5358a0e27da7484d8eb2e656ec0aaa5a",
+          "policy_id": "255b8f70b60b187397f2f5fd54c7360a74aafe6f660995a5d2e181d87661bcfc",
+          "account_identity": "9d056c516b655d59da1324ea01dae7d1c9e2272c26152621065759874ab6e2b7",
+          "journal_source_id": "61428f430681404280c7e352109d3e7c",
           "verified_exchange_balance": false,
           "asof_source_cursor": 0,
-          "event_id": "INITIAL_FUNDING:675c24c99e6843cbe28f5df205d4e4817ec302c220247cfb92d80c9b4cc9e70b"
+          "event_id": "INITIAL_FUNDING:cc101edcb2b06871f2b0cab7bccf1814b628d2e5d027ac695e864d40528a8d36"
         },
         "actual_exchange_balance_status": "NOT_CONNECTED",
         "cash": "8",
@@ -166,24 +166,24 @@
           "loss": "0"
         },
         "reason_counts": {
-          "REJECTED_EVENT:rule_version_mismatch": 122
+          "REJECTED_EVENT:rule_version_mismatch": 799
         },
         "counts": {
           "INITIAL_FUNDING": 1,
-          "SCAN": 15,
-          "HEALTH": 23,
-          "BOOK_SNAPSHOT": 46,
-          "DECISION": 3921,
-          "VERIFIED_BOOK": 19,
-          "REJECTED_EVENT": 122
+          "SCAN": 14,
+          "HEALTH": 25,
+          "BOOK_SNAPSHOT": 59,
+          "DECISION": 4397,
+          "VERIFIED_BOOK": 22,
+          "REJECTED_EVENT": 799
         },
         "held_out_closed_legs": 0,
         "held_out_mean_net": null,
         "confidence_interval": null,
         "expected_net_advantage": "UNSUPPORTED",
-        "abstention_count": 3921,
-        "source_cursor": 67316,
-        "input_digest": "2afc62a4b29005ea87b76678b53f3e139558c4eb68717db85a3e8ab23052f01d",
+        "abstention_count": 4397,
+        "source_cursor": 102083,
+        "input_digest": "312c7b99f11b2e4efb00152cee00e9c779b8b08b3b85b02e9b9f11f1781cb2b3",
         "comparison_policy": "Same as-of observations, same initial capital and risk model; M2 is a negative control"
       },
       "M2": {
@@ -193,16 +193,16 @@
           "scope": "FUNDED_V4_PAPER_USDT_PERPETUAL",
           "currency": "USDT",
           "amount": "8",
-          "timestamp_ms": 1793502956083,
+          "timestamp_ms": 1793505014022,
           "source_reference": "Explicit recorded-public-data counterfactual comparison",
           "source_evidence": "Explicit hypothetical PAPER scenario; no exchange balance verified.",
           "event_type": "INITIAL_FUNDING",
-          "policy_id": "fa3a450a69ceb16f34bbdbca76b95dda0c8c810aa87c3152489c453530f4dfbd",
-          "account_identity": "7f6b04374ee550ddf6a25c0739458053ed71ae1a1e60cae6bf27c10ff9f8f623",
-          "journal_source_id": "5358a0e27da7484d8eb2e656ec0aaa5a",
+          "policy_id": "0959919d32b63ff3db4b3e6e593b77d5c2528c2189b396e598b1001aa4ca2fe8",
+          "account_identity": "bc7050cac785fe3b5f2469a035dbccd1cdf49e07384b301c9bb49e72a61228ed",
+          "journal_source_id": "61428f430681404280c7e352109d3e7c",
           "verified_exchange_balance": false,
           "asof_source_cursor": 0,
-          "event_id": "INITIAL_FUNDING:9fb8bf5ac50936f0b692dfbfe0807bc80dc6b4411b806ef7977f1d6310b4b57b"
+          "event_id": "INITIAL_FUNDING:8fcbafd6d8c29a8619a48c525024b35c52e2f1303fca03634586401cb437d6a5"
         },
         "actual_exchange_balance_status": "NOT_CONNECTED",
         "cash": "8",
@@ -249,24 +249,24 @@
           "loss": "0"
         },
         "reason_counts": {
-          "REJECTED_EVENT:rule_version_mismatch": 122
+          "REJECTED_EVENT:rule_version_mismatch": 799
         },
         "counts": {
           "INITIAL_FUNDING": 1,
-          "SCAN": 15,
-          "HEALTH": 23,
-          "BOOK_SNAPSHOT": 46,
-          "DECISION": 3921,
-          "VERIFIED_BOOK": 19,
-          "REJECTED_EVENT": 122
+          "SCAN": 14,
+          "HEALTH": 25,
+          "BOOK_SNAPSHOT": 59,
+          "DECISION": 4397,
+          "VERIFIED_BOOK": 22,
+          "REJECTED_EVENT": 799
         },
         "held_out_closed_legs": 0,
         "held_out_mean_net": null,
         "confidence_interval": null,
         "expected_net_advantage": "UNSUPPORTED",
-        "abstention_count": 3921,
-        "source_cursor": 67316,
-        "input_digest": "2afc62a4b29005ea87b76678b53f3e139558c4eb68717db85a3e8ab23052f01d",
+        "abstention_count": 4397,
+        "source_cursor": 102083,
+        "input_digest": "312c7b99f11b2e4efb00152cee00e9c779b8b08b3b85b02e9b9f11f1781cb2b3",
         "comparison_policy": "Same as-of observations, same initial capital and risk model; M2 is a negative control"
       },
       "M3": {
@@ -276,16 +276,16 @@
           "scope": "FUNDED_V4_PAPER_USDT_PERPETUAL",
           "currency": "USDT",
           "amount": "8",
-          "timestamp_ms": 1793502956083,
+          "timestamp_ms": 1793505014022,
           "source_reference": "Explicit recorded-public-data counterfactual comparison",
           "source_evidence": "Explicit hypothetical PAPER scenario; no exchange balance verified.",
           "event_type": "INITIAL_FUNDING",
-          "policy_id": "0271f88dd52123f84542e9f8601ad8283d0515313011f4675de5a2907a126df5",
-          "account_identity": "ea0803077f7f4b29ce3bd41e6faed0bd2d1cfcc4791002e9529ebe5ae5cc66a3",
-          "journal_source_id": "5358a0e27da7484d8eb2e656ec0aaa5a",
+          "policy_id": "5832e15d351b5559552419a696a4314bbfd4d23f12954a7db34b0926f5851a56",
+          "account_identity": "a8b1102f412a56014dbf0b0358e1c95131d7a73bedce90a4edd154eb42f47907",
+          "journal_source_id": "61428f430681404280c7e352109d3e7c",
           "verified_exchange_balance": false,
           "asof_source_cursor": 0,
-          "event_id": "INITIAL_FUNDING:c561714fb6b8dd74bc4465514cbfd732adcdf2099e330330710cb34c8a2a57f4"
+          "event_id": "INITIAL_FUNDING:fec6b5cffdeb84c9dfe85e3fb61c2803fe522a3a208da74a8ea36e782ad263c8"
         },
         "actual_exchange_balance_status": "NOT_CONNECTED",
         "cash": "8",
@@ -332,24 +332,24 @@
           "loss": "0"
         },
         "reason_counts": {
-          "REJECTED_EVENT:rule_version_mismatch": 122
+          "REJECTED_EVENT:rule_version_mismatch": 799
         },
         "counts": {
           "INITIAL_FUNDING": 1,
-          "SCAN": 15,
-          "HEALTH": 23,
-          "BOOK_SNAPSHOT": 46,
-          "DECISION": 3921,
-          "VERIFIED_BOOK": 19,
-          "REJECTED_EVENT": 122
+          "SCAN": 14,
+          "HEALTH": 25,
+          "BOOK_SNAPSHOT": 59,
+          "DECISION": 4397,
+          "VERIFIED_BOOK": 22,
+          "REJECTED_EVENT": 799
         },
         "held_out_closed_legs": 0,
         "held_out_mean_net": null,
         "confidence_interval": null,
         "expected_net_advantage": "UNSUPPORTED",
-        "abstention_count": 3921,
-        "source_cursor": 67316,
-        "input_digest": "2afc62a4b29005ea87b76678b53f3e139558c4eb68717db85a3e8ab23052f01d",
+        "abstention_count": 4397,
+        "source_cursor": 102083,
+        "input_digest": "312c7b99f11b2e4efb00152cee00e9c779b8b08b3b85b02e9b9f11f1781cb2b3",
         "comparison_policy": "Same as-of observations, same initial capital and risk model; M2 is a negative control"
       }
     },
@@ -361,16 +361,16 @@
           "scope": "FUNDED_V4_PAPER_USDT_PERPETUAL",
           "currency": "USDT",
           "amount": "60",
-          "timestamp_ms": 1793502956083,
+          "timestamp_ms": 1793505014022,
           "source_reference": "Explicit recorded-public-data counterfactual comparison",
           "source_evidence": "Explicit hypothetical PAPER scenario; no exchange balance verified.",
           "event_type": "INITIAL_FUNDING",
-          "policy_id": "7a2ce31b44055566b2ae0d644d736e1aaefd5e7ae60b0259844a3af2c22c28b7",
-          "account_identity": "710d755c69d05152930f4e96b609e5d92768454164bcd856fd5cc14d0d972801",
-          "journal_source_id": "5358a0e27da7484d8eb2e656ec0aaa5a",
+          "policy_id": "05118722fe9fb59bee74be181a5868051899e5e0c29316b18d39612d214db36b",
+          "account_identity": "164b36937dfad82b19fb0db4a1b12bdc076ef8c1ed80674908d11adea102ebbb",
+          "journal_source_id": "61428f430681404280c7e352109d3e7c",
           "verified_exchange_balance": false,
           "asof_source_cursor": 0,
-          "event_id": "INITIAL_FUNDING:5a96f15b7890c181d077a36e0c8d850d785d1f0c233d4d659c859b39327652ad"
+          "event_id": "INITIAL_FUNDING:7ccd823dff587969315c3c4bdc1680295cddc096ca2a246d73a54cad9f7f02c1"
         },
         "actual_exchange_balance_status": "NOT_CONNECTED",
         "cash": "60",
@@ -417,24 +417,24 @@
           "loss": "0"
         },
         "reason_counts": {
-          "REJECTED_EVENT:rule_version_mismatch": 122
+          "REJECTED_EVENT:rule_version_mismatch": 799
         },
         "counts": {
           "INITIAL_FUNDING": 1,
-          "SCAN": 15,
-          "HEALTH": 23,
-          "BOOK_SNAPSHOT": 46,
-          "DECISION": 3921,
-          "VERIFIED_BOOK": 19,
-          "REJECTED_EVENT": 122
+          "SCAN": 14,
+          "HEALTH": 25,
+          "BOOK_SNAPSHOT": 59,
+          "DECISION": 4397,
+          "VERIFIED_BOOK": 22,
+          "REJECTED_EVENT": 799
         },
         "held_out_closed_legs": 0,
         "held_out_mean_net": null,
         "confidence_interval": null,
         "expected_net_advantage": "UNSUPPORTED",
-        "abstention_count": 3921,
-        "source_cursor": 67316,
-        "input_digest": "2afc62a4b29005ea87b76678b53f3e139558c4eb68717db85a3e8ab23052f01d",
+        "abstention_count": 4397,
+        "source_cursor": 102083,
+        "input_digest": "312c7b99f11b2e4efb00152cee00e9c779b8b08b3b85b02e9b9f11f1781cb2b3",
         "comparison_policy": "Same as-of observations, same initial capital and risk model; M2 is a negative control"
       },
       "M1": {
@@ -444,16 +444,16 @@
           "scope": "FUNDED_V4_PAPER_USDT_PERPETUAL",
           "currency": "USDT",
           "amount": "60",
-          "timestamp_ms": 1793502956083,
+          "timestamp_ms": 1793505014022,
           "source_reference": "Explicit recorded-public-data counterfactual comparison",
           "source_evidence": "Explicit hypothetical PAPER scenario; no exchange balance verified.",
           "event_type": "INITIAL_FUNDING",
-          "policy_id": "1c0b023d5312614055660e27e6b9ce341f1b8df0dbe30c46e316775018c96f3d",
-          "account_identity": "40e0ba45e1065096b273a8b6989e8b3ce190b7204317dcc165c748bc15fd6433",
-          "journal_source_id": "5358a0e27da7484d8eb2e656ec0aaa5a",
+          "policy_id": "e5c6f35104630d30922672702f90a186c524ef2911af939cfb74aaa623166739",
+          "account_identity": "34cf6f5488c928a045090ba57f72032dd2a8039f18afdfdf5a034d3e0d9a5707",
+          "journal_source_id": "61428f430681404280c7e352109d3e7c",
           "verified_exchange_balance": false,
           "asof_source_cursor": 0,
-          "event_id": "INITIAL_FUNDING:d774139867c1c180773de40808dd0b7ee469c6e6d85c06a2f3739e93ad0173dd"
+          "event_id": "INITIAL_FUNDING:b51771b7ca0f4c7783dc10a2ba8f540b68029436a78306739bbfb00d5aa71257"
         },
         "actual_exchange_balance_status": "NOT_CONNECTED",
         "cash": "60",
@@ -500,24 +500,24 @@
           "loss": "0"
         },
         "reason_counts": {
-          "REJECTED_EVENT:rule_version_mismatch": 122
+          "REJECTED_EVENT:rule_version_mismatch": 799
         },
         "counts": {
           "INITIAL_FUNDING": 1,
-          "SCAN": 15,
-          "HEALTH": 23,
-          "BOOK_SNAPSHOT": 46,
-          "DECISION": 3921,
-          "VERIFIED_BOOK": 19,
-          "REJECTED_EVENT": 122
+          "SCAN": 14,
+          "HEALTH": 25,
+          "BOOK_SNAPSHOT": 59,
+          "DECISION": 4397,
+          "VERIFIED_BOOK": 22,
+          "REJECTED_EVENT": 799
         },
         "held_out_closed_legs": 0,
         "held_out_mean_net": null,
         "confidence_interval": null,
         "expected_net_advantage": "UNSUPPORTED",
-        "abstention_count": 3921,
-        "source_cursor": 67316,
-        "input_digest": "2afc62a4b29005ea87b76678b53f3e139558c4eb68717db85a3e8ab23052f01d",
+        "abstention_count": 4397,
+        "source_cursor": 102083,
+        "input_digest": "312c7b99f11b2e4efb00152cee00e9c779b8b08b3b85b02e9b9f11f1781cb2b3",
         "comparison_policy": "Same as-of observations, same initial capital and risk model; M2 is a negative control"
       },
       "M2": {
@@ -527,16 +527,16 @@
           "scope": "FUNDED_V4_PAPER_USDT_PERPETUAL",
           "currency": "USDT",
           "amount": "60",
-          "timestamp_ms": 1793502956083,
+          "timestamp_ms": 1793505014022,
           "source_reference": "Explicit recorded-public-data counterfactual comparison",
           "source_evidence": "Explicit hypothetical PAPER scenario; no exchange balance verified.",
           "event_type": "INITIAL_FUNDING",
-          "policy_id": "fb9597a31017c548ddecab104c746ec484f3824d102dac288c50247926fcbb69",
-          "account_identity": "c505494e1fdd1476b35932a208f494d5e569f7a6c1cbb6053a2f9e5c80fcd400",
-          "journal_source_id": "5358a0e27da7484d8eb2e656ec0aaa5a",
+          "policy_id": "3f9f1a0f258ed42de5691d64b740df0934fae67e73be3c8aa49c518836d3afd7",
+          "account_identity": "ca1202a5f2e8db9e2faec3ae56c6f14e99825123f5736b4d650fec7eac12bcca",
+          "journal_source_id": "61428f430681404280c7e352109d3e7c",
           "verified_exchange_balance": false,
           "asof_source_cursor": 0,
-          "event_id": "INITIAL_FUNDING:41e068dbf2411e553c1a53765947fb1171d08eed7c87e3d114699d6f961d2815"
+          "event_id": "INITIAL_FUNDING:a51c80a74b99666470b2e36ff13800673018eb85cfcb6d8f6d3ddb743a29443c"
         },
         "actual_exchange_balance_status": "NOT_CONNECTED",
         "cash": "60",
@@ -583,24 +583,24 @@
           "loss": "0"
         },
         "reason_counts": {
-          "REJECTED_EVENT:rule_version_mismatch": 122
+          "REJECTED_EVENT:rule_version_mismatch": 799
         },
         "counts": {
           "INITIAL_FUNDING": 1,
-          "SCAN": 15,
-          "HEALTH": 23,
-          "BOOK_SNAPSHOT": 46,
-          "DECISION": 3921,
-          "VERIFIED_BOOK": 19,
-          "REJECTED_EVENT": 122
+          "SCAN": 14,
+          "HEALTH": 25,
+          "BOOK_SNAPSHOT": 59,
+          "DECISION": 4397,
+          "VERIFIED_BOOK": 22,
+          "REJECTED_EVENT": 799
         },
         "held_out_closed_legs": 0,
         "held_out_mean_net": null,
         "confidence_interval": null,
         "expected_net_advantage": "UNSUPPORTED",
-        "abstention_count": 3921,
-        "source_cursor": 67316,
-        "input_digest": "2afc62a4b29005ea87b76678b53f3e139558c4eb68717db85a3e8ab23052f01d",
+        "abstention_count": 4397,
+        "source_cursor": 102083,
+        "input_digest": "312c7b99f11b2e4efb00152cee00e9c779b8b08b3b85b02e9b9f11f1781cb2b3",
         "comparison_policy": "Same as-of observations, same initial capital and risk model; M2 is a negative control"
       },
       "M3": {
@@ -610,16 +610,16 @@
           "scope": "FUNDED_V4_PAPER_USDT_PERPETUAL",
           "currency": "USDT",
           "amount": "60",
-          "timestamp_ms": 1793502956083,
+          "timestamp_ms": 1793505014022,
           "source_reference": "Explicit recorded-public-data counterfactual comparison",
           "source_evidence": "Explicit hypothetical PAPER scenario; no exchange balance verified.",
           "event_type": "INITIAL_FUNDING",
-          "policy_id": "598e0cf0e2cd72bf4419dd83a268b67d1d0df85c8d70047bff46f3a19d454a11",
-          "account_identity": "24df1fe57d331ea365db177d2c22009986459c8812c3ed09442b148116ae51b9",
-          "journal_source_id": "5358a0e27da7484d8eb2e656ec0aaa5a",
+          "policy_id": "6e1b76a9686d9239f9cf982a30ed66be9325fdd35e87304a728f41a0ea23fc7a",
+          "account_identity": "c505fac4da0e6ac0b899b6f2b257e7ffc384afa3ddde998f592547b5afcef23c",
+          "journal_source_id": "61428f430681404280c7e352109d3e7c",
           "verified_exchange_balance": false,
           "asof_source_cursor": 0,
-          "event_id": "INITIAL_FUNDING:67d4470d5ecd0d97349f9b439b56de9d8a45326a0cbb5215e410189d837f0672"
+          "event_id": "INITIAL_FUNDING:46c5c91374dfb929740b000781ff9f1272991792fb18b8d124f3910edcd27154"
         },
         "actual_exchange_balance_status": "NOT_CONNECTED",
         "cash": "60",
@@ -666,24 +666,24 @@
           "loss": "0"
         },
         "reason_counts": {
-          "REJECTED_EVENT:rule_version_mismatch": 122
+          "REJECTED_EVENT:rule_version_mismatch": 799
         },
         "counts": {
           "INITIAL_FUNDING": 1,
-          "SCAN": 15,
-          "HEALTH": 23,
-          "BOOK_SNAPSHOT": 46,
-          "DECISION": 3921,
-          "VERIFIED_BOOK": 19,
-          "REJECTED_EVENT": 122
+          "SCAN": 14,
+          "HEALTH": 25,
+          "BOOK_SNAPSHOT": 59,
+          "DECISION": 4397,
+          "VERIFIED_BOOK": 22,
+          "REJECTED_EVENT": 799
         },
         "held_out_closed_legs": 0,
         "held_out_mean_net": null,
         "confidence_interval": null,
         "expected_net_advantage": "UNSUPPORTED",
-        "abstention_count": 3921,
-        "source_cursor": 67316,
-        "input_digest": "2afc62a4b29005ea87b76678b53f3e139558c4eb68717db85a3e8ab23052f01d",
+        "abstention_count": 4397,
+        "source_cursor": 102083,
+        "input_digest": "312c7b99f11b2e4efb00152cee00e9c779b8b08b3b85b02e9b9f11f1781cb2b3",
         "comparison_policy": "Same as-of observations, same initial capital and risk model; M2 is a negative control"
       }
     },
@@ -695,16 +695,16 @@
           "scope": "FUNDED_V4_PAPER_USDT_PERPETUAL",
           "currency": "USDT",
           "amount": "100",
-          "timestamp_ms": 1793502956083,
+          "timestamp_ms": 1793505014022,
           "source_reference": "Explicit recorded-public-data counterfactual comparison",
           "source_evidence": "Explicit hypothetical PAPER scenario; no exchange balance verified.",
           "event_type": "INITIAL_FUNDING",
-          "policy_id": "8f237dc9c45183677eabdb29256abb21bf9a63d045672918e10483b6623d662a",
-          "account_identity": "15bb2595295ac8a17a4350482c0097bafc3c8d410134693af320efb3500ef138",
-          "journal_source_id": "5358a0e27da7484d8eb2e656ec0aaa5a",
+          "policy_id": "85849f23607f91fab3c0624f21690c582e20006cb2978a508701082ad3938520",
+          "account_identity": "a1e8a5080b481c466dcf04795b0aa82df6d81b4742d52ffa6d67257c8f6057d9",
+          "journal_source_id": "61428f430681404280c7e352109d3e7c",
           "verified_exchange_balance": false,
           "asof_source_cursor": 0,
-          "event_id": "INITIAL_FUNDING:7577b38291165a46c616a2ea30722e81ee61457667bda294b9589a23fd65f03b"
+          "event_id": "INITIAL_FUNDING:c2e157ac78acd094ec65949ad45f2c1e6df4e1c7abacc9201a43385172cf10e2"
         },
         "actual_exchange_balance_status": "NOT_CONNECTED",
         "cash": "100",
@@ -751,24 +751,24 @@
           "loss": "0"
         },
         "reason_counts": {
-          "REJECTED_EVENT:rule_version_mismatch": 122
+          "REJECTED_EVENT:rule_version_mismatch": 799
         },
         "counts": {
           "INITIAL_FUNDING": 1,
-          "SCAN": 15,
-          "HEALTH": 23,
-          "BOOK_SNAPSHOT": 46,
-          "DECISION": 3921,
-          "VERIFIED_BOOK": 19,
-          "REJECTED_EVENT": 122
+          "SCAN": 14,
+          "HEALTH": 25,
+          "BOOK_SNAPSHOT": 59,
+          "DECISION": 4397,
+          "VERIFIED_BOOK": 22,
+          "REJECTED_EVENT": 799
         },
         "held_out_closed_legs": 0,
         "held_out_mean_net": null,
         "confidence_interval": null,
         "expected_net_advantage": "UNSUPPORTED",
-        "abstention_count": 3921,
-        "source_cursor": 67316,
-        "input_digest": "2afc62a4b29005ea87b76678b53f3e139558c4eb68717db85a3e8ab23052f01d",
+        "abstention_count": 4397,
+        "source_cursor": 102083,
+        "input_digest": "312c7b99f11b2e4efb00152cee00e9c779b8b08b3b85b02e9b9f11f1781cb2b3",
         "comparison_policy": "Same as-of observations, same initial capital and risk model; M2 is a negative control"
       },
       "M1": {
@@ -778,16 +778,16 @@
           "scope": "FUNDED_V4_PAPER_USDT_PERPETUAL",
           "currency": "USDT",
           "amount": "100",
-          "timestamp_ms": 1793502956083,
+          "timestamp_ms": 1793505014022,
           "source_reference": "Explicit recorded-public-data counterfactual comparison",
           "source_evidence": "Explicit hypothetical PAPER scenario; no exchange balance verified.",
           "event_type": "INITIAL_FUNDING",
-          "policy_id": "7a9bff216e677e9b45c29927b49856dd26ef56fdcd45f002a0db2cf345e4b180",
-          "account_identity": "dcda489017263b17884e104ccbf9b2e3d0416f8617722244feaf34063fd7a245",
-          "journal_source_id": "5358a0e27da7484d8eb2e656ec0aaa5a",
+          "policy_id": "9a0ee2fe4a8f70aa9993d8102c644ec7d0ae3ddd79a838181e2ee086f0820036",
+          "account_identity": "761742ea93d44b3dc1b7021256dfbe1f65589ca54493969bdd9d24da22caf3ba",
+          "journal_source_id": "61428f430681404280c7e352109d3e7c",
           "verified_exchange_balance": false,
           "asof_source_cursor": 0,
-          "event_id": "INITIAL_FUNDING:c5ab8a513792699d4ed88a182861a716900e47a45e5f0466320a0d6abe617a10"
+          "event_id": "INITIAL_FUNDING:6521270541c7bd012d0962888b7815864dd6982cead0bcf08a939df1a6b31e29"
         },
         "actual_exchange_balance_status": "NOT_CONNECTED",
         "cash": "100",
@@ -834,24 +834,24 @@
           "loss": "0"
         },
         "reason_counts": {
-          "REJECTED_EVENT:rule_version_mismatch": 122
+          "REJECTED_EVENT:rule_version_mismatch": 799
         },
         "counts": {
           "INITIAL_FUNDING": 1,
-          "SCAN": 15,
-          "HEALTH": 23,
-          "BOOK_SNAPSHOT": 46,
-          "DECISION": 3921,
-          "VERIFIED_BOOK": 19,
-          "REJECTED_EVENT": 122
+          "SCAN": 14,
+          "HEALTH": 25,
+          "BOOK_SNAPSHOT": 59,
+          "DECISION": 4397,
+          "VERIFIED_BOOK": 22,
+          "REJECTED_EVENT": 799
         },
         "held_out_closed_legs": 0,
         "held_out_mean_net": null,
         "confidence_interval": null,
         "expected_net_advantage": "UNSUPPORTED",
-        "abstention_count": 3921,
-        "source_cursor": 67316,
-        "input_digest": "2afc62a4b29005ea87b76678b53f3e139558c4eb68717db85a3e8ab23052f01d",
+        "abstention_count": 4397,
+        "source_cursor": 102083,
+        "input_digest": "312c7b99f11b2e4efb00152cee00e9c779b8b08b3b85b02e9b9f11f1781cb2b3",
         "comparison_policy": "Same as-of observations, same initial capital and risk model; M2 is a negative control"
       },
       "M2": {
@@ -861,16 +861,16 @@
           "scope": "FUNDED_V4_PAPER_USDT_PERPETUAL",
           "currency": "USDT",
           "amount": "100",
-          "timestamp_ms": 1793502956083,
+          "timestamp_ms": 1793505014022,
           "source_reference": "Explicit recorded-public-data counterfactual comparison",
           "source_evidence": "Explicit hypothetical PAPER scenario; no exchange balance verified.",
           "event_type": "INITIAL_FUNDING",
-          "policy_id": "8f565eec32e867f65d56aff8935064573ff4d4000fca149adab2ba1689ea3cbc",
-          "account_identity": "b64613aec50cdfef3359887e41749dfd0d1706e495244608d5383b3d4d51e20e",
-          "journal_source_id": "5358a0e27da7484d8eb2e656ec0aaa5a",
+          "policy_id": "93ab5d74e9ba894dda08df9df4c1986a14b5a9d51787b5d445b421f782fb7178",
+          "account_identity": "5121227d471f8570a3c00b6fbff2b11df1f373200b772fd8f02dd7ab28c829af",
+          "journal_source_id": "61428f430681404280c7e352109d3e7c",
           "verified_exchange_balance": false,
           "asof_source_cursor": 0,
-          "event_id": "INITIAL_FUNDING:9dabfab35050d6e44dec3638725ffbb0aad2c34c5dce49383b66c94ec18ccc44"
+          "event_id": "INITIAL_FUNDING:3d6e928b5d1bef678e718fbf40b480b02c38288b6c0985746e58587177e5cf51"
         },
         "actual_exchange_balance_status": "NOT_CONNECTED",
         "cash": "100",
@@ -917,24 +917,24 @@
           "loss": "0"
         },
         "reason_counts": {
-          "REJECTED_EVENT:rule_version_mismatch": 122
+          "REJECTED_EVENT:rule_version_mismatch": 799
         },
         "counts": {
           "INITIAL_FUNDING": 1,
-          "SCAN": 15,
-          "HEALTH": 23,
-          "BOOK_SNAPSHOT": 46,
-          "DECISION": 3921,
-          "VERIFIED_BOOK": 19,
-          "REJECTED_EVENT": 122
+          "SCAN": 14,
+          "HEALTH": 25,
+          "BOOK_SNAPSHOT": 59,
+          "DECISION": 4397,
+          "VERIFIED_BOOK": 22,
+          "REJECTED_EVENT": 799
         },
         "held_out_closed_legs": 0,
         "held_out_mean_net": null,
         "confidence_interval": null,
         "expected_net_advantage": "UNSUPPORTED",
-        "abstention_count": 3921,
-        "source_cursor": 67316,
-        "input_digest": "2afc62a4b29005ea87b76678b53f3e139558c4eb68717db85a3e8ab23052f01d",
+        "abstention_count": 4397,
+        "source_cursor": 102083,
+        "input_digest": "312c7b99f11b2e4efb00152cee00e9c779b8b08b3b85b02e9b9f11f1781cb2b3",
         "comparison_policy": "Same as-of observations, same initial capital and risk model; M2 is a negative control"
       },
       "M3": {
@@ -944,16 +944,16 @@
           "scope": "FUNDED_V4_PAPER_USDT_PERPETUAL",
           "currency": "USDT",
           "amount": "100",
-          "timestamp_ms": 1793502956083,
+          "timestamp_ms": 1793505014022,
           "source_reference": "Explicit recorded-public-data counterfactual comparison",
           "source_evidence": "Explicit hypothetical PAPER scenario; no exchange balance verified.",
           "event_type": "INITIAL_FUNDING",
-          "policy_id": "6506741d4dc2c6a3f2e38abb01a0ff98c1d147480cf5e4c692929c3c9ddf0ee9",
-          "account_identity": "42124e1216936fe3e1e36dd5c98071caffd2c9afe2c30507d57d50cee792051b",
-          "journal_source_id": "5358a0e27da7484d8eb2e656ec0aaa5a",
+          "policy_id": "889e4d4b5014bf70a0e2181891623756ada459573b446f51f8c8a8840954b827",
+          "account_identity": "5eb6c9a47ddb7602ace5d8811c22818bdde8e9ae967a617672e3344d84569538",
+          "journal_source_id": "61428f430681404280c7e352109d3e7c",
           "verified_exchange_balance": false,
           "asof_source_cursor": 0,
-          "event_id": "INITIAL_FUNDING:5ca0f80e4d157a6e46b7ff040fb899d2ad6e709d866a4e01f633fb7c2f876bb6"
+          "event_id": "INITIAL_FUNDING:4fdccfc1d5c49d720e6c45078f593cad2a46a67eed913a663e0144a63cc9482f"
         },
         "actual_exchange_balance_status": "NOT_CONNECTED",
         "cash": "100",
@@ -1000,24 +1000,24 @@
           "loss": "0"
         },
         "reason_counts": {
-          "REJECTED_EVENT:rule_version_mismatch": 122
+          "REJECTED_EVENT:rule_version_mismatch": 799
         },
         "counts": {
           "INITIAL_FUNDING": 1,
-          "SCAN": 15,
-          "HEALTH": 23,
-          "BOOK_SNAPSHOT": 46,
-          "DECISION": 3921,
-          "VERIFIED_BOOK": 19,
-          "REJECTED_EVENT": 122
+          "SCAN": 14,
+          "HEALTH": 25,
+          "BOOK_SNAPSHOT": 59,
+          "DECISION": 4397,
+          "VERIFIED_BOOK": 22,
+          "REJECTED_EVENT": 799
         },
         "held_out_closed_legs": 0,
         "held_out_mean_net": null,
         "confidence_interval": null,
         "expected_net_advantage": "UNSUPPORTED",
-        "abstention_count": 3921,
-        "source_cursor": 67316,
-        "input_digest": "2afc62a4b29005ea87b76678b53f3e139558c4eb68717db85a3e8ab23052f01d",
+        "abstention_count": 4397,
+        "source_cursor": 102083,
+        "input_digest": "312c7b99f11b2e4efb00152cee00e9c779b8b08b3b85b02e9b9f11f1781cb2b3",
         "comparison_policy": "Same as-of observations, same initial capital and risk model; M2 is a negative control"
       }
     }
@@ -1025,6 +1025,6 @@
   "hedge_authorization": "No supported held-out advantage installed; adaptive hedge abstains",
   "24h_host_gate": "BLOCKED \u2014 HOST NOT PROVISIONED",
   "uk_product_gate": "OPEN_NOT_VERIFIED",
-  "tested_commit": "f9cbd5cd54a7c6d4e8a15b995482fde05a2cfdc1",
-  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41268122093"
+  "tested_commit": "b428a8b7702c60b65053d6b4d80d92249866ad05",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41270428562"
 }

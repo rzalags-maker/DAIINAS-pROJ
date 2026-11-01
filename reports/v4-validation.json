@@ -6,13 +6,13 @@
   "production_ready": false,
   "initial_funding": {
     "account_id": "paper-v4-100",
-    "account_identity": "be97169d60c3c3582ec543b68cde7171160a3ee974e9d7c7607768d68f43ab06",
+    "account_identity": "59ff75ba14df1338745614a0a0ba6013d949983a2e40547ecadbc67171ac3476",
     "amount": "100",
     "asof_source_cursor": 0,
     "currency": "USDT",
-    "event_id": "INITIAL_FUNDING:16acc8ec9c24757dd136ddab475783a7d9382ee8399fa3e4a675d36a3509e11d",
+    "event_id": "INITIAL_FUNDING:8f1b5c15f19de7ece805d9c2c9864c5d06a85c85980601054bc828c29e4cae5f",
     "event_type": "INITIAL_FUNDING",
-    "journal_source_id": "5358a0e27da7484d8eb2e656ec0aaa5a",
+    "journal_source_id": "61428f430681404280c7e352109d3e7c",
     "kind": "owner_confirmed_paper_scenario",
     "policy_id": "b36770b8c3b5d842c9c85649fdddd992c80f10a5f7432a402c5b8153b9d70fb3",
     "scope": "FUNDED_V4_PAPER_USDT_PERPETUAL",
@@ -23,12 +23,12 @@
   },
   "actual_exchange_balance_status": "NOT_CONNECTED",
   "actual_public_events": {
-    "execution": 142,
-    "level2": 62938,
-    "tickerV2": 3926
+    "execution": 237,
+    "level2": 97094,
+    "tickerV2": 4425
   },
-  "journal_records": 67316,
-  "duration_seconds": 230.21,
+  "journal_records": 102083,
+  "duration_seconds": 230.283,
   "replay_identical": true,
   "money_reconciled_independently": true,
   "cash": "100",
@@ -67,29 +67,29 @@
   "positions": [],
   "campaigns": [],
   "counts": {
-    "BOOK_SNAPSHOT": 46,
-    "DECISION": 3921,
-    "HEALTH": 23,
+    "BOOK_SNAPSHOT": 59,
+    "DECISION": 4397,
+    "HEALTH": 25,
     "INITIAL_FUNDING": 1,
-    "REJECTED_EVENT": 122,
-    "SCAN": 15,
-    "VERIFIED_BOOK": 19
+    "REJECTED_EVENT": 799,
+    "SCAN": 14,
+    "VERIFIED_BOOK": 22
   },
   "reason_counts": {
-    "REJECTED_EVENT:rule_version_mismatch": 122
+    "REJECTED_EVENT:rule_version_mismatch": 799
   },
-  "input_digest": "2afc62a4b29005ea87b76678b53f3e139558c4eb68717db85a3e8ab23052f01d",
+  "input_digest": "312c7b99f11b2e4efb00152cee00e9c779b8b08b3b85b02e9b9f11f1781cb2b3",
   "backup": {
-    "source_id": "5358a0e27da7484d8eb2e656ec0aaa5a",
-    "paper_cursor": 67316,
-    "source_max_seq": 67316,
-    "paper_input_digest": "2afc62a4b29005ea87b76678b53f3e139558c4eb68717db85a3e8ab23052f01d",
+    "source_id": "61428f430681404280c7e352109d3e7c",
+    "paper_cursor": 102083,
+    "source_max_seq": 102083,
+    "paper_input_digest": "312c7b99f11b2e4efb00152cee00e9c779b8b08b3b85b02e9b9f11f1781cb2b3",
     "sha256": {
-      "source.sqlite3": "b063d6bdc01c5bff20fa70a9062c72ea0d039ea6ce75d7b295143293f4497198",
-      "paper.sqlite3": "98d9f39b0d72000e317c39e26a5a15028617294a92e98634d7ce1f993d5331c9"
+      "source.sqlite3": "8a33b7c7a9cb0d0d0a6211949d94b3dae2a4e084e06bc8234f7b2c634b35dbf2",
+      "paper.sqlite3": "bf91a4790a94d3dc184dbbfbe2ebf0d14f9b3de648dcf09f55dd597b77f8d1b8"
     }
   },
   "24h_host_gate": "BLOCKED \u2014 HOST NOT PROVISIONED",
-  "tested_commit": "f9cbd5cd54a7c6d4e8a15b995482fde05a2cfdc1",
-  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41268122093"
+  "tested_commit": "b428a8b7702c60b65053d6b4d80d92249866ad05",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41270428562"
 }

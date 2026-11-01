@@ -16,12 +16,14 @@
     "source_evidence": "Explicit hypothetical PAPER scenario; no exchange balance verified.",
     "event_type": "INITIAL_FUNDING",
     "policy_id": "b36770b8c3b5d842c9c85649fdddd992c80f10a5f7432a402c5b8153b9d70fb3",
-    "account_identity": "be97169d60c3c3582ec543b68cde7171160a3ee974e9d7c7607768d68f43ab06",
-    "journal_source_id": "5358a0e27da7484d8eb2e656ec0aaa5a",
+    "account_identity": "59ff75ba14df1338745614a0a0ba6013d949983a2e40547ecadbc67171ac3476",
+    "journal_source_id": "61428f430681404280c7e352109d3e7c",
     "verified_exchange_balance": false,
     "asof_source_cursor": 0,
-    "event_id": "INITIAL_FUNDING:16acc8ec9c24757dd136ddab475783a7d9382ee8399fa3e4a675d36a3509e11d"
+    "event_id": "INITIAL_FUNDING:8f1b5c15f19de7ece805d9c2c9864c5d06a85c85980601054bc828c29e4cae5f"
   },
+  "entry_capacity": null,
+  "account_status": null,
   "actual_exchange_balance_status": "NOT_CONNECTED",
   "mode": "M3",
   "execution_version": "v4.2-explicit-funding-decimal18-v1",
@@ -86,558 +88,422 @@
   "exit_requests": {},
   "campaigns": [],
   "market_states": {
-    "ETHUSDTM": {
+    "HYPEUSDTM": {
       "history": [
         [
-          1793502958000,
-          2266.5550000000003
+          1793505091000,
+          87.706
         ],
         [
-          1793502959000,
-          2266.5550000000003
+          1793505092000,
+          87.706
         ],
         [
-          1793502961000,
-          2266.5550000000003
+          1793505094000,
+          87.7055
         ],
         [
-          1793502962000,
-          2266.5550000000003
+          1793505095000,
+          87.70349999999999
         ],
         [
-          1793502966000,
-          2266.705
+          1793505098000,
+          87.70349999999999
         ],
         [
-          1793502967000,
-          2266.705
+          1793505099000,
+          87.70349999999999
         ],
         [
-          1793502968000,
-          2266.705
+          1793505101000,
+          87.70349999999999
         ],
         [
-          1793502969000,
-          2266.705
+          1793505106000,
+          87.7025
         ],
         [
-          1793502970000,
-          2266.705
+          1793505107000,
+          87.70349999999999
         ],
         [
-          1793502971000,
-          2266.705
+          1793505108000,
+          87.7025
         ],
         [
-          1793502972000,
-          2266.705
+          1793505109000,
+          87.7025
         ],
         [
-          1793502973000,
-          2266.705
+          1793505112000,
+          87.7025
         ],
         [
-          1793502974000,
-          2266.705
+          1793505113000,
+          87.7025
         ],
         [
-          1793502975000,
-          2266.705
+          1793505123000,
+          87.7025
         ],
         [
-          1793502976000,
-          2266.705
+          1793505124000,
+          87.702
         ],
         [
-          1793502977000,
-          2266.705
+          1793505129000,
+          87.702
         ],
         [
-          1793502978000,
-          2266.705
+          1793505135000,
+          87.702
         ],
         [
-          1793502979000,
-          2266.705
+          1793505145000,
+          87.702
         ],
         [
-          1793502980000,
-          2266.705
+          1793505149000,
+          87.701
         ],
         [
-          1793502981000,
-          2266.705
-        ],
-        [
-          1793502982000,
-          2266.705
-        ],
-        [
-          1793502983000,
-          2266.705
-        ],
-        [
-          1793502984000,
-          2266.705
-        ],
-        [
-          1793502985000,
-          2266.705
-        ],
-        [
-          1793502986000,
-          2266.705
-        ],
-        [
-          1793502987000,
-          2266.705
-        ],
-        [
-          1793502988000,
-          2266.705
-        ],
-        [
-          1793502989000,
-          2266.705
-        ],
-        [
-          1793502990000,
-          2266.705
-        ],
-        [
-          1793502991000,
-          2266.705
-        ],
-        [
-          1793502992000,
-          2266.705
-        ],
-        [
-          1793502993000,
-          2266.705
-        ],
-        [
-          1793502994000,
-          2266.705
-        ],
-        [
-          1793502995000,
-          2266.705
-        ],
-        [
-          1793502996000,
-          2266.705
-        ],
-        [
-          1793502997000,
-          2266.705
-        ],
-        [
-          1793502998000,
-          2266.705
-        ],
-        [
-          1793502999000,
-          2266.705
-        ],
-        [
-          1793503000000,
-          2266.705
-        ],
-        [
-          1793503001000,
-          2266.705
-        ],
-        [
-          1793503002000,
-          2266.705
-        ],
-        [
-          1793503003000,
-          2266.705
-        ],
-        [
-          1793503004000,
-          2266.705
-        ],
-        [
-          1793503005000,
-          2266.705
-        ],
-        [
-          1793503006000,
-          2266.705
-        ],
-        [
-          1793503007000,
-          2266.705
-        ],
-        [
-          1793503008000,
-          2266.705
-        ],
-        [
-          1793503009000,
-          2266.705
-        ],
-        [
-          1793503010000,
-          2266.435
-        ],
-        [
-          1793503011000,
-          2266.2650000000003
-        ],
-        [
-          1793503012000,
-          2266.2650000000003
-        ],
-        [
-          1793503013000,
-          2266.2650000000003
-        ],
-        [
-          1793503014000,
-          2266.2650000000003
-        ],
-        [
-          1793503015000,
-          2266.2650000000003
-        ],
-        [
-          1793503016000,
-          2266.2650000000003
-        ],
-        [
-          1793503017000,
-          2266.2650000000003
-        ],
-        [
-          1793503018000,
-          2266.2650000000003
-        ],
-        [
-          1793503019000,
-          2266.2650000000003
-        ],
-        [
-          1793503020000,
-          2266.2650000000003
-        ],
-        [
-          1793503021000,
-          2265.755
-        ],
-        [
-          1793503022000,
-          2265.755
-        ],
-        [
-          1793503023000,
-          2265.755
-        ],
-        [
-          1793503024000,
-          2265.755
-        ],
-        [
-          1793503025000,
-          2265.755
-        ],
-        [
-          1793503027000,
-          2265.755
-        ],
-        [
-          1793503028000,
-          2265.755
-        ],
-        [
-          1793503029000,
-          2265.755
-        ],
-        [
-          1793503030000,
-          2265.755
-        ],
-        [
-          1793503037000,
-          2265.8450000000003
-        ],
-        [
-          1793503038000,
-          2265.8450000000003
-        ],
-        [
-          1793503039000,
-          2265.8450000000003
-        ],
-        [
-          1793503040000,
-          2265.8450000000003
-        ],
-        [
-          1793503041000,
-          2265.8450000000003
-        ],
-        [
-          1793503042000,
-          2265.8450000000003
-        ],
-        [
-          1793503044000,
-          2265.8450000000003
-        ],
-        [
-          1793503045000,
-          2265.8450000000003
-        ],
-        [
-          1793503046000,
-          2265.8450000000003
-        ],
-        [
-          1793503047000,
-          2265.8450000000003
-        ],
-        [
-          1793503050000,
-          2265.8450000000003
-        ],
-        [
-          1793503051000,
-          2265.8450000000003
-        ],
-        [
-          1793503052000,
-          2265.8450000000003
-        ],
-        [
-          1793503053000,
-          2265.8450000000003
-        ],
-        [
-          1793503054000,
-          2265.8450000000003
-        ],
-        [
-          1793503055000,
-          2265.8450000000003
-        ],
-        [
-          1793503056000,
-          2265.8450000000003
-        ],
-        [
-          1793503057000,
-          2265.8450000000003
-        ],
-        [
-          1793503058000,
-          2265.8450000000003
-        ],
-        [
-          1793503059000,
-          2265.8450000000003
-        ],
-        [
-          1793503060000,
-          2265.8450000000003
-        ],
-        [
-          1793503061000,
-          2265.8450000000003
-        ],
-        [
-          1793503062000,
-          2265.8450000000003
-        ],
-        [
-          1793503063000,
-          2265.8450000000003
-        ],
-        [
-          1793503064000,
-          2265.8450000000003
-        ],
-        [
-          1793503065000,
-          2265.8450000000003
-        ],
-        [
-          1793503066000,
-          2265.8450000000003
-        ],
-        [
-          1793503068000,
-          2265.8450000000003
-        ],
-        [
-          1793503069000,
-          2266.045
-        ],
-        [
-          1793503070000,
-          2266.045
-        ],
-        [
-          1793503071000,
-          2266.045
-        ],
-        [
-          1793503072000,
-          2266.045
-        ],
-        [
-          1793503073000,
-          2266.045
-        ],
-        [
-          1793503074000,
-          2266.045
-        ],
-        [
-          1793503075000,
-          2266.045
-        ],
-        [
-          1793503076000,
-          2266.045
-        ],
-        [
-          1793503077000,
-          2266.045
-        ],
-        [
-          1793503078000,
-          2266.045
-        ],
-        [
-          1793503079000,
-          2266.045
-        ],
-        [
-          1793503080000,
-          2266.045
-        ],
-        [
-          1793503081000,
-          2266.045
-        ],
-        [
-          1793503082000,
-          2266.045
-        ],
-        [
-          1793503083000,
-          2266.045
-        ],
-        [
-          1793503085000,
-          2266.045
-        ],
-        [
-          1793503086000,
-          2266.045
-        ],
-        [
-          1793503087000,
-          2266.045
-        ],
-        [
-          1793503088000,
-          2266.045
-        ],
-        [
-          1793503089000,
-          2266.045
-        ],
-        [
-          1793503090000,
-          2266.045
-        ],
-        [
-          1793503091000,
-          2266.045
-        ],
-        [
-          1793503092000,
-          2266.045
-        ],
-        [
-          1793503093000,
-          2266.045
-        ],
-        [
-          1793503094000,
-          2266.045
-        ],
-        [
-          1793503095000,
-          2266.045
-        ],
-        [
-          1793503096000,
-          2266.045
-        ],
-        [
-          1793503097000,
-          2266.045
-        ],
-        [
-          1793503098000,
-          2266.045
-        ],
-        [
-          1793503099000,
-          2266.165
-        ],
-        [
-          1793503100000,
-          2266.165
-        ],
-        [
-          1793503103000,
-          2266.165
-        ],
-        [
-          1793503104000,
-          2266.165
+          1793505154000,
+          87.701
         ]
       ],
-      "symbol_time_ms": 1793503104209,
-      "regime": "DISLOCATED",
-      "candidate": "DISLOCATED",
-      "candidate_since": 1793503103751,
-      "last_transition_ms": 1793503103751,
-      "momentum_bps": 0.5295570035013242,
-      "trend_bps": -1.7206730037455653,
-      "trend_persistence": 0.03333333333333333,
-      "volatility_bps": 0.2603774390121203,
+      "symbol_time_ms": 1793505154563,
+      "regime": "UNKNOWN",
+      "candidate": "UNKNOWN",
+      "candidate_since": 1793505154560,
+      "last_transition_ms": 1793505154560,
+      "momentum_bps": -0.11402248523473268,
+      "trend_bps": -0.5700864251034776,
+      "trend_persistence": 0.2631578947368421,
+      "volatility_bps": 0.07011202668667542,
       "volatility_regime": "LOW",
-      "cvd_notional": 0,
-      "cvd_ratio": 0,
-      "observed_print_count": 0,
-      "bbo_imbalance": -0.19261213720316628,
-      "l2_pressure": null,
-      "spread_bps": 0.044127413494684985,
-      "round_trip_cost_floor_bps": 16.044127413494685,
-      "range_amplitude_bps": 4.19286286469589,
-      "oscillations": 0,
-      "entry_bid_depth": 3.06,
-      "entry_ask_depth": 4.5200000000000005,
-      "data_fresh": false,
-      "evidence_confidence": "LOW",
+      "cvd_notional": 4613.183800000001,
+      "cvd_ratio": 0.9006871580678323,
+      "observed_print_count": 5,
+      "bbo_imbalance": -0.45054945054945056,
+      "l2_pressure": -0.4623655913978495,
+      "spread_bps": 0.2280475707227214,
+      "round_trip_cost_floor_bps": 16.22804757072272,
+      "range_amplitude_bps": 0.5701189268081386,
+      "oscillations": 2,
+      "entry_bid_depth": 2.5,
+      "entry_ask_depth": 6.6000000000000005,
+      "data_fresh": true,
+      "evidence_confidence": "OBSERVATIONAL_ONLY",
       "expected_net_status": "UNSUPPORTED_UNTIL_HELD_OUT_VALIDATION",
-      "reason": "unverified_or_missing_liquidity",
-      "prospective_move_minus_cost_bps": -13.94769598114674,
+      "reason": "no_cost_adjusted_structure",
+      "prospective_move_minus_cost_bps": -15.657961145619241,
       "horizons_ms": {
         "micro": 30000,
         "trend": 180000,
         "volatility": 600000
       },
       "contract_spec": {
-        "captured_ms": 1793503102559,
+        "captured_ms": 1793505151417,
+        "rules": {
+          "contract_size": "0.1",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "HYPEUSDTM",
+          "tick_size": "0.001"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "rules_hash": "448530e8fbac2307d5110457766ed7a7730ec5ec555ef3efe456eed9907e171d",
+      "last_action": "NO_TRADE",
+      "last_decision_ms": 1793505154563,
+      "decision_reason": "no_cost_adjusted_observable_opportunity",
+      "hedge_evidence_supported": false
+    },
+    "PEPEUSDTM": {
+      "history": [
+        [
+          1793505117000,
+          5.01695e-06
+        ],
+        [
+          1793505120000,
+          5.01665e-06
+        ],
+        [
+          1793505121000,
+          5.0169499999999995e-06
+        ],
+        [
+          1793505122000,
+          5.01715e-06
+        ],
+        [
+          1793505123000,
+          5.01865e-06
+        ],
+        [
+          1793505124000,
+          5.018449999999999e-06
+        ],
+        [
+          1793505125000,
+          5.01745e-06
+        ],
+        [
+          1793505126000,
+          5.01725e-06
+        ],
+        [
+          1793505127000,
+          5.0172e-06
+        ],
+        [
+          1793505130000,
+          5.01815e-06
+        ],
+        [
+          1793505131000,
+          5.01965e-06
+        ],
+        [
+          1793505132000,
+          5.0197500000000005e-06
+        ],
+        [
+          1793505133000,
+          5.0192999999999995e-06
+        ],
+        [
+          1793505135000,
+          5.0192999999999995e-06
+        ],
+        [
+          1793505136000,
+          5.0179e-06
+        ],
+        [
+          1793505137000,
+          5.01835e-06
+        ],
+        [
+          1793505138000,
+          5.0181e-06
+        ],
+        [
+          1793505139000,
+          5.0178e-06
+        ],
+        [
+          1793505140000,
+          5.017550000000001e-06
+        ],
+        [
+          1793505141000,
+          5.01785e-06
+        ],
+        [
+          1793505142000,
+          5.01785e-06
+        ],
+        [
+          1793505143000,
+          5.01785e-06
+        ],
+        [
+          1793505144000,
+          5.0174500000000006e-06
+        ],
+        [
+          1793505147000,
+          5.01725e-06
+        ],
+        [
+          1793505148000,
+          5.01705e-06
+        ],
+        [
+          1793505149000,
+          5.01725e-06
+        ],
+        [
+          1793505150000,
+          5.0174500000000006e-06
+        ],
+        [
+          1793505151000,
+          5.01655e-06
+        ],
+        [
+          1793505152000,
+          5.01735e-06
+        ],
+        [
+          1793505153000,
+          5.0173e-06
+        ],
+        [
+          1793505154000,
+          5.01725e-06
+        ],
+        [
+          1793505155000,
+          5.0154499999999996e-06
+        ],
+        [
+          1793505156000,
+          5.01645e-06
+        ],
+        [
+          1793505157000,
+          5.01645e-06
+        ],
+        [
+          1793505158000,
+          5.01605e-06
+        ],
+        [
+          1793505159000,
+          5.01555e-06
+        ],
+        [
+          1793505161000,
+          5.0152e-06
+        ],
+        [
+          1793505162000,
+          5.01555e-06
+        ]
+      ],
+      "symbol_time_ms": 1793505162942,
+      "regime": "DISLOCATED",
+      "candidate": "DISLOCATED",
+      "candidate_since": 1793505161898,
+      "last_transition_ms": 1793505161898,
+      "momentum_bps": -7.471161317315067,
+      "trend_bps": -2.7905400691663473,
+      "trend_persistence": 0.1891891891891892,
+      "volatility_bps": 1.3106767108819,
+      "volatility_regime": "LOW",
+      "cvd_notional": 2033.8626879999997,
+      "cvd_ratio": 0.33717000303336886,
+      "observed_print_count": 13,
+      "bbo_imbalance": 0.0,
+      "l2_pressure": null,
+      "spread_bps": 3.3894587831849736,
+      "round_trip_cost_floor_bps": 19.38945878318497,
+      "range_amplitude_bps": 9.07241984367646,
+      "oscillations": 15,
+      "entry_bid_depth": 21320000.0,
+      "entry_ask_depth": 21320000.0,
+      "data_fresh": false,
+      "evidence_confidence": "LOW",
+      "expected_net_status": "UNSUPPORTED_UNTIL_HELD_OUT_VALIDATION",
+      "reason": "unverified_or_missing_liquidity",
+      "prospective_move_minus_cost_bps": -11.918297465869903,
+      "horizons_ms": {
+        "micro": 30000,
+        "trend": 180000,
+        "volatility": 600000
+      },
+      "contract_spec": {
+        "captured_ms": 1793505151417,
+        "rules": {
+          "contract_size": "520000.0",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "PEPEUSDTM",
+          "tick_size": "1e-10"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "rules_hash": "3c2497b23e61385ffb9eea52c0e57dabeffa27aa198baf85bee6518679a91613",
+      "last_action": "NO_TRADE",
+      "last_decision_ms": 1793505162942,
+      "decision_reason": "no_cost_adjusted_observable_opportunity",
+      "hedge_evidence_supported": false
+    },
+    "ETHUSDTM": {
+      "history": [
+        [
+          1793505151000,
+          2267.115
+        ],
+        [
+          1793505152000,
+          2267.125
+        ],
+        [
+          1793505154000,
+          2267.125
+        ],
+        [
+          1793505155000,
+          2267.125
+        ],
+        [
+          1793505157000,
+          2267.125
+        ],
+        [
+          1793505158000,
+          2267.125
+        ],
+        [
+          1793505159000,
+          2267.125
+        ],
+        [
+          1793505160000,
+          2267.125
+        ],
+        [
+          1793505162000,
+          2267.125
+        ],
+        [
+          1793505163000,
+          2267.125
+        ]
+      ],
+      "symbol_time_ms": 1793505163551,
+      "regime": "UNKNOWN",
+      "candidate": "UNKNOWN",
+      "candidate_since": 1793505152553,
+      "last_transition_ms": 1793505152553,
+      "momentum_bps": 0.04410892257444843,
+      "trend_bps": 0.04410892257444843,
+      "trend_persistence": 0.1111111111111111,
+      "volatility_bps": 0.01386209700587772,
+      "volatility_regime": "LOW",
+      "cvd_notional": 0,
+      "cvd_ratio": 0,
+      "observed_print_count": 0,
+      "bbo_imbalance": 0.4290348742903488,
+      "l2_pressure": 0.4290348742903488,
+      "spread_bps": 0.044108728015518676,
+      "round_trip_cost_floor_bps": 16.044108728015516,
+      "range_amplitude_bps": 0.04410892257444843,
+      "oscillations": 0,
+      "entry_bid_depth": 8.81,
+      "entry_ask_depth": 3.52,
+      "data_fresh": true,
+      "evidence_confidence": "LOW",
+      "expected_net_status": "UNSUPPORTED_UNTIL_HELD_OUT_VALIDATION",
+      "reason": "insufficient_history",
+      "prospective_move_minus_cost_bps": -15.999999805441067,
+      "horizons_ms": {
+        "micro": 30000,
+        "trend": 180000,
+        "volatility": 600000
+      },
+      "contract_spec": {
+        "captured_ms": 1793505151417,
         "rules": {
           "contract_size": "0.01",
           "max_qty": "1000000",
@@ -652,505 +518,7 @@
       },
       "rules_hash": "3a2b30a0889ccdd8fe6c8f7efc7743e4188c47b257f61b965e0697f8e3ef4f64",
       "last_action": "NO_TRADE",
-      "last_decision_ms": 1793503104209,
-      "decision_reason": "no_cost_adjusted_observable_opportunity",
-      "hedge_evidence_supported": false
-    },
-    "SOLUSDTM": {
-      "history": [
-        [
-          1793502958000,
-          95.5565
-        ],
-        [
-          1793502967000,
-          95.5565
-        ],
-        [
-          1793502968000,
-          95.55850000000001
-        ],
-        [
-          1793502969000,
-          95.55850000000001
-        ],
-        [
-          1793502970000,
-          95.5635
-        ],
-        [
-          1793502971000,
-          95.5635
-        ],
-        [
-          1793502972000,
-          95.5635
-        ],
-        [
-          1793502973000,
-          95.5655
-        ],
-        [
-          1793502974000,
-          95.5575
-        ],
-        [
-          1793502975000,
-          95.5575
-        ],
-        [
-          1793502976000,
-          95.5485
-        ],
-        [
-          1793502977000,
-          95.5485
-        ],
-        [
-          1793502979000,
-          95.5485
-        ],
-        [
-          1793502980000,
-          95.5545
-        ],
-        [
-          1793502981000,
-          95.5545
-        ],
-        [
-          1793502982000,
-          95.5545
-        ],
-        [
-          1793502984000,
-          95.5545
-        ],
-        [
-          1793502985000,
-          95.5545
-        ],
-        [
-          1793502986000,
-          95.5545
-        ],
-        [
-          1793502987000,
-          95.5545
-        ],
-        [
-          1793502988000,
-          95.5545
-        ],
-        [
-          1793502989000,
-          95.5545
-        ],
-        [
-          1793502990000,
-          95.5545
-        ],
-        [
-          1793502991000,
-          95.5545
-        ],
-        [
-          1793502992000,
-          95.5545
-        ],
-        [
-          1793502994000,
-          95.5545
-        ],
-        [
-          1793502995000,
-          95.5545
-        ],
-        [
-          1793502997000,
-          95.5545
-        ],
-        [
-          1793502998000,
-          95.5545
-        ],
-        [
-          1793502999000,
-          95.5545
-        ],
-        [
-          1793503000000,
-          95.5545
-        ],
-        [
-          1793503001000,
-          95.5545
-        ],
-        [
-          1793503002000,
-          95.5545
-        ],
-        [
-          1793503003000,
-          95.5545
-        ],
-        [
-          1793503004000,
-          95.5545
-        ],
-        [
-          1793503005000,
-          95.5545
-        ],
-        [
-          1793503006000,
-          95.5545
-        ],
-        [
-          1793503007000,
-          95.5545
-        ],
-        [
-          1793503008000,
-          95.5545
-        ],
-        [
-          1793503009000,
-          95.5545
-        ],
-        [
-          1793503010000,
-          95.5175
-        ],
-        [
-          1793503011000,
-          95.5205
-        ],
-        [
-          1793503012000,
-          95.5205
-        ],
-        [
-          1793503013000,
-          95.5205
-        ],
-        [
-          1793503014000,
-          95.5205
-        ],
-        [
-          1793503015000,
-          95.5205
-        ],
-        [
-          1793503016000,
-          95.5205
-        ],
-        [
-          1793503017000,
-          95.5205
-        ],
-        [
-          1793503018000,
-          95.5205
-        ],
-        [
-          1793503019000,
-          95.5205
-        ],
-        [
-          1793503021000,
-          95.5205
-        ],
-        [
-          1793503022000,
-          95.5205
-        ],
-        [
-          1793503023000,
-          95.5205
-        ],
-        [
-          1793503024000,
-          95.5205
-        ],
-        [
-          1793503025000,
-          95.5205
-        ],
-        [
-          1793503026000,
-          95.5205
-        ],
-        [
-          1793503027000,
-          95.5205
-        ],
-        [
-          1793503028000,
-          95.5205
-        ],
-        [
-          1793503029000,
-          95.5205
-        ],
-        [
-          1793503030000,
-          95.5205
-        ],
-        [
-          1793503039000,
-          95.5025
-        ],
-        [
-          1793503040000,
-          95.5025
-        ],
-        [
-          1793503041000,
-          95.5025
-        ],
-        [
-          1793503042000,
-          95.5025
-        ],
-        [
-          1793503043000,
-          95.5025
-        ],
-        [
-          1793503044000,
-          95.5025
-        ],
-        [
-          1793503045000,
-          95.5025
-        ],
-        [
-          1793503046000,
-          95.5025
-        ],
-        [
-          1793503047000,
-          95.5025
-        ],
-        [
-          1793503048000,
-          95.5025
-        ],
-        [
-          1793503049000,
-          95.5025
-        ],
-        [
-          1793503051000,
-          95.5025
-        ],
-        [
-          1793503052000,
-          95.5025
-        ],
-        [
-          1793503053000,
-          95.5025
-        ],
-        [
-          1793503054000,
-          95.5025
-        ],
-        [
-          1793503056000,
-          95.5025
-        ],
-        [
-          1793503057000,
-          95.5025
-        ],
-        [
-          1793503059000,
-          95.5025
-        ],
-        [
-          1793503060000,
-          95.5025
-        ],
-        [
-          1793503061000,
-          95.5025
-        ],
-        [
-          1793503062000,
-          95.5025
-        ],
-        [
-          1793503063000,
-          95.5025
-        ],
-        [
-          1793503064000,
-          95.5025
-        ],
-        [
-          1793503067000,
-          95.5025
-        ],
-        [
-          1793503068000,
-          95.5025
-        ],
-        [
-          1793503070000,
-          95.5025
-        ],
-        [
-          1793503071000,
-          95.5025
-        ],
-        [
-          1793503072000,
-          95.5025
-        ],
-        [
-          1793503073000,
-          95.5025
-        ],
-        [
-          1793503074000,
-          95.5025
-        ],
-        [
-          1793503076000,
-          95.5025
-        ],
-        [
-          1793503077000,
-          95.5025
-        ],
-        [
-          1793503078000,
-          95.5025
-        ],
-        [
-          1793503079000,
-          95.5025
-        ],
-        [
-          1793503081000,
-          95.5025
-        ],
-        [
-          1793503082000,
-          95.5025
-        ],
-        [
-          1793503083000,
-          95.5025
-        ],
-        [
-          1793503084000,
-          95.5025
-        ],
-        [
-          1793503086000,
-          95.5025
-        ],
-        [
-          1793503087000,
-          95.5025
-        ],
-        [
-          1793503088000,
-          95.5025
-        ],
-        [
-          1793503089000,
-          95.5025
-        ],
-        [
-          1793503090000,
-          95.5025
-        ],
-        [
-          1793503091000,
-          95.5025
-        ],
-        [
-          1793503092000,
-          95.5025
-        ],
-        [
-          1793503093000,
-          95.5025
-        ],
-        [
-          1793503094000,
-          95.5025
-        ],
-        [
-          1793503095000,
-          95.5025
-        ],
-        [
-          1793503097000,
-          95.5025
-        ],
-        [
-          1793503098000,
-          95.5025
-        ],
-        [
-          1793503099000,
-          95.5025
-        ]
-      ],
-      "symbol_time_ms": 1793503099852,
-      "regime": "UNKNOWN",
-      "candidate": "UNKNOWN",
-      "candidate_since": 1793503010922,
-      "last_transition_ms": 1793503010922,
-      "momentum_bps": 0.0,
-      "trend_bps": -5.651106936733763,
-      "trend_persistence": 0.016666666666666666,
-      "volatility_bps": 0.43376016071975804,
-      "volatility_regime": "LOW",
-      "cvd_notional": 38.2012,
-      "cvd_ratio": 1.0,
-      "observed_print_count": 1,
-      "bbo_imbalance": -0.2597173144876324,
-      "l2_pressure": -0.2597173144876324,
-      "spread_bps": 0.10470930080414387,
-      "round_trip_cost_floor_bps": 16.104709300804142,
-      "range_amplitude_bps": 6.596685950630565,
-      "oscillations": 0,
-      "entry_bid_depth": 41.900000000000006,
-      "entry_ask_depth": 71.3,
-      "data_fresh": true,
-      "evidence_confidence": "OBSERVATIONAL_ONLY",
-      "expected_net_status": "UNSUPPORTED_UNTIL_HELD_OUT_VALIDATION",
-      "reason": "no_cost_adjusted_structure",
-      "prospective_move_minus_cost_bps": -10.45360236407038,
-      "horizons_ms": {
-        "micro": 30000,
-        "trend": 180000,
-        "volatility": 600000
-      },
-      "contract_spec": {
-        "captured_ms": 1793503069724,
-        "rules": {
-          "contract_size": "0.1",
-          "max_qty": "1000000",
-          "min_notional": "0",
-          "min_qty": "1",
-          "step_size": "1",
-          "symbol": "SOLUSDTM",
-          "tick_size": "0.001"
-        },
-        "source": "KuCoin public contracts/active",
-        "taker_fee_rate": 0.0006
-      },
-      "rules_hash": "326f45402ffae60bf5d4a29cfaaa3f7cd30215d0bd381355cd5e0613fb6e7fb1",
-      "last_action": "NO_TRADE",
-      "last_decision_ms": 1793503099852,
+      "last_decision_ms": 1793505163551,
       "decision_reason": "no_cost_adjusted_observable_opportunity",
       "hedge_evidence_supported": false
     }
@@ -1165,66 +533,66 @@
   "pins": [],
   "counts": {
     "INITIAL_FUNDING": 1,
-    "SCAN": 10,
-    "HEALTH": 15,
-    "BOOK_SNAPSHOT": 24,
-    "DECISION": 2625,
-    "VERIFIED_BOOK": 8,
-    "REJECTED_EVENT": 21
+    "SCAN": 8,
+    "HEALTH": 13,
+    "BOOK_SNAPSHOT": 31,
+    "DECISION": 2739,
+    "VERIFIED_BOOK": 11,
+    "REJECTED_EVENT": 449
   },
   "reason_counts": {
-    "REJECTED_EVENT:rule_version_mismatch": 21
+    "REJECTED_EVENT:rule_version_mismatch": 449
   },
   "recent_closed_positions": [],
-  "source_cursor": 43862,
-  "input_digest": "5a311ad4158e48ba5f586c28070e07d8746759abde31c3fc3cb3896c10d16fdf",
-  "checkpoint_available_ms": 1793503105861,
+  "source_cursor": 65787,
+  "input_digest": "c613c7baf4c942bd8f36073d99ab07e64fe6a9e16a904373107ca516adf4b54e",
+  "checkpoint_available_ms": 1793505164022,
   "scan": {
-    "available_ms": 1793503105861,
-    "report_time_ms": 1793503105789,
+    "available_ms": 1793505151504,
+    "report_time_ms": 1793505151417,
     "watch": {
       "blocked_new_entries": [],
       "capacity_exhausted": false,
       "deep_symbols": [
         "ETHUSDTM",
-        "HYPEUSDTM",
-        "SOLUSDTM"
+        "PEPEUSDTM",
+        "HYPEUSDTM"
       ],
       "entered_at": {
-        "ETHUSDTM": 1793502956371,
-        "HYPEUSDTM": 1793503100713,
-        "SOLUSDTM": 1793502956371
+        "ETHUSDTM": 1793505151417,
+        "HYPEUSDTM": 1793505080191,
+        "PEPEUSDTM": 1793505117091
       },
       "no_trade": true,
       "pinned": [],
       "reason": "Snapshot-based candidate rotation only; no strategy edge validated",
-      "time_ms": 1793503105789,
+      "time_ms": 1793505151417,
       "watch_pool": [
         "ETHUSDTM",
+        "PEPEUSDTM",
         "HYPEUSDTM",
+        "ZECUSDTM",
         "SOLUSDTM",
         "XRPUSDTM",
-        "TAOUSDTM",
-        "XMRUSDTM",
-        "PEPEUSDTM",
-        "BNBUSDTM",
-        "NEARUSDTM",
-        "KCSUSDTM",
+        "PAXGUSDTM",
         "BCHUSDTM",
+        "ASTERUSDTM",
+        "FILUSDTM",
         "SUIUSDTM",
         "LINKUSDTM",
-        "FILUSDTM",
-        "ASTERUSDTM",
-        "DOTUSDTM",
-        "DOGEUSDTM",
         "ENAUSDTM",
-        "IRYSUSDTM",
-        "GRAMUSDTM"
+        "NEARUSDTM",
+        "UNIUSDTM",
+        "TIAUSDTM",
+        "AAVEUSDTM",
+        "AVAXUSDTM",
+        "INJUSDTM",
+        "HBARUSDTM"
       ]
     },
     "specs": {
       "ETHUSDTM": {
-        "captured_ms": 1793503105789,
+        "captured_ms": 1793505151417,
         "rules": {
           "contract_size": "0.01",
           "max_qty": "1000000",
@@ -1238,7 +606,7 @@
         "taker_fee_rate": 0.0006
       },
       "HYPEUSDTM": {
-        "captured_ms": 1793503105789,
+        "captured_ms": 1793505151417,
         "rules": {
           "contract_size": "0.1",
           "max_qty": "1000000",
@@ -1251,16 +619,16 @@
         "source": "KuCoin public contracts/active",
         "taker_fee_rate": 0.0006
       },
-      "SOLUSDTM": {
-        "captured_ms": 1793503105789,
+      "PEPEUSDTM": {
+        "captured_ms": 1793505151417,
         "rules": {
-          "contract_size": "0.1",
+          "contract_size": "520000.0",
           "max_qty": "1000000",
           "min_notional": "0",
           "min_qty": "1",
           "step_size": "1",
-          "symbol": "SOLUSDTM",
-          "tick_size": "0.001"
+          "symbol": "PEPEUSDTM",
+          "tick_size": "1e-10"
         },
         "source": "KuCoin public contracts/active",
         "taker_fee_rate": 0.0006
@@ -1270,94 +638,129 @@
   },
   "service": {
     "active": [
-      "ETHUSDTM"
+      "ETHUSDTM",
+      "HYPEUSDTM",
+      "PEPEUSDTM"
     ],
-    "boot_id": "8112b862c33b4fcd864662901a188f03",
-    "connected": false,
-    "disk_free_bytes": 93554577408,
-    "elapsed_seconds": 149.02882323499995,
+    "boot_id": "932cd3beb26d4e3a815d8385447a4c80",
+    "connected": true,
+    "disk_free_bytes": 93503889408,
+    "elapsed_seconds": 149.14398185099998,
     "feed_age_ms": {
       "ETHUSDTM": {
-        "execution": 1793503105111,
-        "level2": 1793503105111,
-        "tickerV2": 903
+        "execution": 1793505163165,
+        "level2": 15,
+        "tickerV2": 635
+      },
+      "HYPEUSDTM": {
+        "execution": 8606,
+        "level2": 84,
+        "tickerV2": 8606
+      },
+      "PEPEUSDTM": {
+        "execution": 2536,
+        "level2": 77,
+        "tickerV2": 224
       }
     },
     "host_id": null,
-    "paper_bytes": 8118040,
-    "session_id": "42ed288ca0ad47648484579d5f58cde5",
-    "source_bytes": 77531464,
+    "paper_bytes": 9875176,
+    "session_id": "db1e0800ced54ea0830a2c67b60a27cd",
+    "source_bytes": 104298224,
     "stream_counts": {
-      "book_resyncs": 8,
-      "connections": 5,
-      "market_scans": 9,
-      "pongs": 8,
-      "reconciliations": 5,
-      "reconnects": 5,
-      "snapshots": 24,
-      "subscribe_acks": 33
+      "book_gaps": 2,
+      "book_resyncs": 13,
+      "connections": 4,
+      "late_retired_frames": 1,
+      "market_scans": 8,
+      "pongs": 9,
+      "reconciliations": 6,
+      "reconnects": 3,
+      "retired_markets": 2,
+      "snapshots": 31,
+      "subscribe_acks": 39,
+      "unsubscribe_acks": 6
     },
     "unavailable": [],
-    "verified_books": []
+    "verified_books": [
+      "ETHUSDTM",
+      "HYPEUSDTM",
+      "PEPEUSDTM"
+    ]
   },
   "unsettled_campaign_pnl": "0",
   "stream": {
     "connected": false,
-    "session_id": "42ed288ca0ad47648484579d5f58cde5",
+    "session_id": "db1e0800ced54ea0830a2c67b60a27cd",
     "active": [
-      "ETHUSDTM"
+      "ETHUSDTM",
+      "HYPEUSDTM",
+      "PEPEUSDTM"
     ],
     "verified_books": [],
     "feed_age_ms": {
       "ETHUSDTM": {
-        "execution": 1793503106083,
-        "tickerV2": 1875,
-        "level2": 1793503106083
+        "execution": 1793505164136,
+        "tickerV2": 585,
+        "level2": 133
+      },
+      "HYPEUSDTM": {
+        "execution": 9577,
+        "tickerV2": 9577,
+        "level2": 415
+      },
+      "PEPEUSDTM": {
+        "execution": 3507,
+        "tickerV2": 1195,
+        "level2": 123
       }
     },
     "stream_counts": {
-      "market_scans": 10,
-      "connections": 5,
-      "subscribe_acks": 33,
-      "snapshots": 24,
-      "book_resyncs": 8,
-      "reconnects": 5,
-      "reconciliations": 5,
-      "pongs": 8
+      "market_scans": 8,
+      "connections": 4,
+      "subscribe_acks": 39,
+      "snapshots": 31,
+      "reconnects": 3,
+      "book_resyncs": 13,
+      "reconciliations": 6,
+      "pongs": 9,
+      "book_gaps": 2,
+      "unsubscribe_acks": 6,
+      "retired_markets": 2,
+      "late_retired_frames": 1
     },
     "unavailable": []
   },
   "errors": [
     "DataGap: Book restore retry limit exceeded",
-    "DataGap: Book restore retry limit exceeded",
-    "ConnectionError: Scheduled public token renewal",
     "ConnectionError: Scheduled public token renewal",
     "DataGap: Book restore retry limit exceeded"
   ],
   "fatal_error": null,
-  "elapsed_seconds": 150.00138961599998,
-  "boot_id": "8112b862c33b4fcd864662901a188f03",
+  "elapsed_seconds": 150.11534777999998,
+  "boot_id": "932cd3beb26d4e3a815d8385447a4c80",
   "source_path": "state/v4-source.sqlite3",
   "paper_path": "state/v4-paper.sqlite3",
   "observed_contracts": 717,
   "normalized_event_counts": {
-    "tickerV2": 2626,
-    "level2": 40960,
-    "execution": 80
+    "tickerV2": 2747,
+    "level2": 62725,
+    "execution": 114
   },
   "source_code_sha256": {
-    "continuous.py": "64862adc05f0a9b86ab5b7666481dff76dff3bbaddf276a388d30ea4ac122a8b",
-    "continuous_paper.py": "04e76e5f85336a369ccd4f986a91ee6341c20f2defd6f703889cd5a5620023fa",
+    "continuous.py": "8305ed2fdbb6c4035747126c65882114693dcbcfc6fb30b2004757a23b80d92d",
+    "continuous_paper.py": "ba8c8f471d8819171f3486b62ce00c743a8a1e34a862493acb878d9ae41c699a",
     "continuous_stream.py": "2a18e78fd5bb0d06e1e040641ee7ec3effea3f25065510d6e5436c0b29de3024",
     "continuous_store.py": "b1fd3315da192b857af9333a830a5ad722dfac2f34b4acffc427b736e8d9b096",
     "capital_ladder.py": "8fa1a07bac9b4675fa56e13428663ab7cec5de1eb847a722d75b804cf846f58f",
-    "portfolio_paper.py": "acec4a2d37f2bdc319f7c8f9fc62736721b6f312c6a45220d67c2f4859690b04",
+    "portfolio_paper.py": "20ad5855e50eb9c4af94ca449f3aafc429fe103ce3b7473a670e7ed00812df09",
     "market_intelligence.py": "5814c8d49cb13f9798529da005fde45214defdf86d9f8aae26baee6a7abe16ec",
     "hedge_research.py": "610a0e299c2b3f9b9ad2532757279244b2f3efbec60eff1ea7cbace2c9ad2f88",
-    "funding.py": "96ca25a5090b96ed46f4a7a71bc31295c858297414d5ec8ed2fbf66e2e0d0b32"
+    "funding.py": "f66c71669dbaa0d8196ae2bf39076863e833fd7150d6d50da51c2b9dd26ea4dc",
+    "account_capital.py": "0cb623f8ab65f41ce4de4e1611a74b7333f1c3405d73cb57b6987e306c5ebf3a"
   },
   "24h_host_gate": "BLOCKED \u2014 HOST NOT PROVISIONED",
   "smoke_status": "passed",
-  "tested_commit": "f9cbd5cd54a7c6d4e8a15b995482fde05a2cfdc1",
-  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41268122093"
+  "tested_commit": "b428a8b7702c60b65053d6b4d80d92249866ad05",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41270428562"
 }
