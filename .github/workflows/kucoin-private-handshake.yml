@@ -32,9 +32,30 @@ jobs:
           KUCOIN_API_KEY_VERSION: ${{ vars.KUCOIN_API_KEY_VERSION || '2' }}
         run: |
           python - <<'PY'
+          import json
           import os
+          import re
           import sys
-          from daiinas.kucoin_readonly import APIError, Credentials, ReadOnly
+          import urllib.error
+          from daiinas.kucoin_readonly import APIError, Credentials, ReadOnly, https_get
+
+          def sanitized_get(url, headers):
+              # Retain original GET transport and never print URL, headers or body.
+              try:
+                  return https_get(url, headers)
+              except urllib.error.HTTPError as error:
+                  status = error.code if isinstance(error.code, int) and 100 <= error.code <= 599 else "UNKNOWN"
+                  print("HTTP_STATUS=" + str(status))
+                  provider_code = "UNKNOWN"
+                  try:
+                      body = json.loads(error.read(4096))
+                      candidate = str(body.get("code", "")) if isinstance(body, dict) else ""
+                      if re.fullmatch(r"[0-9]{6}", candidate):
+                          provider_code = candidate
+                  except (ValueError, UnicodeError, OSError):
+                      pass
+                  print("KUCOIN_ERROR_CODE=" + provider_code)
+                  raise
 
           names = ("KUCOIN_API_KEY", "KUCOIN_API_SECRET", "KUCOIN_API_PASSPHRASE")
           if any(not os.environ.get(name) for name in names):
@@ -42,9 +63,11 @@ jobs:
               sys.exit(2)
 
           # This job calls only the hardcoded signed GET account-mode endpoint.
-          # Never print credentials, request headers, responses, balances, or IDs.
+          # Never print credentials, request headers, response bodies, balances, or IDs.
+          version = os.environ.get("KUCOIN_API_KEY_VERSION", "2")
+          print("API_KEY_VERSION=" + (version if version in ("2", "3") else "UNSUPPORTED"))
           try:
-              mode_response = ReadOnly(Credentials.from_env()).get("mode")
+              mode_response = ReadOnly(Credentials.from_env(), transport=sanitized_get).get("mode")
               mode = mode_response.get("selfAccountMode") if isinstance(mode_response, dict) else None
               if mode not in ("CLASSIC", "UNIFIED"):
                   print("KUCOIN_READ_ONLY_AUTH=FAIL; CATEGORY=UNEXPECTED_ACCOUNT_MODE")
@@ -61,6 +84,8 @@ jobs:
                   category = "HTTP_REJECTION"
               elif error.startswith("API_"):
                   category = "EXCHANGE_REJECTION"
+                  match = re.match(r"API_([0-9]{6})(?:\s|$)", error)
+                  print("KUCOIN_ERROR_CODE=" + (match.group(1) if match else "UNKNOWN"))
               elif error.startswith("NOT_CONNECTED"):
                   category = "MISSING_CREDENTIAL"
               else:
