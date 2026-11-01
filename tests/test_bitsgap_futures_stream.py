@@ -122,6 +122,18 @@ class StreamTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.stream.unscoped_control_responses,0)
         self.assertEqual(self.stream.last_frame_shape["topic_class"],"NONE")
 
+    async def test_topic_value_with_optional_messaging_field_is_validated(self):
+        event = self.stream._ingest({"ok": True, "topic": "balance",
+                  "params":{"em":72}, "value":self.w.balance,
+                  "mes":"SENSITIVE_PROVIDER_MESSAGE_DO_NOT_ECHO"})
+        self.assertEqual(event["event"], "VALIDATED_UPDATE")
+        self.assertEqual(event["topic"], "balance")
+        self.assertNotIn("SENSITIVE_PROVIDER_MESSAGE", json.dumps(event))
+        with self.assertRaisesRegex(BitsgapError, "WS_UNVERIFIED_TOPIC_FRAME"):
+            self.stream._ingest({"ok": True, "topic": "balance",
+                   "params":{"em":72}, "value":self.w.balance,
+                   "mes": {"private":"SECRET"}})
+
     async def test_foreign_exchange_event_is_denied(self):
         ws=FakeWS([{"type":"auth_ok","sid":"ok"},
                    {"ok":True,"topic":"balance","params":{"em":71},"value":self.w.balance}])
