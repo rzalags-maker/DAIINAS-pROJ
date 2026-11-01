@@ -1,4 +1,5 @@
 name: One-time Bitsgap Futures OBSERVE authenticated snapshot
+# Re-run after reviewed documented topic-value normalization (PR #21)
 
 on:
   push:
