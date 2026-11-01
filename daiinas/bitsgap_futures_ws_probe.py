@@ -56,6 +56,7 @@ async def probe_bounded(*, observer, connect, seconds=8):
         "rest_positions": wallet.positions_status if wallet is not None else "UNVERIFIED",
         "websocket_auth": "PASS" if stream.authenticated else "UNVERIFIED",
         "websocket_topics": statuses,
+        "unscoped_ok_control_responses": stream.unscoped_control_responses,
         "diagnostic_outcome": failure,
         "rejected_frame_envelope": stream.last_frame_shape,
         "absence_of_data_is_zero_exposure": False,
