@@ -1,0 +1,78 @@
+{
+  "status": "passed",
+  "initial_capital": "100",
+  "live_orders_enabled": false,
+  "strategy_validated": false,
+  "production_ready": false,
+  "actual_public_events": {
+    "execution": 664,
+    "level2": 134603,
+    "tickerV2": 12630
+  },
+  "journal_records": 148193,
+  "duration_seconds": 229.75,
+  "replay_identical": true,
+  "money_reconciled_independently": true,
+  "cash": "100",
+  "executable_equity": "100",
+  "equity_last_mark": "100",
+  "net_realized_pnl": "0",
+  "fees": "0",
+  "carry": "0",
+  "ladder": {
+    "starting_total": "100",
+    "realized_net": "0",
+    "active": "50",
+    "reserve": "50",
+    "pending": "0",
+    "deficit": "0",
+    "total": "100",
+    "stage": "EXPAND",
+    "next_step": "RESERVE",
+    "committed_active": "0",
+    "slot_ceiling": 2,
+    "per_position_budget": "25",
+    "policy": {
+      "activation_total": "100",
+      "activation_reserve": "50",
+      "position_budget": "25",
+      "max_slots": 10,
+      "reserve_step": "50",
+      "active_step": "50",
+      "per_trade_planned_risk": "0.0025",
+      "aggregate_planned_risk": "0.01"
+    },
+    "live_orders_enabled": false
+  },
+  "active_risk_drawdown": 0.0,
+  "account_drawdown": 0.0,
+  "positions": [],
+  "campaigns": [],
+  "counts": {
+    "BOOK_SNAPSHOT": 36,
+    "DECISION": 11472,
+    "HEALTH": 19,
+    "REJECTED_EVENT": 714,
+    "REJECTED_QUOTE": 1124,
+    "SCAN": 13,
+    "VERIFIED_BOOK": 19
+  },
+  "reason_counts": {
+    "REJECTED_EVENT:rule_version_mismatch": 714,
+    "REJECTED_QUOTE:invalid_or_stale": 1124
+  },
+  "input_digest": "6f12663b6bf80454dfb34fe504dc2b110ddd7774f0288b0f98eddeb8b64eb024",
+  "backup": {
+    "source_id": "83cd589d73d84bbb9ab59b786efce543",
+    "paper_cursor": 148193,
+    "source_max_seq": 148193,
+    "paper_input_digest": "6f12663b6bf80454dfb34fe504dc2b110ddd7774f0288b0f98eddeb8b64eb024",
+    "sha256": {
+      "source.sqlite3": "ca174ca5a0c2eb8f53afbc2810477dfc4eab01059903bf6b3cad889c9b63991e",
+      "paper.sqlite3": "232e191b459d0262a5dc0547644b10c68999124fa97bf6c05b0f32f99b894c77"
+    }
+  },
+  "24h_host_gate": "BLOCKED \u2014 HOST NOT PROVISIONED",
+  "tested_commit": "bb5392af092ee06d862e304951308bdb699f3a5c",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41263173254"
+}

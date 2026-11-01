@@ -1,0 +1,1110 @@
+{
+  "status": "PAPER_ONLY",
+  "engine": "v4",
+  "live_orders_enabled": false,
+  "strategy_validated": false,
+  "production_ready": false,
+  "initial_capital": "100",
+  "mode": "M3",
+  "execution_version": "v4.1-decimal18-v1",
+  "money_quantum_usdt": "1E-18",
+  "evidence_policy_sha256": "3af113f64d86224724aeafcbefad4b592be8aacb7bc8b9ecd46666afffd01195",
+  "cash": "100",
+  "equity_last_mark": "100",
+  "executable_equity": "100",
+  "mark_status": "FLAT",
+  "active_equity": "50",
+  "ladder": {
+    "starting_total": "100",
+    "realized_net": "0",
+    "active": "50",
+    "reserve": "50",
+    "pending": "0",
+    "deficit": "0",
+    "total": "100",
+    "stage": "EXPAND",
+    "next_step": "RESERVE",
+    "committed_active": "0",
+    "slot_ceiling": 2,
+    "per_position_budget": "25",
+    "policy": {
+      "activation_total": "100",
+      "activation_reserve": "50",
+      "position_budget": "25",
+      "max_slots": 10,
+      "reserve_step": "50",
+      "active_step": "50",
+      "per_trade_planned_risk": "0.0025",
+      "aggregate_planned_risk": "0.01"
+    },
+    "live_orders_enabled": false
+  },
+  "capital_status": {
+    "allowed_slots": 2,
+    "open_positions": 0,
+    "free_slots": 2,
+    "excess_open_to_reduce_safely": 0,
+    "block_new_entries": false,
+    "marked_trading_budget": "50",
+    "reserve_untouched": "50",
+    "manual_safe_exit_required": false
+  },
+  "reserved_margin": "0",
+  "planned_risk": "0",
+  "realized_net_pnl": "0",
+  "fees": "0",
+  "entry_fees": "0",
+  "exit_fees": "0",
+  "modeled_carry": "0",
+  "external_simulated_flows": "0",
+  "account_maximum_drawdown": 0.0,
+  "account_peak": "100",
+  "maximum_drawdown_basis": "Active equity risk gate; total account metric is account_maximum_drawdown",
+  "maximum_drawdown": 0.0,
+  "halted": false,
+  "paused_new_entries": false,
+  "positions": [],
+  "pending_entries": [],
+  "exit_requests": {},
+  "campaigns": [],
+  "market_states": {
+    "ETHUSDTM": {
+      "history": [
+        [
+          1793498541000,
+          2269.835
+        ],
+        [
+          1793498542000,
+          2269.835
+        ],
+        [
+          1793498543000,
+          2269.835
+        ],
+        [
+          1793498544000,
+          2269.835
+        ],
+        [
+          1793498545000,
+          2269.835
+        ],
+        [
+          1793498546000,
+          2269.835
+        ],
+        [
+          1793498547000,
+          2269.835
+        ],
+        [
+          1793498548000,
+          2269.835
+        ],
+        [
+          1793498549000,
+          2269.835
+        ],
+        [
+          1793498550000,
+          2269.6549999999997
+        ],
+        [
+          1793498551000,
+          2269.6549999999997
+        ],
+        [
+          1793498552000,
+          2269.6549999999997
+        ],
+        [
+          1793498553000,
+          2269.6549999999997
+        ],
+        [
+          1793498554000,
+          2269.6549999999997
+        ],
+        [
+          1793498555000,
+          2270.415
+        ],
+        [
+          1793498556000,
+          2271.145
+        ],
+        [
+          1793498557000,
+          2271.495
+        ],
+        [
+          1793498558000,
+          2271.575
+        ],
+        [
+          1793498559000,
+          2271.575
+        ],
+        [
+          1793498560000,
+          2271.575
+        ],
+        [
+          1793498561000,
+          2271.575
+        ],
+        [
+          1793498562000,
+          2271.575
+        ],
+        [
+          1793498563000,
+          2271.4449999999997
+        ],
+        [
+          1793498564000,
+          2271.4449999999997
+        ],
+        [
+          1793498565000,
+          2271.4449999999997
+        ],
+        [
+          1793498566000,
+          2271.4449999999997
+        ],
+        [
+          1793498567000,
+          2271.4449999999997
+        ],
+        [
+          1793498568000,
+          2271.4449999999997
+        ],
+        [
+          1793498569000,
+          2271.4049999999997
+        ],
+        [
+          1793498570000,
+          2271.4049999999997
+        ],
+        [
+          1793498573000,
+          2271.4049999999997
+        ],
+        [
+          1793498575000,
+          2271.4049999999997
+        ],
+        [
+          1793498576000,
+          2271.4049999999997
+        ],
+        [
+          1793498577000,
+          2271.4049999999997
+        ],
+        [
+          1793498578000,
+          2271.4049999999997
+        ],
+        [
+          1793498579000,
+          2271.4049999999997
+        ],
+        [
+          1793498580000,
+          2271.105
+        ],
+        [
+          1793498581000,
+          2271.105
+        ],
+        [
+          1793498582000,
+          2271.105
+        ],
+        [
+          1793498583000,
+          2270.995
+        ],
+        [
+          1793498584000,
+          2270.9449999999997
+        ],
+        [
+          1793498585000,
+          2270.9449999999997
+        ],
+        [
+          1793498586000,
+          2270.9449999999997
+        ],
+        [
+          1793498587000,
+          2270.9449999999997
+        ],
+        [
+          1793498588000,
+          2270.9449999999997
+        ],
+        [
+          1793498589000,
+          2270.775
+        ],
+        [
+          1793498590000,
+          2270.775
+        ],
+        [
+          1793498591000,
+          2270.775
+        ],
+        [
+          1793498592000,
+          2270.775
+        ],
+        [
+          1793498593000,
+          2270.775
+        ],
+        [
+          1793498594000,
+          2270.775
+        ],
+        [
+          1793498595000,
+          2270.575
+        ],
+        [
+          1793498596000,
+          2270.575
+        ],
+        [
+          1793498597000,
+          2270.575
+        ],
+        [
+          1793498598000,
+          2270.575
+        ],
+        [
+          1793498599000,
+          2270.575
+        ],
+        [
+          1793498600000,
+          2270.575
+        ],
+        [
+          1793498601000,
+          2270.575
+        ],
+        [
+          1793498602000,
+          2270.575
+        ],
+        [
+          1793498603000,
+          2270.575
+        ],
+        [
+          1793498604000,
+          2270.575
+        ],
+        [
+          1793498608000,
+          2270.575
+        ],
+        [
+          1793498609000,
+          2270.575
+        ],
+        [
+          1793498610000,
+          2270.575
+        ],
+        [
+          1793498611000,
+          2270.575
+        ],
+        [
+          1793498612000,
+          2270.575
+        ],
+        [
+          1793498613000,
+          2270.575
+        ],
+        [
+          1793498614000,
+          2270.575
+        ],
+        [
+          1793498615000,
+          2270.575
+        ],
+        [
+          1793498616000,
+          2270.575
+        ],
+        [
+          1793498617000,
+          2270.575
+        ],
+        [
+          1793498618000,
+          2271.0699999999997
+        ],
+        [
+          1793498619000,
+          2271.6549999999997
+        ],
+        [
+          1793498620000,
+          2271.6549999999997
+        ],
+        [
+          1793498621000,
+          2271.395
+        ],
+        [
+          1793498622000,
+          2271.395
+        ],
+        [
+          1793498623000,
+          2271.335
+        ],
+        [
+          1793498624000,
+          2271.335
+        ],
+        [
+          1793498625000,
+          2271.335
+        ],
+        [
+          1793498626000,
+          2271.335
+        ],
+        [
+          1793498627000,
+          2271.335
+        ],
+        [
+          1793498628000,
+          2271.335
+        ],
+        [
+          1793498629000,
+          2271.995
+        ],
+        [
+          1793498630000,
+          2271.995
+        ],
+        [
+          1793498631000,
+          2271.995
+        ],
+        [
+          1793498632000,
+          2271.995
+        ],
+        [
+          1793498633000,
+          2272.8050000000003
+        ],
+        [
+          1793498634000,
+          2273.1099999999997
+        ],
+        [
+          1793498635000,
+          2273.115
+        ],
+        [
+          1793498638000,
+          2272.245
+        ],
+        [
+          1793498639000,
+          2272.725
+        ],
+        [
+          1793498640000,
+          2272.635
+        ],
+        [
+          1793498641000,
+          2273.0150000000003
+        ],
+        [
+          1793498642000,
+          2273.5150000000003
+        ],
+        [
+          1793498643000,
+          2273.5950000000003
+        ],
+        [
+          1793498644000,
+          2274.425
+        ],
+        [
+          1793498649000,
+          2273.245
+        ],
+        [
+          1793498650000,
+          2273.075
+        ],
+        [
+          1793498651000,
+          2273.0550000000003
+        ],
+        [
+          1793498652000,
+          2273.215
+        ],
+        [
+          1793498653000,
+          2273.2650000000003
+        ],
+        [
+          1793498654000,
+          2273.2650000000003
+        ],
+        [
+          1793498655000,
+          2273.2650000000003
+        ],
+        [
+          1793498656000,
+          2273.2650000000003
+        ],
+        [
+          1793498657000,
+          2273.075
+        ],
+        [
+          1793498658000,
+          2273.085
+        ],
+        [
+          1793498659000,
+          2273.455
+        ],
+        [
+          1793498660000,
+          2273.285
+        ],
+        [
+          1793498661000,
+          2273.285
+        ],
+        [
+          1793498662000,
+          2273.915
+        ],
+        [
+          1793498663000,
+          2274.165
+        ],
+        [
+          1793498664000,
+          2274.165
+        ],
+        [
+          1793498665000,
+          2274.165
+        ],
+        [
+          1793498666000,
+          2273.955
+        ],
+        [
+          1793498667000,
+          2273.665
+        ],
+        [
+          1793498668000,
+          2273.585
+        ],
+        [
+          1793498669000,
+          2273.585
+        ],
+        [
+          1793498670000,
+          2273.3050000000003
+        ],
+        [
+          1793498671000,
+          2273.165
+        ],
+        [
+          1793498672000,
+          2273.165
+        ],
+        [
+          1793498676000,
+          2273.165
+        ],
+        [
+          1793498677000,
+          2273.4449999999997
+        ],
+        [
+          1793498678000,
+          2273.355
+        ],
+        [
+          1793498679000,
+          2273.355
+        ],
+        [
+          1793498681000,
+          2273.355
+        ],
+        [
+          1793498682000,
+          2273.165
+        ],
+        [
+          1793498683000,
+          2273.165
+        ],
+        [
+          1793498684000,
+          2273.165
+        ],
+        [
+          1793498685000,
+          2273.165
+        ],
+        [
+          1793498686000,
+          2273.165
+        ],
+        [
+          1793498687000,
+          2272.925
+        ],
+        [
+          1793498688000,
+          2272.925
+        ],
+        [
+          1793498689000,
+          2272.925
+        ]
+      ],
+      "symbol_time_ms": 1793498689327,
+      "regime": "UNKNOWN",
+      "candidate": "UNKNOWN",
+      "candidate_since": 1793498687178,
+      "last_transition_ms": 1793498687178,
+      "momentum_bps": -1.5836113817657704,
+      "trend_bps": 13.613324316525954,
+      "trend_persistence": 0.016666666666666666,
+      "volatility_bps": 1.0726789124534248,
+      "volatility_regime": "LOW",
+      "cvd_notional": -22.7316,
+      "cvd_ratio": -1.0,
+      "observed_print_count": 1,
+      "bbo_imbalance": -0.9975278121137205,
+      "l2_pressure": -0.9975278121137205,
+      "spread_bps": 0.043996172331966656,
+      "round_trip_cost_floor_bps": 16.043996172331966,
+      "range_amplitude_bps": 21.016409983016793,
+      "oscillations": 14,
+      "entry_bid_depth": 0.03,
+      "entry_ask_depth": 24.240000000000002,
+      "data_fresh": true,
+      "evidence_confidence": "OBSERVATIONAL_ONLY",
+      "expected_net_status": "UNSUPPORTED_UNTIL_HELD_OUT_VALIDATION",
+      "reason": "no_cost_adjusted_structure",
+      "prospective_move_minus_cost_bps": -2.430671855806011,
+      "horizons_ms": {
+        "micro": 30000,
+        "trend": 180000,
+        "volatility": 600000
+      },
+      "contract_spec": {
+        "captured_ms": 1793498674452,
+        "rules": {
+          "contract_size": "0.01",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "ETHUSDTM",
+          "tick_size": "0.01"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "rules_hash": "3a2b30a0889ccdd8fe6c8f7efc7743e4188c47b257f61b965e0697f8e3ef4f64",
+      "last_action": "NO_TRADE",
+      "last_decision_ms": 1793498689327,
+      "decision_reason": "no_cost_adjusted_observable_opportunity",
+      "hedge_evidence_supported": false
+    },
+    "BNBUSDTM": {
+      "history": [
+        [
+          1793498676000,
+          703.8499999999999
+        ],
+        [
+          1793498677000,
+          703.8499999999999
+        ],
+        [
+          1793498678000,
+          703.8499999999999
+        ],
+        [
+          1793498679000,
+          703.855
+        ],
+        [
+          1793498680000,
+          703.8599999999999
+        ],
+        [
+          1793498681000,
+          703.855
+        ],
+        [
+          1793498682000,
+          703.8599999999999
+        ],
+        [
+          1793498683000,
+          703.855
+        ],
+        [
+          1793498684000,
+          703.855
+        ],
+        [
+          1793498685000,
+          703.8599999999999
+        ],
+        [
+          1793498686000,
+          703.8599999999999
+        ],
+        [
+          1793498687000,
+          703.8599999999999
+        ],
+        [
+          1793498688000,
+          703.825
+        ],
+        [
+          1793498689000,
+          703.7950000000001
+        ]
+      ],
+      "symbol_time_ms": 1793498689424,
+      "regime": "DISLOCATED",
+      "candidate": "DISLOCATED",
+      "candidate_since": 1793498689372,
+      "last_transition_ms": 1793498689372,
+      "momentum_bps": -0.7814164949893065,
+      "trend_bps": -0.7814164949893065,
+      "trend_persistence": 0.0,
+      "volatility_bps": 0.1780783606174974,
+      "volatility_regime": "LOW",
+      "cvd_notional": -1013.5152,
+      "cvd_ratio": -1.0,
+      "observed_print_count": 1,
+      "bbo_imbalance": 0.19811320754716982,
+      "l2_pressure": null,
+      "spread_bps": 1.8471287803976364,
+      "round_trip_cost_floor_bps": 17.847128780397632,
+      "range_amplitude_bps": 0.923564390196141,
+      "oscillations": 5,
+      "entry_bid_depth": 1.27,
+      "entry_ask_depth": 0.85,
+      "data_fresh": false,
+      "evidence_confidence": "LOW",
+      "expected_net_status": "UNSUPPORTED_UNTIL_HELD_OUT_VALIDATION",
+      "reason": "unverified_or_missing_liquidity",
+      "prospective_move_minus_cost_bps": -17.065712285408324,
+      "horizons_ms": {
+        "micro": 30000,
+        "trend": 180000,
+        "volatility": 600000
+      },
+      "contract_spec": {
+        "captured_ms": 1793498674452,
+        "rules": {
+          "contract_size": "0.01",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "BNBUSDTM",
+          "tick_size": "0.01"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "rules_hash": "9c437e1b3a65ed579e4fcc54d070ec4c059583f087b5edbcb5b91d8eeaa3b6b6",
+      "last_action": "NO_TRADE",
+      "last_decision_ms": 1793498689424,
+      "decision_reason": "no_cost_adjusted_observable_opportunity",
+      "hedge_evidence_supported": false
+    },
+    "SOLUSDTM": {
+      "history": [
+        [
+          1793498677000,
+          95.8565
+        ],
+        [
+          1793498678000,
+          95.84649999999999
+        ],
+        [
+          1793498679000,
+          95.84649999999999
+        ],
+        [
+          1793498680000,
+          95.84649999999999
+        ],
+        [
+          1793498681000,
+          95.8505
+        ],
+        [
+          1793498682000,
+          95.8355
+        ],
+        [
+          1793498683000,
+          95.8395
+        ],
+        [
+          1793498684000,
+          95.8395
+        ],
+        [
+          1793498685000,
+          95.8355
+        ],
+        [
+          1793498686000,
+          95.8335
+        ],
+        [
+          1793498687000,
+          95.82849999999999
+        ],
+        [
+          1793498688000,
+          95.82849999999999
+        ],
+        [
+          1793498689000,
+          95.82849999999999
+        ]
+      ],
+      "symbol_time_ms": 1793498689493,
+      "regime": "UNKNOWN",
+      "candidate": "UNKNOWN",
+      "candidate_since": 1793498689108,
+      "last_transition_ms": 1793498689108,
+      "momentum_bps": -2.921033002457607,
+      "trend_bps": -2.921033002457607,
+      "trend_persistence": 0.25,
+      "volatility_bps": 0.5526106454629167,
+      "volatility_regime": "LOW",
+      "cvd_notional": 0,
+      "cvd_ratio": 0,
+      "observed_print_count": 0,
+      "bbo_imbalance": -0.3315217391304348,
+      "l2_pressure": -0.3315217391304348,
+      "spread_bps": 0.10435308911133578,
+      "round_trip_cost_floor_bps": 16.104353089111335,
+      "range_amplitude_bps": 2.921886495146353,
+      "oscillations": 4,
+      "entry_bid_depth": 12.3,
+      "entry_ask_depth": 24.5,
+      "data_fresh": true,
+      "evidence_confidence": "OBSERVATIONAL_ONLY",
+      "expected_net_status": "UNSUPPORTED_UNTIL_HELD_OUT_VALIDATION",
+      "reason": "no_cost_adjusted_structure",
+      "prospective_move_minus_cost_bps": -13.183320086653728,
+      "horizons_ms": {
+        "micro": 30000,
+        "trend": 180000,
+        "volatility": 600000
+      },
+      "contract_spec": {
+        "captured_ms": 1793498674452,
+        "rules": {
+          "contract_size": "0.1",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "SOLUSDTM",
+          "tick_size": "0.001"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "rules_hash": "326f45402ffae60bf5d4a29cfaaa3f7cd30215d0bd381355cd5e0613fb6e7fb1",
+      "last_action": "NO_TRADE",
+      "last_decision_ms": 1793498689493,
+      "decision_reason": "no_cost_adjusted_observable_opportunity",
+      "hedge_evidence_supported": false
+    }
+  },
+  "closed_summary": {
+    "count": 0,
+    "wins": 0,
+    "losses": 0,
+    "profit": "0",
+    "loss": "0"
+  },
+  "pins": [],
+  "counts": {
+    "SCAN": 7,
+    "HEALTH": 9,
+    "BOOK_SNAPSHOT": 20,
+    "VERIFIED_BOOK": 11,
+    "DECISION": 8204,
+    "REJECTED_EVENT": 485,
+    "REJECTED_QUOTE": 1124
+  },
+  "reason_counts": {
+    "REJECTED_EVENT:rule_version_mismatch": 485,
+    "REJECTED_QUOTE:invalid_or_stale": 1124
+  },
+  "recent_closed_positions": [],
+  "source_cursor": 114249,
+  "input_digest": "f660d62cb6d397bda1a3b5f4d55568ea6f983452aad187e58bc8dfb1a8b44d56",
+  "checkpoint_available_ms": 1793498689614,
+  "scan": {
+    "available_ms": 1793498674537,
+    "report_time_ms": 1793498674452,
+    "watch": {
+      "blocked_new_entries": [],
+      "capacity_exhausted": false,
+      "deep_symbols": [
+        "ETHUSDTM",
+        "SOLUSDTM",
+        "BNBUSDTM"
+      ],
+      "entered_at": {
+        "BNBUSDTM": 1793498671475,
+        "ETHUSDTM": 1793498540039,
+        "SOLUSDTM": 1793498674452
+      },
+      "no_trade": true,
+      "pinned": [],
+      "reason": "Snapshot-based candidate rotation only; no strategy edge validated",
+      "time_ms": 1793498674452,
+      "watch_pool": [
+        "ETHUSDTM",
+        "SOLUSDTM",
+        "BNBUSDTM",
+        "ZECUSDTM",
+        "PAXGUSDTM",
+        "AAVEUSDTM",
+        "TAOUSDTM",
+        "PEPEUSDTM",
+        "SUIUSDTM",
+        "ENAUSDTM",
+        "ONDOUSDTM",
+        "WETUSDTM",
+        "KCSUSDTM",
+        "HYPEUSDTM",
+        "BCHUSDTM",
+        "NEARUSDTM",
+        "INJUSDTM",
+        "1000BONKUSDTM",
+        "FILUSDTM",
+        "GRAMUSDTM"
+      ]
+    },
+    "specs": {
+      "BNBUSDTM": {
+        "captured_ms": 1793498674452,
+        "rules": {
+          "contract_size": "0.01",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "BNBUSDTM",
+          "tick_size": "0.01"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "ETHUSDTM": {
+        "captured_ms": 1793498674452,
+        "rules": {
+          "contract_size": "0.01",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "ETHUSDTM",
+          "tick_size": "0.01"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "SOLUSDTM": {
+        "captured_ms": 1793498674452,
+        "rules": {
+          "contract_size": "0.1",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "SOLUSDTM",
+          "tick_size": "0.001"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      }
+    },
+    "unavailable": []
+  },
+  "service": {
+    "active": [
+      "BNBUSDTM",
+      "ETHUSDTM",
+      "SOLUSDTM"
+    ],
+    "boot_id": "824540ccd288451daffda3d52fee905c",
+    "connected": true,
+    "disk_free_bytes": 93460865024,
+    "elapsed_seconds": 149.80181001,
+    "feed_age_ms": {
+      "BNBUSDTM": {
+        "execution": 9759,
+        "level2": 2,
+        "tickerV2": 45
+      },
+      "ETHUSDTM": {
+        "execution": 2260,
+        "level2": 2,
+        "tickerV2": 91
+      },
+      "SOLUSDTM": {
+        "execution": 1793498689415,
+        "level2": 10,
+        "tickerV2": 22
+      }
+    },
+    "host_id": null,
+    "paper_bytes": 15049096,
+    "session_id": "a29eff45bd904fc2956a88a963bb0a34",
+    "source_bytes": 160479056,
+    "stream_counts": {
+      "book_gaps": 1,
+      "book_resyncs": 12,
+      "connections": 3,
+      "market_scans": 7,
+      "pongs": 9,
+      "reconciliations": 7,
+      "reconnects": 2,
+      "retired_markets": 2,
+      "snapshots": 20,
+      "subscribe_acks": 33,
+      "unsubscribe_acks": 6
+    },
+    "unavailable": [],
+    "verified_books": [
+      "BNBUSDTM",
+      "ETHUSDTM",
+      "SOLUSDTM"
+    ]
+  },
+  "unsettled_campaign_pnl": "0",
+  "stream": {
+    "connected": false,
+    "session_id": "a29eff45bd904fc2956a88a963bb0a34",
+    "active": [
+      "BNBUSDTM",
+      "ETHUSDTM",
+      "SOLUSDTM"
+    ],
+    "verified_books": [],
+    "feed_age_ms": {
+      "BNBUSDTM": {
+        "execution": 10115,
+        "tickerV2": 348,
+        "level2": 159
+      },
+      "ETHUSDTM": {
+        "execution": 2616,
+        "tickerV2": 447,
+        "level2": 157
+      },
+      "SOLUSDTM": {
+        "execution": 1793498689771,
+        "tickerV2": 279,
+        "level2": 165
+      }
+    },
+    "stream_counts": {
+      "market_scans": 7,
+      "connections": 3,
+      "subscribe_acks": 33,
+      "snapshots": 20,
+      "book_resyncs": 12,
+      "reconciliations": 7,
+      "pongs": 9,
+      "unsubscribe_acks": 6,
+      "retired_markets": 2,
+      "reconnects": 2,
+      "book_gaps": 1
+    },
+    "unavailable": []
+  },
+  "errors": [
+    "ConnectionError: Scheduled public token renewal",
+    "ConnectionError: Scheduled public token renewal"
+  ],
+  "fatal_error": null,
+  "elapsed_seconds": 150.157767529,
+  "boot_id": "824540ccd288451daffda3d52fee905c",
+  "source_path": "state/v4-source.sqlite3",
+  "paper_path": "state/v4-paper.sqlite3",
+  "observed_contracts": 717,
+  "normalized_event_counts": {
+    "level2": 104190,
+    "tickerV2": 9337,
+    "execution": 539
+  },
+  "source_code_sha256": {
+    "continuous.py": "30527f847d8eb928ee1891f2b86a9e85c7af4b3f2df038e252c4a3b19b3d7404",
+    "continuous_paper.py": "04e76e5f85336a369ccd4f986a91ee6341c20f2defd6f703889cd5a5620023fa",
+    "continuous_stream.py": "2a18e78fd5bb0d06e1e040641ee7ec3effea3f25065510d6e5436c0b29de3024",
+    "continuous_store.py": "b1fd3315da192b857af9333a830a5ad722dfac2f34b4acffc427b736e8d9b096",
+    "capital_ladder.py": "8fa1a07bac9b4675fa56e13428663ab7cec5de1eb847a722d75b804cf846f58f",
+    "portfolio_paper.py": "59c16c16877ac2093fa11501b29ecdd15fb627e77301069d92e95bdd94869aab",
+    "market_intelligence.py": "5814c8d49cb13f9798529da005fde45214defdf86d9f8aae26baee6a7abe16ec",
+    "hedge_research.py": "c6d4e2b72249ffde287f42d9b3c67c9c41dc7d82f77b255fef74847cdb0032e3"
+  },
+  "24h_host_gate": "BLOCKED \u2014 HOST NOT PROVISIONED",
+  "smoke_status": "passed",
+  "tested_commit": "bb5392af092ee06d862e304951308bdb699f3a5c",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41263173254"
+}

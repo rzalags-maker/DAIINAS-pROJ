@@ -1,0 +1,400 @@
+{
+  "status": "PAPER_ONLY",
+  "live_orders_enabled": false,
+  "strategy_validated": false,
+  "production_ready": false,
+  "execution_cost_totals": {
+    "by_market": {
+      "PEPEUSDTM": {
+        "trades": 1,
+        "gross_pnl": -5.2e-05,
+        "fees": 0.0031528535999999995,
+        "modeled_carry": 5.4199330430555556e-08,
+        "net_pnl": -0.00320490779933043,
+        "mid_price_gross_pnl": 0.001846,
+        "spread_cost": 0.000754,
+        "slippage_and_tick_cost": 0.001144
+      }
+    },
+    "by_direction": {
+      "LONG": {
+        "trades": 1,
+        "gross_pnl": -5.2e-05,
+        "fees": 0.0031528535999999995,
+        "modeled_carry": 5.4199330430555556e-08,
+        "net_pnl": -0.00320490779933043,
+        "mid_price_gross_pnl": 0.001846,
+        "spread_cost": 0.000754,
+        "slippage_and_tick_cost": 0.001144
+      }
+    }
+  },
+  "cost_attribution_scope": "New closes under audited runtime; older records require offline audit",
+  "executable_equity": null,
+  "reserved_margin": 0.8758533333333333,
+  "free_cash_after_margin": 7.119365222867335,
+  "initial_capital": 8.0,
+  "cash": 7.995218556200669,
+  "equity_last_mark": 7.990363987342431,
+  "mark_status": "UNRESOLVED_STALE_MARK",
+  "realized_net_pnl": -0.003204907799330544,
+  "cash_pnl_excluding_external_flows": -0.004781443799330987,
+  "external_simulated_flows": 0.0,
+  "fees": 0.004729389599999999,
+  "entry_fees": 0.0031529783999999996,
+  "exit_fees": 0.0015764111999999996,
+  "modeled_carry": 5.4199330430555556e-08,
+  "closed_summary": {
+    "count": 1,
+    "wins": 0,
+    "losses": 1,
+    "profit": 0.0,
+    "loss": 0.003204907799330544
+  },
+  "recent_closed_positions": [
+    {
+      "contract_multiplier": 520000.0,
+      "cost_attribution": {
+        "direction": "LONG",
+        "exit_class": "INFRASTRUCTURE",
+        "exit_reason": "DATA_HEALTH",
+        "fee_and_carry_pct_abs_gross": 6063.284229481596,
+        "fees": 0.0031528535999999995,
+        "gross_pnl": -5.2e-05,
+        "id": "position:signal:16477:PEPEUSDTM:LONG",
+        "loss_over_planned": 0.0,
+        "mid_price_gross_pnl": 0.001846,
+        "modeled_break_even_mid_price_move": 9.713284229481596e-09,
+        "modeled_break_even_move_bps": 19.2302278327904,
+        "modeled_carry": 5.4199330430555556e-08,
+        "net_pnl": -0.00320490779933043,
+        "planned_loss": 0.014014364000000045,
+        "planned_risk_budget": 0.02,
+        "planned_risk_utilization": 0.7007182000000023,
+        "realized_loss": 0.00320490779933043,
+        "realized_risk_budget_utilization": 0.1602453899665215,
+        "round_trip_cost_bps": 19.2302278327904,
+        "round_trip_cost_usdt": 0.00505090779933043,
+        "slippage_and_tick_cost": 0.001144,
+        "spread_cost": 0.000754,
+        "spread_slippage_status": "VERIFIED_OBSERVED_BBO_WITH_MODELED_FILLS",
+        "stop_gap_price": null,
+        "symbol": "PEPEUSDTM"
+      },
+      "direction": "LONG",
+      "entry_fee_usdt": 0.0015764423999999999,
+      "entry_notional_usdt": 2.627404,
+      "entry_observed_ask": 5.0516e-06,
+      "entry_observed_bid": 5.0505e-06,
+      "entry_price": 5.0527e-06,
+      "entry_provider_ms": 1793498438872,
+      "entry_received_ms": 1793498438951,
+      "entry_source_seq": 16488,
+      "entry_wire_received_ms": 1793498438949,
+      "exit_fee_usdt": 0.0015764111999999996,
+      "exit_observed_ask": 5.0555e-06,
+      "exit_observed_bid": 5.0537e-06,
+      "exit_price": 5.0526e-06,
+      "exit_provider_ms": 1793498444814,
+      "exit_quote": 5.0537e-06,
+      "exit_reason": "DATA_HEALTH",
+      "exit_received_ms": 1793498444892,
+      "exit_request_ms": 1793498442519,
+      "exit_source_seq": 17230,
+      "exit_wire_received_ms": 1793498444892,
+      "fee_rate": 0.0006,
+      "gross_pnl_usdt": -5.200000000011402e-05,
+      "holding_ms": 5941,
+      "id": "position:signal:16477:PEPEUSDTM:LONG",
+      "last_good_mark_ms": 1793498444892,
+      "margin_reserved_usdt": 0.8758013333333333,
+      "modeled_carry_usdt": 5.4199330430555556e-08,
+      "net_pnl_usdt": -0.003204907799330544,
+      "planned_loss_usdt": 0.014014364000000045,
+      "planned_stop_mid": 5.033371325e-06,
+      "planned_stop_quote": 5.0328213250000005e-06,
+      "planned_target_mid": 5.086407349999999e-06,
+      "planned_target_net_usdt": 0.013529100000000044,
+      "price_tick_size": "1e-10",
+      "quantity_contracts": 1.0,
+      "risk_budget_usdt": 0.02,
+      "rules_hash": "3c2497b23e61385ffb9eea52c0e57dabeffa27aa198baf85bee6518679a91613",
+      "signal_received_ms": 1793498438792,
+      "symbol": "PEPEUSDTM",
+      "unresolved": null
+    }
+  ],
+  "peak": 8.0,
+  "maximum_drawdown": 0.0012435186288379807,
+  "halted": false,
+  "paused_new_entries": false,
+  "open_position": {
+    "direction": "SHORT",
+    "quantity_contracts": 1.0,
+    "contract_multiplier": 520000.0,
+    "price_tick_size": "1e-10",
+    "entry_price": 5.053e-06,
+    "entry_fee_usdt": 0.0015765359999999997,
+    "fee_rate": 0.0006,
+    "planned_stop_mid": 5.072391449999999e-06,
+    "planned_target_mid": 5.019317099999999e-06,
+    "planned_stop_quote": 5.07299145e-06,
+    "planned_target_net_usdt": 0.013496911999999929,
+    "planned_loss_usdt": 0.014131655200000273,
+    "risk_budget_usdt": 0.019991987730501672,
+    "margin_reserved_usdt": 0.8758533333333333,
+    "entry_notional_usdt": 2.62756,
+    "id": "position:signal:17953:PEPEUSDTM:SHORT",
+    "symbol": "PEPEUSDTM",
+    "rules_hash": "3c2497b23e61385ffb9eea52c0e57dabeffa27aa198baf85bee6518679a91613",
+    "signal_received_ms": 1793498448003,
+    "entry_received_ms": 1793498448587,
+    "entry_observed_bid": 5.0541e-06,
+    "entry_observed_ask": 5.0553e-06,
+    "entry_wire_received_ms": 1793498448585,
+    "entry_provider_ms": 1793498448508,
+    "entry_source_seq": 18102,
+    "unresolved": "missing_or_stale_executable_mark",
+    "last_good_mark_ms": 1793498455959
+  },
+  "pending_entry": null,
+  "pending_exit": null,
+  "pins": [
+    "PEPEUSDTM"
+  ],
+  "source_cursor": 19194,
+  "input_digest": "bca279a68d800fb2d7f535cb0d625b0a776f705ed530c647306312d18208b32b",
+  "counts": {
+    "SCAN": 7,
+    "HEALTH": 10,
+    "BOOK_SNAPSHOT": 23,
+    "VERIFIED_BOOK": 10,
+    "SIGNAL": 9,
+    "REJECTED": 7,
+    "REJECTED_EVENT": 22,
+    "OPENED": 2,
+    "UNRESOLVED": 120,
+    "RESOLVED": 111,
+    "EXIT_REQUEST": 1,
+    "CLOSED": 1
+  },
+  "reason_counts": {
+    "REJECTED:unverified_or_unaligned_depth_at_entry": 7,
+    "REJECTED_EVENT:normalization_rule_version_mismatch": 22,
+    "UNRESOLVED:insufficient_verified_depth_for_full_exit": 111,
+    "UNRESOLVED:DISCONNECTED": 2,
+    "UNRESOLVED:missing_or_stale_executable_mark": 5,
+    "UNRESOLVED:CONNECTION_LOSS": 1,
+    "EXIT_REQUEST:DATA_HEALTH": 1,
+    "UNRESOLVED:CONNECTED": 1
+  },
+  "scan": {
+    "available_ms": 1793498441576,
+    "report_time_ms": 1793498441490,
+    "watch": {
+      "blocked_new_entries": [],
+      "capacity_exhausted": false,
+      "deep_symbols": [
+        "PEPEUSDTM",
+        "KCSUSDTM",
+        "BCHUSDTM"
+      ],
+      "entered_at": {
+        "BCHUSDTM": 1793498407774,
+        "KCSUSDTM": 1793498439219,
+        "PEPEUSDTM": 1793498307068
+      },
+      "no_trade": true,
+      "pinned": [
+        "PEPEUSDTM"
+      ],
+      "reason": "Snapshot-based candidate rotation only; no strategy edge validated",
+      "time_ms": 1793498441490,
+      "watch_pool": [
+        "APTUSDTM",
+        "KCSUSDTM",
+        "PEPEUSDTM",
+        "AAVEUSDTM",
+        "FILUSDTM",
+        "NEARUSDTM",
+        "BCHUSDTM",
+        "SUIUSDTM",
+        "ASTERUSDTM",
+        "LINKUSDTM",
+        "TAOUSDTM",
+        "ENAUSDTM",
+        "DOTUSDTM",
+        "GRAMUSDTM",
+        "XLMUSDTM",
+        "ONDOUSDTM",
+        "HBARUSDTM",
+        "AVAXUSDTM",
+        "WETUSDTM",
+        "QNTUSDTM"
+      ]
+    },
+    "specs": {
+      "BCHUSDTM": {
+        "captured_ms": 1793498441490,
+        "rules": {
+          "contract_size": "0.01",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "BCHUSDTM",
+          "tick_size": "0.01"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "KCSUSDTM": {
+        "captured_ms": 1793498441490,
+        "rules": {
+          "contract_size": "0.1",
+          "max_qty": "100000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "KCSUSDTM",
+          "tick_size": "0.001"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      },
+      "PEPEUSDTM": {
+        "captured_ms": 1793498441490,
+        "rules": {
+          "contract_size": "520000.0",
+          "max_qty": "1000000",
+          "min_notional": "0",
+          "min_qty": "1",
+          "step_size": "1",
+          "symbol": "PEPEUSDTM",
+          "tick_size": "1e-10"
+        },
+        "source": "KuCoin public contracts/active",
+        "taker_fee_rate": 0.0006
+      }
+    },
+    "unavailable": []
+  },
+  "checkpoint_available_ms": 1793498456023,
+  "service": {
+    "active": [
+      "BCHUSDTM",
+      "KCSUSDTM",
+      "PEPEUSDTM"
+    ],
+    "boot_id": "8c5950006fad4ea98321d14f7a20b998",
+    "connected": true,
+    "disk_free_bytes": 93722509312,
+    "elapsed_seconds": 149.535157921,
+    "feed_age_ms": {
+      "BCHUSDTM": {
+        "execution": 11510,
+        "level2": 238,
+        "tickerV2": 238
+      },
+      "KCSUSDTM": {
+        "execution": 1793498455556,
+        "level2": 392,
+        "tickerV2": 394
+      },
+      "PEPEUSDTM": {
+        "execution": 5212,
+        "level2": 99,
+        "tickerV2": 536
+      }
+    },
+    "host_id": null,
+    "paper_bytes": 5668440,
+    "session_id": "148bfef69403415c840139260aabbfff",
+    "source_bytes": 45293136,
+    "stream_counts": {
+      "book_gaps": 2,
+      "book_resyncs": 13,
+      "connections": 3,
+      "market_scans": 7,
+      "pongs": 8,
+      "reconciliations": 6,
+      "reconnects": 2,
+      "retired_markets": 2,
+      "snapshots": 23,
+      "subscribe_acks": 36,
+      "unsubscribe_acks": 6
+    },
+    "unavailable": [],
+    "verified_books": [
+      "BCHUSDTM",
+      "KCSUSDTM",
+      "PEPEUSDTM"
+    ]
+  },
+  "stream": {
+    "connected": false,
+    "session_id": "148bfef69403415c840139260aabbfff",
+    "active": [
+      "BCHUSDTM",
+      "KCSUSDTM",
+      "PEPEUSDTM"
+    ],
+    "verified_books": [],
+    "feed_age_ms": {
+      "BCHUSDTM": {
+        "execution": 12133,
+        "tickerV2": 861,
+        "level2": 479
+      },
+      "KCSUSDTM": {
+        "execution": 1793498456179,
+        "tickerV2": 1017,
+        "level2": 329
+      },
+      "PEPEUSDTM": {
+        "execution": 5835,
+        "tickerV2": 407,
+        "level2": 220
+      }
+    },
+    "stream_counts": {
+      "market_scans": 7,
+      "connections": 3,
+      "subscribe_acks": 36,
+      "snapshots": 23,
+      "book_resyncs": 13,
+      "reconciliations": 6,
+      "pongs": 8,
+      "unsubscribe_acks": 6,
+      "retired_markets": 2,
+      "reconnects": 2,
+      "book_gaps": 2
+    },
+    "unavailable": []
+  },
+  "errors": [
+    "ConnectionError: Scheduled public token renewal",
+    "ConnectionError: Scheduled public token renewal"
+  ],
+  "fatal_error": null,
+  "elapsed_seconds": 150.15797744999998,
+  "boot_id": "8c5950006fad4ea98321d14f7a20b998",
+  "source_path": "state/v33-source.sqlite3",
+  "paper_path": "state/v33-paper.sqlite3",
+  "observed_contracts": 717,
+  "normalized_event_counts": {
+    "execution": 131,
+    "level2": 17241,
+    "tickerV2": 1632
+  },
+  "source_code_sha256": {
+    "continuous.py": "30527f847d8eb928ee1891f2b86a9e85c7af4b3f2df038e252c4a3b19b3d7404",
+    "continuous_paper.py": "04e76e5f85336a369ccd4f986a91ee6341c20f2defd6f703889cd5a5620023fa",
+    "continuous_stream.py": "2a18e78fd5bb0d06e1e040641ee7ec3effea3f25065510d6e5436c0b29de3024",
+    "continuous_store.py": "b1fd3315da192b857af9333a830a5ad722dfac2f34b4acffc427b736e8d9b096"
+  },
+  "24h_host_gate": "BLOCKED \u2014 HOST NOT PROVISIONED",
+  "smoke_status": "passed",
+  "tested_commit": "bb5392af092ee06d862e304951308bdb699f3a5c",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41263173254"
+}

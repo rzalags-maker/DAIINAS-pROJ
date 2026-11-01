@@ -2,7 +2,7 @@
   "status": "passed",
   "live_orders_enabled": false,
   "tests": {
-    "tests_run": 239,
+    "tests_run": 240,
     "failures": 0,
     "errors": 0,
     "skipped": 0,
@@ -10,27 +10,27 @@
     "unexpected_successes": 0,
     "successful": true
   },
-  "market_scans": 15,
+  "market_scans": 14,
   "observed_contracts": 717,
   "public_event_counts": {
-    "execution": 88,
-    "level2": 20671,
-    "tickerV2": 1843
+    "execution": 170,
+    "level2": 24044,
+    "tickerV2": 2171
   },
   "process_boots": [
-    "f3b6d22c7bf8430f945f8da35c117593",
-    "ba2f8448d94347abb7f84e5a94a37767"
+    "8c5950006fad4ea98321d14f7a20b998",
+    "85f6aa0767ed478da2404c4a663ef036"
   ],
-  "source_cursor": 22946,
-  "input_digest": "75ed8ef2c2eb968555575b538625d4cd2b35411d6f5179a80204c6857877eae5",
-  "cash": 7.966369006086173,
-  "equity_last_mark": 7.966369006086173,
-  "fees": 0.0182503896,
-  "modeled_carry": 6.043138281805556e-07,
+  "source_cursor": 26706,
+  "input_digest": "57cd49b3725c251a79ad1e7557a473efc9d48900160be0013b1db9a4e7a95614",
+  "cash": 7.982362254792318,
+  "equity_last_mark": 7.982362254792318,
+  "fees": 0.012964977599999998,
+  "modeled_carry": 7.676076819583334e-07,
   "closed_summary": {
-    "count": 6,
-    "loss": 0.03363099391382772,
-    "losses": 6,
+    "count": 4,
+    "loss": 0.017637745207682076,
+    "losses": 4,
     "profit": 0.0,
     "wins": 0
   },
@@ -38,43 +38,43 @@
   "pending_entry": null,
   "pending_exit": null,
   "decision_counts": {
-    "BOOK_SNAPSHOT": 70,
-    "CLOSED": 6,
-    "EXIT_REQUEST": 6,
-    "HEALTH": 33,
-    "OPENED": 6,
-    "REJECTED": 3,
-    "REJECTED_EVENT": 149,
-    "RESOLVED": 248,
-    "SCAN": 15,
-    "SIGNAL": 9,
-    "UNRESOLVED": 277,
-    "VERIFIED_BOOK": 23
+    "BOOK_SNAPSHOT": 48,
+    "CLOSED": 4,
+    "EXIT_REQUEST": 4,
+    "HEALTH": 29,
+    "OPENED": 4,
+    "REJECTED": 7,
+    "REJECTED_EVENT": 24,
+    "RESOLVED": 186,
+    "SCAN": 14,
+    "SIGNAL": 11,
+    "UNRESOLVED": 228,
+    "VERIFIED_BOOK": 17
   },
   "rejected_and_unresolved_reasons": {
-    "EXIT_REQUEST:DATA_HEALTH": 4,
-    "EXIT_REQUEST:FLOW_INVALIDATION": 2,
-    "REJECTED:unverified_or_unaligned_depth_at_entry": 3,
-    "REJECTED_EVENT:normalization_rule_version_mismatch": 149,
-    "UNRESOLVED:CONNECTED": 4,
-    "UNRESOLVED:CONNECTION_LOSS": 4,
-    "UNRESOLVED:DISCONNECTED": 4,
-    "UNRESOLVED:insufficient_verified_depth_for_full_exit": 247,
-    "UNRESOLVED:missing_or_stale_executable_mark": 18
+    "EXIT_REQUEST:DATA_HEALTH": 3,
+    "REJECTED:unverified_or_unaligned_depth_at_entry": 7,
+    "REJECTED_EVENT:normalization_rule_version_mismatch": 24,
+    "UNRESOLVED:CONNECTED": 7,
+    "UNRESOLVED:CONNECTION_LOSS": 6,
+    "UNRESOLVED:DISCONNECTED": 7,
+    "UNRESOLVED:insufficient_verified_depth_for_full_exit": 185,
+    "UNRESOLVED:missing_or_stale_executable_mark": 23,
+    "EXIT_REQUEST:SPREAD": 1
   },
   "replay_identical": true,
   "backup": {
-    "source_id": "e93ed22954bb471f8498f93f14ef2bd0",
-    "paper_cursor": 22946,
-    "source_max_seq": 22946,
-    "paper_input_digest": "75ed8ef2c2eb968555575b538625d4cd2b35411d6f5179a80204c6857877eae5",
+    "source_id": "2c756af069914adbb38685e4c9d7125b",
+    "paper_cursor": 26706,
+    "source_max_seq": 26706,
+    "paper_input_digest": "57cd49b3725c251a79ad1e7557a473efc9d48900160be0013b1db9a4e7a95614",
     "sha256": {
-      "source.sqlite3": "0075db4a8090f59e54c57f9941c2a5c7424361b3eedb49df12d0294e40233b59",
-      "paper.sqlite3": "1d6eab5672e7447af590f9bc478cc88c26bf1590f68b5c05d7907bc2b04812e7"
+      "source.sqlite3": "b1e8aafd83cabb8930cd551b3819e49fe2e8544808ba4fe9a1650b7363a8daba",
+      "paper.sqlite3": "6f5f5275037278f7c995d6a747f425dd371b32f6572e8d359658e2bbbdeaf409"
     }
   },
   "24h_host_gate": "BLOCKED \u2014 HOST NOT PROVISIONED",
   "performance_gate": "Not established by bounded infrastructure smoke",
-  "tested_commit": "5762ebe706e3249287bf7d15b081dd7df46d1e71",
-  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41262690612"
+  "tested_commit": "bb5392af092ee06d862e304951308bdb699f3a5c",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41263173254"
 }
