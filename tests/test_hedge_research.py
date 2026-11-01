@@ -7,6 +7,7 @@ from daiinas.market_intelligence import update,correlation,supported_hedge
 from daiinas.hedge_research import illustrative_path
 from daiinas.continuous_store import digest
 from daiinas.portfolio_paper import PortfolioPolicy
+from daiinas.funding import paper_funding
 
 D=lambda x:Decimal(str(x))
 
@@ -42,7 +43,7 @@ class IntelligenceTests(unittest.TestCase):
         self.assertEqual(stale['regime'],'DISLOCATED')
 
     def test_evidence_never_from_future_or_50_50_guess(self):
-        policy=PortfolioPolicy(initial_capital='100')
+        policy=PortfolioPolicy(initial_capital='100',funding=paper_funding('100',account_id='fixture-100',source_reference='explicit-unit-fixture',timestamp_ms=0))
         e={'sample_kind':'observed_public','source_sha256':'a'*64,'policy_sha256':digest(asdict(policy)),
            'training_end_ms':10,'validation_start_ms':20,'validation_end_ms':172800020,'held_out_windows':2,'held_out_campaigns':30,
            'net_return_lower_95pct':.001,'advantage_over_directional_lower_95pct':.0001,

@@ -13,6 +13,16 @@
   "engine": "v4",
   "portfolio": {
     "initial_capital": "8",
-    "mode": "M3"
+    "mode": "M3",
+    "funding": {
+      "kind": "owner_confirmed_paper_scenario",
+      "account_id": "paper-v4-8",
+      "scope": "FUNDED_V4_PAPER_USDT_PERPETUAL",
+      "currency": "USDT",
+      "amount": "8",
+      "timestamp_ms": 1793491200000,
+      "source_reference": "User-selected hypothetical scenario v4-8; not verified exchange capital",
+      "source_evidence": "Explicit hypothetical PAPER scenario; no exchange balance verified."
+    }
   }
 }

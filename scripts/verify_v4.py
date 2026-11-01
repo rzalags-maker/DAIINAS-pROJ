@@ -19,6 +19,8 @@ def verify():
     assert second['initial_capital']=='100'
     with sqlite3.connect('state/v4-paper.sqlite3') as c:
         assert c.execute('PRAGMA integrity_check').fetchone()[0]=='ok'
+        assert c.execute("SELECT count(*) FROM initial_funding").fetchone()[0]==1
+        assert c.execute("SELECT count(*) FROM audit WHERE action='INITIAL_FUNDING'").fetchone()[0]==1
         trades=[json.loads(r[0]) for r in c.execute('SELECT payload FROM closed_positions')]
         checkpoint=json.loads(c.execute('SELECT payload FROM checkpoint WHERE id=1').fetchone()[0])
     gross=fees=carry=net=D(0)
@@ -41,6 +43,7 @@ def verify():
         counts=dict(c.execute('SELECT channel,count(*) FROM raw_events GROUP BY channel'))
         rows=c.execute('SELECT count(*),min(available_ms),max(available_ms) FROM journal').fetchone()
     return {'status':'passed','initial_capital':'100','live_orders_enabled':False,'strategy_validated':False,'production_ready':False,
+        'initial_funding':second['initial_funding'],'actual_exchange_balance_status':second['actual_exchange_balance_status'],
         'actual_public_events':counts,'journal_records':rows[0],'duration_seconds':(rows[2]-rows[1])/1000,
         'replay_identical':True,'money_reconciled_independently':True,'cash':second['cash'],
         'executable_equity':second['executable_equity'],'equity_last_mark':second['equity_last_mark'],

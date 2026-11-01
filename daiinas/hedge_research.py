@@ -13,6 +13,7 @@ import statistics
 from .continuous import replay,source_rows
 from .paper_micro import PaperPolicy
 from .portfolio_paper import PortfolioLedger,PortfolioPolicy
+from .funding import paper_funding
 
 D=lambda x:Decimal(str(x))
 
@@ -64,7 +65,8 @@ def compare(sources,output_dir,capitals=('8','60','100')):
     for capital in capitals:
         results[capital]={}
         for mode in ('M0','M1','M2','M3'):
-            pp=PortfolioPolicy(initial_capital=capital,mode=mode)
+            pp=PortfolioPolicy(initial_capital=capital,mode=mode,funding=paper_funding(capital,account_id='comparison-'+capital+'-'+mode,
+                source_reference='Explicit recorded-public-data counterfactual comparison',timestamp_ms=first-1))
             report=replay(sources,root/f'{capital}-{mode}.sqlite3',PaperPolicy(initial_capital_usdt=float(capital)),
                 ledger_factory=PortfolioLedger,ledger_options={'portfolio':pp})
             closed=report['recent_closed_positions']
@@ -74,14 +76,15 @@ def compare(sources,output_dir,capitals=('8','60','100')):
             try:closed=[json.loads(r[0]) for r in con.execute('SELECT payload FROM closed_positions')]
             finally:con.close()
             held=[float(p['net_pnl_usdt']) for p in closed if p['entry_received_ms']>=split]
-            results[capital][mode]={k:report[k] for k in ('cash','equity_last_mark','executable_equity','mark_status','ladder',
+            results[capital][mode]={k:report[k] for k in ('initial_funding','actual_exchange_balance_status','cash','equity_last_mark','executable_equity','mark_status','ladder',
                 'realized_net_pnl','fees','modeled_carry','maximum_drawdown','account_maximum_drawdown','positions','campaigns','closed_summary','reason_counts','counts')}
             results[capital][mode].update(held_out_closed_legs=len(held),held_out_mean_net=statistics.mean(held) if held else None,
                 confidence_interval=None,expected_net_advantage='UNSUPPORTED',abstention_count=report['counts'].get('DECISION',0)-report['counts'].get('SIGNAL',0),
                 source_cursor=report['source_cursor'],input_digest=report['input_digest'],
                 comparison_policy='Same as-of observations, same initial capital and risk model; M2 is a negative control')
             if mode=='M0' and (D(report['cash'])!=D(capital)+D(report['external_simulated_flows']) or report['positions']):raise AssertionError('Flat control altered trading capital')
-    return {'live_orders_enabled':False,'sample_kind':'RECORDED_PUBLIC_MARKET_DATA','strategy_validated':False,'production_ready':False,
+    return {'funding_mode':'EXPLICIT_HYPOTHETICAL_PAPER','actual_exchange_balance_status':'NOT_CONNECTED',
+        'live_orders_enabled':False,'sample_kind':'RECORDED_PUBLIC_MARKET_DATA','strategy_validated':False,'production_ready':False,
         'source_sha256':{str(p):hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in sources},
         'first_available_ms':first,'last_available_ms':last,'duration_seconds':(last-first)/1000,
         'walk_forward':{'training_end_ms':split-1,'held_out_start_ms':split,

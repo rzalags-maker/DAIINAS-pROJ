@@ -13,12 +13,13 @@ from .continuous_store import Timeline,digest,canonical
 from .paper_micro import size_for_quote,finish_position,PaperPolicy
 from .shadow_flow import observe,ShadowPolicy
 from .paper_audit import position_costs
+from .funding import validate_funding
 from .market_intelligence import update as update_market,correlation,supported_hedge
 
 D=lambda v:dec(str(v))
 ZERO=D(0)
 MONEY_QUANTUM=D('0.000000000000000001')
-EXECUTION_VERSION='v4.1-decimal18-v2'
+EXECUTION_VERSION='v4.2-explicit-funding-decimal18-v1'
 
 def money(value,*,cost=False):
     # Conservative fixed ledger precision avoids association-dependent repeating carry.
@@ -27,7 +28,8 @@ def money(value,*,cost=False):
 
 @dataclass(frozen=True)
 class PortfolioPolicy:
-    initial_capital: str='8'
+    initial_capital: str
+    funding: dict
     mode: str='M3'
     decision_model: str='adaptive'
     correlation_limit: float=.85
@@ -39,6 +41,8 @@ class PortfolioPolicy:
     allow_research_expansion: bool=False
 
     def __post_init__(self):
+        if not isinstance(self.initial_capital,str):raise ValueError('Opening capital must be an exact decimal string')
+        validate_funding(self.funding,self.initial_capital)
         if self.decision_model not in ('adaptive','pressure') or D(self.initial_capital)<=0 or self.mode not in ('M0','M1','M2','M3'):raise ValueError('Invalid portfolio scenario')
         if (not isinstance(self.allow_research_expansion,bool) or not isinstance(self.cooldown_ms,int)
                 or isinstance(self.cooldown_ms,bool) or not isinstance(self.correlation_min_samples,int)
@@ -48,11 +52,17 @@ class PortfolioPolicy:
 
 
 class PortfolioLedger(PaperLedger):
-    def __init__(self,path,source_id,policy=PaperPolicy(),shadow=ShadowPolicy(),*,portfolio=None):
-        self.portfolio=portfolio if isinstance(portfolio,PortfolioPolicy) else PortfolioPolicy(**(portfolio or {}))
-        if D(policy.initial_capital_usdt)!=D(self.portfolio.initial_capital):raise ValueError('Explicit initial-capital policy mismatch')
+    def __init__(self,path,source_id,policy=None,shadow=ShadowPolicy(),*,portfolio=None):
+        if not isinstance(portfolio,PortfolioPolicy) and (not isinstance(portfolio,dict) or 'initial_capital' not in portfolio or 'funding' not in portfolio):
+            raise ValueError('Explicit user-selected PAPER capital and typed funding source required; no v4 default')
+        self.portfolio=portfolio if isinstance(portfolio,PortfolioPolicy) else PortfolioPolicy(**portfolio)
+        if policy is None:policy=PaperPolicy(initial_capital_usdt=float(self.portfolio.initial_capital))
+        if float(policy.initial_capital_usdt)!=float(self.portfolio.initial_capital):raise ValueError('Explicit initial-capital policy mismatch')
         super().__init__(path,source_id,policy,shadow,_profile={**asdict(self.portfolio),'execution_version':EXECUTION_VERSION})
-        self.db.executescript("""CREATE TABLE IF NOT EXISTS campaign_records(id TEXT PRIMARY KEY,payload TEXT NOT NULL);
+        self.db.executescript("""CREATE TABLE IF NOT EXISTS initial_funding(id INTEGER PRIMARY KEY CHECK(id=1),payload TEXT NOT NULL);
+            CREATE TRIGGER IF NOT EXISTS funding_no_update BEFORE UPDATE ON initial_funding BEGIN SELECT RAISE(ABORT,'Immutable opening funding'); END;
+            CREATE TRIGGER IF NOT EXISTS funding_no_delete BEFORE DELETE ON initial_funding BEGIN SELECT RAISE(ABORT,'Immutable opening funding'); END;
+            CREATE TABLE IF NOT EXISTS campaign_records(id TEXT PRIMARY KEY,payload TEXT NOT NULL);
             CREATE TRIGGER IF NOT EXISTS campaign_no_update BEFORE UPDATE ON campaign_records BEGIN SELECT RAISE(ABORT,'Immutable campaign'); END;
             CREATE TRIGGER IF NOT EXISTS campaign_no_delete BEFORE DELETE ON campaign_records BEGIN SELECT RAISE(ABORT,'Immutable campaign'); END;""")
         if 'ladder' not in self.state:
@@ -66,6 +76,34 @@ class PortfolioLedger(PaperLedger):
                 last_active_base=active,capital_status={},marked_unrealized='0',equity_verified=True,
                 account_peak=self.portfolio.initial_capital,account_flow_adjustment='0',account_max_drawdown=0.,
                 closed_summary={'count':0,'wins':0,'losses':0,'profit':'0','loss':'0'})
+
+        identity=self.db.execute("SELECT value FROM v33_meta WHERE key='identity'").fetchone()[0]
+        funding={**validate_funding(self.portfolio.funding,self.portfolio.initial_capital),
+                 'event_type':'INITIAL_FUNDING','policy_id':self.evidence_policy_hash(),'account_identity':digest(json.loads(identity)),
+                 'journal_source_id':source_id,'verified_exchange_balance':False,'asof_source_cursor':0}
+        funding['event_id']='INITIAL_FUNDING:'+digest(funding)
+        stored=self.db.execute('SELECT payload FROM initial_funding WHERE id=1').fetchone()
+        if stored:
+            if json.loads(stored[0])!=funding or self.state.get('initial_funding')!=funding:
+                self.close();raise ValueError('Conflicting initial funding; never re-seed existing money')
+            if self.db.execute("SELECT count(*) FROM audit WHERE action='INITIAL_FUNDING'").fetchone()[0]!=1:
+                self.close();raise ValueError('Opening funding audit missing or duplicated')
+        else:
+            if self.state['cursor']:self.close();raise ValueError('Refuse funding migration of existing account')
+            self.state['initial_funding']=funding
+            self.seq,self.idx=0,0
+            self.db.execute('BEGIN IMMEDIATE')
+            try:
+                self.db.execute('INSERT INTO initial_funding VALUES(1,?)',(canonical(funding),))
+                self.audit('INITIAL_FUNDING',**funding)
+                self.db.execute('INSERT INTO checkpoint VALUES(1,?)',(canonical(self.state),))
+                self.db.execute('COMMIT')
+            except BaseException:
+                if self.db.in_transaction:self.db.execute('ROLLBACK')
+                self.close();raise
+        try:self.invariant()
+        except AssertionError as exc:
+            self.close();raise ValueError('Initial funding/checkpoint conflict; startup halted without re-seeding') from exc
 
     def evidence_policy_hash(self):
         return digest({'portfolio':asdict(self.portfolio),'paper':asdict(self.policy),'shadow':asdict(self.shadow),'execution_version':EXECUTION_VERSION})
@@ -120,6 +158,7 @@ class PortfolioLedger(PaperLedger):
 
     def invariant(self):
         s=self.state;ladder=self.ladder()
+        if ladder.starting_total!=D(s['initial_funding']['amount']):raise AssertionError('Opening funding differs from ladder start')
         fees=sum((D(p['entry_fee_usdt']) for p in s['positions'].values()),ZERO)
         expected=ladder.total+D(s['quarantined_flows'])+self.unsettled()-fees
         if D(s['cash'])!=expected:raise AssertionError('Portfolio Decimal cash/reserve/active/pending/deficit reconciliation')
@@ -493,7 +532,10 @@ class PortfolioLedger(PaperLedger):
             elif action=='capital-flow':
                 amount=D(p['amount'])
                 if amount!=money(amount) or D(s['quarantined_flows'])+amount<0:self.audit('CONTROL_REJECTED',reason='external_flows_quarantined_not_ladder_profit')
-                else:self.add('quarantined_flows',amount);self.add('cash',amount);self.add('account_flow_adjustment',amount);self.audit('CONTROL',operator_action=action,amount=str(amount))
+                else:
+                    self.add('quarantined_flows',amount);self.add('cash',amount);self.add('account_flow_adjustment',amount)
+                    self.audit('EXTERNAL_DEPOSIT' if amount>0 else 'EXTERNAL_WITHDRAWAL',amount=str(amount),allocation='UNALLOCATED_EXTERNAL_FUNDS')
+                    self.audit('CONTROL',operator_action=action,amount=str(amount))
             elif action=='install-research-evidence':
                 record=p.get('evidence',{});sym=p.get('symbol')
                 if sym and supported_hedge(record,available,self.evidence_policy_hash()):
@@ -526,7 +568,8 @@ class PortfolioLedger(PaperLedger):
     def report(self):
         s=self.state;ladder=self.ladder();positions=list(s['positions'].values())
         return {'status':'PAPER_ONLY','engine':'v4','live_orders_enabled':False,'strategy_validated':False,'production_ready':False,
-            'initial_capital':self.portfolio.initial_capital,'mode':self.portfolio.mode,
+            'initial_capital':self.portfolio.initial_capital,'initial_funding':s['initial_funding'],
+            'actual_exchange_balance_status':'NOT_CONNECTED','mode':self.portfolio.mode,
             'execution_version':EXECUTION_VERSION,'money_quantum_usdt':str(MONEY_QUANTUM),'evidence_policy_sha256':self.evidence_policy_hash(),'cash':s['cash'],
             'equity_last_mark':s['last_equity'],'executable_equity':s['last_equity'] if s['equity_verified'] else None,
             'mark_status':s['mark_status'],'active_equity':s['active_equity'],'ladder':ladder.snapshot(),

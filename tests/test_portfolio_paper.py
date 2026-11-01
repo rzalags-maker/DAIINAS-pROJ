@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 from daiinas.continuous_store import SourceJournal
 from daiinas.portfolio_paper import PortfolioLedger,PortfolioPolicy
+from daiinas.funding import paper_funding
 from daiinas.paper_micro import PaperPolicy
 import test_continuous_paper as f
 
@@ -24,7 +25,7 @@ class PortfolioTests(unittest.TestCase):
         self.source.close();self.tmp.cleanup()
     def start(self,capital='100',mode='M1',decision_model='pressure'):
         self.policy=PaperPolicy(initial_capital_usdt=float(capital))
-        self.pp=PortfolioPolicy(initial_capital=capital,mode=mode,decision_model=decision_model,allow_research_expansion=True)
+        self.pp=PortfolioPolicy(initial_capital=capital,funding=paper_funding(capital,account_id='fixture-'+capital,source_reference='explicit-unit-fixture',timestamp_ms=0),mode=mode,decision_model=decision_model,allow_research_expansion=True)
         self.paper=PortfolioLedger(self.root/'portfolio.sqlite3',self.source.source_id,self.policy,portfolio=self.pp)
         self.send(0,f.scan(extra={f'S{i}USDTM':f.specs(f'S{i}USDTM')[f'S{i}USDTM'] for i in range(12)}))
     def send(self,t,*packets):
@@ -285,7 +286,7 @@ class WriterIntegrationTests(unittest.IsolatedAsyncioTestCase):
         from daiinas.continuous_ops import backup_pair,verify_backup
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);src=root/'source.sqlite3';paper=root/'portfolio.sqlite3'
-            policy=PaperPolicy(initial_capital_usdt=126);pp=PortfolioPolicy(initial_capital='126',mode='M1',decision_model='pressure')
+            policy=PaperPolicy(initial_capital_usdt=126);pp=PortfolioPolicy(initial_capital='126',funding=paper_funding('126',account_id='fixture-126',source_reference='explicit-unit-fixture',timestamp_ms=0),mode='M1',decision_model='pressure')
             pipe=Pipeline(src,paper,policy,ledger_factory=PortfolioLedger,ledger_options={'portfolio':pp})
             observer=None
             try:
@@ -349,11 +350,13 @@ class ProcessKillTests(unittest.TestCase):
 import os,sys,signal
 from pathlib import Path
 from daiinas.portfolio_paper import PortfolioLedger,PortfolioPolicy
+from daiinas.funding import paper_funding
 from daiinas.continuous_store import SourceJournal
 from daiinas.paper_micro import PaperPolicy
+from daiinas.funding import paper_funding
 root=Path(sys.argv[1]);source=SourceJournal(root/'source.sqlite3')
 p=PortfolioLedger(root/'portfolio.sqlite3',source.source_id,PaperPolicy(initial_capital_usdt=126.0),
- portfolio=PortfolioPolicy(initial_capital='126',mode='M1',decision_model='pressure',allow_research_expansion=True))
+ portfolio=PortfolioPolicy(initial_capital='126',funding=paper_funding('126',account_id='fixture-126',source_reference='explicit-unit-fixture',timestamp_ms=0),mode='M1',decision_model='pressure',allow_research_expansion=True))
 old=p.audit
 def audit(action,**detail):
  old(action,**detail)

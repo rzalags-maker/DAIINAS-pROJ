@@ -6,6 +6,7 @@ on:
     paths:
       - 'daiinas/*.py'
       - 'tests/test_portfolio_paper.py'
+      - 'tests/test_funding.py'
       - 'tests/test_hedge_research.py'
       - 'tests/test_capital_ladder.py'
       - 'daiinas/paper_audit.py'

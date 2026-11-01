@@ -23,14 +23,19 @@ from .service import single_worker
 
 def settings(path):
     config=json.loads(Path(path).read_text())
-    paper=PaperPolicy(**config.get('paper',{}));shadow=ShadowPolicy(**config.get('shadow',{}))
     if config.get('engine','v33') not in ('v33','v4'):raise ValueError('Unknown account engine')
-    if (config.get('engine','v33')=='v33' and paper.initial_capital_usdt!=8) or paper.margin_fraction>.8:
-        raise ValueError('Legacy 8-USDT account or separate opt-in portfolio, <=80% margin')
+    values=dict(config.get('paper',{}))
     if config.get('engine')=='v4':
         from .portfolio_paper import PortfolioPolicy
-        portfolio=PortfolioPolicy(**config.get('portfolio',{}))
-        if float(portfolio.initial_capital)!=paper.initial_capital_usdt:raise ValueError('Separate explicit portfolio capital required')
+        data=config.get('portfolio',{})
+        if 'initial_capital' not in data or 'funding' not in data:raise ValueError('Explicit v4 funding source and amount required; no default')
+        portfolio=PortfolioPolicy(**data)
+        values.setdefault('initial_capital_usdt',float(portfolio.initial_capital))
+    paper=PaperPolicy(**values);shadow=ShadowPolicy(**config.get('shadow',{}))
+    if (config.get('engine','v33')=='v33' and paper.initial_capital_usdt!=8) or paper.margin_fraction>.8:
+        raise ValueError('Legacy 8-USDT account or separate explicit funded portfolio, <=80% margin')
+    if config.get('engine')=='v4' and float(portfolio.initial_capital)!=paper.initial_capital_usdt:
+        raise ValueError('Conflicting explicit portfolio capital')
     if not 3<=config.get('deep',5)<=8 or not 30<=config.get('refresh_seconds',180)<=3600:
         raise ValueError('Deep watchlist 3..8; public scan cadence 30..3600 seconds')
     return config,paper,shadow
@@ -138,7 +143,7 @@ async def service(args,config,paper,shadow):
                        'normalized_event_counts':dict(observer.stats),
                        'source_code_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in
                            [Path(__file__),Path(__file__).with_name('continuous_paper.py'),Path(__file__).with_name('continuous_stream.py'),Path(__file__).with_name('continuous_store.py')]+
-                           ([Path(__file__).with_name(n+'.py') for n in ('capital_ladder','portfolio_paper','market_intelligence','hedge_research')] if config.get('engine')=='v4' else [])}})
+                           ([Path(__file__).with_name(n+'.py') for n in ('capital_ladder','portfolio_paper','market_intelligence','hedge_research','funding')] if config.get('engine')=='v4' else [])}})
         result['24h_host_gate']='PENDING — HOST ACCEPTANCE NOT RUN' if args.host_id else 'BLOCKED — HOST NOT PROVISIONED'
         if args.seconds:
             stats=observer.stream_stats
@@ -173,7 +178,7 @@ def main(argv=None):
     p.add_argument('--host-id')
     a=p.parse_args(argv)
     path_config,path_paper,path_shadow=settings(a.config)
-    prefix='v4-'+str(path_config.get('portfolio',{}).get('initial_capital','8')) if path_config.get('engine')=='v4' else 'v33'
+    prefix='v4-'+str(path_config['portfolio']['initial_capital']) if path_config.get('engine')=='v4' else 'v33'
     if a.source_db is None:a.source_db=Path('state')/(prefix+'-source.sqlite3')
     if a.paper_db is None:a.paper_db=Path('state')/(prefix+'-paper.sqlite3')
     if a.source_db.resolve()==a.paper_db.resolve():p.error('Independent source/paper databases required')
