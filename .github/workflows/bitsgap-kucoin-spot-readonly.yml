@@ -1,0 +1,41 @@
+name: Bitsgap KuCoin Spot read-only verification (manual)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bitsgap-readonly-handshake
+  cancel-in-progress: false
+
+jobs:
+  verify-readonly:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install existing crypto dependency
+        run: python -m pip install "cryptography>=42,<47"
+      - name: Offline signing, schema and command-denial regressions
+        run: |
+          python - <<'PYTEST'
+          import subprocess
+          result = subprocess.run(
+              ["python", "-B", "-m", "unittest", "discover", "-s", "tests",
+               "-p", "test_bitsgap_readonly.py", "-q"],
+              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+          print("READ_ONLY_SECURITY_TESTS=" + ("PASS" if result.returncode == 0 else "FAIL"))
+          raise SystemExit(result.returncode)
+          PYTEST
+      - name: Manual authenticated Spot snapshots (redacted statuses only)
+        env:
+          BITSGAP_PRIVATE_KEY_PEM: ${{ secrets.BITSGAP_PRIVATE_KEY_PEM }}
+        run: python -B -m daiinas.bitsgap_readonly
