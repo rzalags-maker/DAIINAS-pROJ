@@ -1,5 +1,5 @@
 name: One-time bounded Bitsgap Futures WS observation
-# One bounded repeat to diagnose frame envelopes, no raw data
+# Final bounded repeat to classify unscoped control reply vs scoped events; no raw data
 
 on:
   push:
