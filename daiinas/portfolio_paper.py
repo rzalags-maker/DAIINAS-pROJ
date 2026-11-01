@@ -13,7 +13,8 @@ from .continuous_store import Timeline,digest,canonical
 from .paper_micro import size_for_quote,finish_position,PaperPolicy
 from .shadow_flow import observe,ShadowPolicy
 from .paper_audit import position_costs
-from .funding import validate_funding
+from .funding import validate_funding,snapshot_funding
+from .account_capital import FuturesAccountSnapshot,initial_account_state,reconcile,capital_status
 from .market_intelligence import update as update_market,correlation,supported_hedge
 
 D=lambda v:dec(str(v))
@@ -39,10 +40,13 @@ class PortfolioPolicy:
     campaign_loss_fraction: str='.005'
     cooldown_ms: int=30000
     allow_research_expansion: bool=False
+    account_driven: bool=False
 
     def __post_init__(self):
         if not isinstance(self.initial_capital,str):raise ValueError('Opening capital must be an exact decimal string')
         validate_funding(self.funding,self.initial_capital)
+        if type(self.account_driven) is not bool:raise ValueError('Explicit account-driven mode required')
+        if self.funding.get('kind')=='mock_futures_snapshot' and not self.account_driven:raise ValueError('Account snapshots require account-driven sizing')
         if self.decision_model not in ('adaptive','pressure') or D(self.initial_capital)<=0 or self.mode not in ('M0','M1','M2','M3'):raise ValueError('Invalid portfolio scenario')
         if (not isinstance(self.allow_research_expansion,bool) or not isinstance(self.cooldown_ms,int)
                 or isinstance(self.cooldown_ms,bool) or not isinstance(self.correlation_min_samples,int)
@@ -58,7 +62,7 @@ class PortfolioLedger(PaperLedger):
         self.portfolio=portfolio if isinstance(portfolio,PortfolioPolicy) else PortfolioPolicy(**portfolio)
         if policy is None:policy=PaperPolicy(initial_capital_usdt=float(self.portfolio.initial_capital))
         if float(policy.initial_capital_usdt)!=float(self.portfolio.initial_capital):raise ValueError('Explicit initial-capital policy mismatch')
-        super().__init__(path,source_id,policy,shadow,_profile={**asdict(self.portfolio),'execution_version':EXECUTION_VERSION})
+        super().__init__(path,source_id,policy,shadow,_profile={**self.profile_payload(),'execution_version':EXECUTION_VERSION})
         self.db.executescript("""CREATE TABLE IF NOT EXISTS initial_funding(id INTEGER PRIMARY KEY CHECK(id=1),payload TEXT NOT NULL);
             CREATE TRIGGER IF NOT EXISTS funding_no_update BEFORE UPDATE ON initial_funding BEGIN SELECT RAISE(ABORT,'Immutable opening funding'); END;
             CREATE TRIGGER IF NOT EXISTS funding_no_delete BEFORE DELETE ON initial_funding BEGIN SELECT RAISE(ABORT,'Immutable opening funding'); END;
@@ -101,19 +105,48 @@ class PortfolioLedger(PaperLedger):
             except BaseException:
                 if self.db.in_transaction:self.db.execute('ROLLBACK')
                 self.close();raise
+        if self.portfolio.account_driven and 'account_capital' not in self.state:
+            if self.state['cursor']:self.close();raise ValueError('Missing durable account reconciliation; never reseed')
+            self.state['account_capital']=initial_account_state(self.portfolio.initial_capital,self.portfolio.funding['account_id'])
         try:self.invariant()
-        except AssertionError as exc:
+        except (AssertionError,ValueError) as exc:
             self.close();raise ValueError('Initial funding/checkpoint conflict; startup halted without re-seeding') from exc
 
+    @classmethod
+    def from_account_snapshot(cls,path,source_id,snapshot,**options):
+        """Cycle-zero uses the account's settled cash, never a configurable seed.
+
+        Subsequent snapshots are journal inputs, not constructor arguments. Restart
+        with the original immutable profile and replay/reconcile current snapshots.
+        """
+        funding=snapshot_funding(snapshot)
+        portfolio=PortfolioPolicy(initial_capital=snapshot.settled_cash,funding=funding,account_driven=True,**options)
+        policy=PaperPolicy(initial_capital_usdt=float(snapshot.settled_cash),leverage=float(snapshot.leverage),stop_bps=50)
+        return cls(path,source_id,policy,portfolio=portfolio)
+
+    def account_limits(self):
+        if not self.portfolio.account_driven:return None
+        return capital_status(self.state['account_capital'],now_ms=self.state['now_ms'],
+                              local_margin=self.reserved(),local_risk=self.planned(),
+                              local_fees=sum((D(p['entry_fee_usdt']) for p in self.state['pending_entries'].values()),ZERO))
+
+    def profile_payload(self):
+        result=asdict(self.portfolio)
+        if not result['account_driven']:result.pop('account_driven')
+        return result
+
     def evidence_policy_hash(self):
-        return digest({'portfolio':asdict(self.portfolio),'paper':asdict(self.policy),'shadow':asdict(self.shadow),'execution_version':EXECUTION_VERSION})
+        return digest({'portfolio':self.profile_payload(),'paper':asdict(self.policy),'shadow':asdict(self.shadow),'execution_version':EXECUTION_VERSION})
 
     def ladder(self):return CapitalLadder.restore(self.state['ladder'])
     def save_ladder(self,ladder):self.state['ladder']=ladder.export_state()
     def add(self,key,value):self.state[key]=str(D(self.state[key])+D(value))
     def pins(self):return sorted({p['symbol'] for p in [*self.state['positions'].values(),*self.state['pending_entries'].values()]})
     def leg_key(self,symbol,side):return symbol+'|'+side
-    def observation_equity(self):return float(max(ZERO,min(self.ladder().active,D(self.state['active_equity']))))
+    def observation_equity(self):
+        limits=self.account_limits()
+        if limits:return float(min(D(limits['active_budget']),D(limits['marginal_margin'])))
+        return float(max(ZERO,min(self.ladder().active,D(self.state['active_equity']))))
 
     def reserved(self):
         return sum((D(p['margin_reserved_usdt']) for p in [*self.state['positions'].values(),*self.state['pending_entries'].values()]),ZERO)
@@ -162,6 +195,18 @@ class PortfolioLedger(PaperLedger):
         fees=sum((D(p['entry_fee_usdt']) for p in s['positions'].values()),ZERO)
         expected=ladder.total+D(s['quarantined_flows'])+self.unsettled()-fees
         if D(s['cash'])!=expected:raise AssertionError('Portfolio Decimal cash/reserve/active/pending/deficit reconciliation')
+        if self.portfolio.account_driven:
+            account=s['account_capital'];actual=CapitalLadder.restore(account['ladder'])
+            if (actual.starting_total!=D(s['initial_funding']['amount'])
+                or D(account['cash'])!=actual.total+D(account['unallocated'])
+                or account['account_id']!=self.portfolio.funding['account_id']):
+                raise AssertionError('Account capital checkpoint discrepancy; never re-seed')
+            snap=account['snapshot']
+            if snap:
+                FuturesAccountSnapshot(**snap).validate(now_ms=snap['timestamp_ms'])
+                if (snap['account_id']!=account['account_id'] or D(snap['settled_cash'])!=D(account['cash'])
+                    or account['snapshots'].get(snap['snapshot_id'])!=snap['source_digest']):
+                    raise AssertionError('Account snapshot checkpoint discrepancy')
         if len(s['positions'])+len(s['pending_entries'])>10:raise AssertionError('Ten gross legs maximum')
         if any(p['campaign_id'] not in s['campaigns'] for p in s['positions'].values()):raise AssertionError('Orphan campaign')
 
@@ -209,13 +254,25 @@ class PortfolioLedger(PaperLedger):
         dd=max(ZERO,(peak-active_equity)/peak);s['max_drawdown']=max(float(dd),s['max_drawdown'])
         if dd>=D('.06') and not s['halted']:s['halted']=True;self.audit('HALTED',drawdown=str(dd))
         cap=ladder.mark_to_market(str(min(ZERO,active_equity-ladder.active)),len(s['positions'])+len(s['pending_entries']))
-        self.save_ladder(ladder);s['capital_status']=cap
+        self.save_ladder(ladder)
+        limits=self.account_limits()
+        if limits:
+            actual=CapitalLadder.restore(s['account_capital']['ladder'])
+            paper_loss=min(ZERO,D(s['last_equity'])-D(self.portfolio.initial_capital)-D(s['quarantined_flows']))
+            account_loss=min(ZERO,D(limits['active_budget'])-actual.active)
+            cap=actual.mark_to_market(str(paper_loss+account_loss),len(s['positions'])+len(s['pending_entries']))
+            s['account_capital']['ladder']=actual.export_state()
+            if not limits['ready_for_paper']:
+                for key in sorted(list(s['pending_entries'])):self.cancel(key,'account_'+limits['connector_status'])
+            if limits['halted'] and not s['halted']:s['halted']=True;self.audit('HALTED',reason='reconciled_account_drawdown')
+        s['capital_status']=cap
         allowed=cap['allowed_slots']
         if not all_valid or s['halted'] or s['paused'] or len(s['positions'])+len(s['pending_entries'])>allowed:
             for key in sorted(list(s['pending_entries']),reverse=True):
                 self.cancel(key,'portfolio_reduction_or_unverified_risk')
         excess=max(0,len(s['positions'])-allowed)
         for key in sorted(s['positions'],reverse=True)[:excess]:self.request(key,'CAPITAL_REDUCTION')
+        if limits:active_equity=max(ZERO,D(limits['active_budget'])+paper_loss)
         per_leg=max(ZERO,active_equity)*D('.0025')*(D('.5') if dd>=D('.03') else 1)
         for key,p in s['positions'].items():
             if D(p.get('current_planned_loss_usdt',p['planned_loss_usdt']))>per_leg:self.request(key,'CAPITAL_REDUCTION')
@@ -268,7 +325,19 @@ class PortfolioLedger(PaperLedger):
 
     def plan(self,sym,side,q):
         s=self.state;ladder=self.ladder();count=len(s['positions'])+len(s['pending_entries'])
+        limits=self.account_limits()
+        if limits:
+            if not limits['ready_for_paper']:return None,'account_'+limits['connector_status']
+            snap=s['account_capital']['snapshot']
+            if D(self.policy.leverage)!=D(snap['leverage']) or not 1<=D(self.policy.leverage)<=2 or self.policy.stop_bps!=50:
+                return None,'unconfirmed_v45_leverage_or_price_stop'
+            # Snapshot ladder owns account allocation. Paper P&L remains separate;
+            # losses/costs can only tighten, never promote real account capital.
+            ladder=CapitalLadder.restore(s['account_capital']['ladder'])
         effective=max(ZERO,min(ladder.active,D(s['active_equity'])))
+        if limits:
+            paper_loss=min(ZERO,D(s['last_equity'])-D(self.portfolio.initial_capital)-D(s['quarantined_flows']))
+            effective=max(ZERO,D(limits['active_budget'])+paper_loss)
         allowed=s['capital_status'].get('allowed_slots',0)
         if s['halted'] or s['paused'] or not s['equity_verified']:return None,'account_halt_pause_or_unverified_exposure'
         if count>=allowed or ladder.deficit:return None,'no_funded_slot'
@@ -294,17 +363,27 @@ class PortfolioLedger(PaperLedger):
                 s['market_states'].get(other['symbol'],{}).get('history',[]),self.portfolio.correlation_min_samples)
             if corr is None or abs(corr)>=self.portfolio.correlation_limit:correlated+=D(other['planned_loss_usdt'])
         budget=min(budget,max(ZERO,effective*D(self.portfolio.correlated_risk_fraction)-correlated))
+        if limits:
+            budget=min(budget,D(limits['risk_budget'])/max(1,allowed-count),D(limits['per_leg_risk_budget']))
+            margin=min(margin,D(limits['marginal_margin']))
         if budget<=0:return None,'correlation_or_concentration_risk_cap'
         # A pending fee is a commitment too, never financed by reserve or pending profit.
         holds=sum((D(p['entry_fee_usdt']) for p in s['pending_entries'].values()),ZERO)
-        margin=min(margin,max(ZERO,ladder.active+self.unsettled()-sum((D(p['entry_fee_usdt']) for p in s['positions'].values()),ZERO)-self.reserved()-holds))
+        margin=min(margin,max(ZERO,(effective if limits else ladder.active+self.unsettled())-sum((D(p['entry_fee_usdt']) for p in s['positions'].values()),ZERO)-self.reserved()-holds))
         rules,fee=self.rules(sym)
         market=s['market_states'].get(sym,{})
         effective_policy=replace(self.policy,stop_bps=max(self.policy.stop_bps,min(500,2*market.get('volatility_bps',0))),
             target_bps=max(self.policy.target_bps,min(1000,4*market.get('volatility_bps',0))))
+        if limits:effective_policy=replace(effective_policy,stop_bps=50)
         plan,reason=size_for_quote(equity=float(effective),peak=float(D(s['peak'])),quote=data,direction=side,
             rules=rules,observed_fee=fee,policy=effective_policy,risk_budget_usdt=float(budget),margin_budget_usdt=float(margin))
         if not plan:return None,reason
+        if limits:
+            # v4.5 stop is adverse ENTRY PRICE distance, not allocation loss.
+            sign=D(1) if side=='LONG' else D(-1)
+            stop=D(plan['entry_price'])*(1-sign*D('.005'))
+            plan['planned_stop_mid']=float(stop)
+            plan['planned_stop_quote']=float(stop-sign*(D(q['ask'])-D(q['bid']))/2)
         # Final admission uses exact Decimal costs at the SAME adverse tick model.
         # The legacy helper proposes a conservative lot; it never owns v4 money.
         entry=D(plan['entry_price']);unit=D(plan['contract_multiplier']);fee_rate=max(D(fee),D(self.policy.minimum_taker_fee_rate))
@@ -317,17 +396,32 @@ class PortfolioLedger(PaperLedger):
         target=D(plan['planned_target_mid'])+(-half if side=='LONG' else half)
         unit_gain=self.close_math(one,{'bid':str(target),'ask':str(target)},horizon,spec)['net']
         if unit_loss<=0 or unit_gain<=0:return None,'full_cost_stop_or_target_infeasible'
+        if limits:budget=min(budget,nominal*D(self.portfolio.campaign_loss_fraction))
         step=D(rules.step_size)
         margin_one=entry*unit*(1/D(self.policy.leverage)+2*fee_rate)
         quantity=min(D(plan['quantity_contracts']),
                      (budget/unit_loss/step).to_integral_value(rounding=ROUND_FLOOR)*step,
                      (margin/margin_one/step).to_integral_value(rounding=ROUND_FLOOR)*step)
-        if not rules.valid(float(quantity),float(entry)) or quantity<=0:return None,'minimum_lot_exceeds_full_cost_risk'
+        if (quantity<=0 or not D(rules.min_qty)<=quantity<=D(rules.max_qty) or quantity%step
+            or quantity*entry*unit<D(rules.min_notional)):return None,'minimum_lot_exceeds_full_cost_risk'
         plan.update(quantity_contracts=str(quantity),risk_budget_usdt=str(budget),
             planned_loss_usdt=str(unit_loss*quantity),planned_target_net_usdt=str(unit_gain*quantity),
             entry_notional_usdt=str(entry*unit*quantity),entry_fee_usdt=str(money(entry*unit*quantity*fee_rate,cost=True)),
             margin_reserved_usdt=str(entry*unit*quantity/D(self.policy.leverage)))
         if D(plan['planned_target_net_usdt'])<D(self.policy.minimum_net_target_usdt):return None,'target_net_below_budget_after_full_cost_sizing'
+        if limits:
+            # Solve for net campaign target after both fees and modeled carry;
+            # take-profit goal is on allocation, not a fixed 2% price move.
+            sign=D(1) if side=='LONG' else D(-1)
+            target_net=nominal*D(self.portfolio.campaign_target_fraction)
+            notional=entry*unit*quantity
+            carry=money(notional*D(self.policy.modeled_carry_8h_rate)*D(self.policy.maximum_holding_ms)/D(28800000),cost=True)
+            exit_price=(target_net+sign*notional+D(plan['entry_fee_usdt'])+carry)/(unit*quantity*(sign-fee_rate))
+            if exit_price<=0:return None,'net_allocation_target_not_physically_reachable'
+            slip=D(self.policy.adverse_slippage_bps)/D(10000)
+            quote=exit_price/(1-sign*slip)
+            plan['planned_target_mid']=float(quote+sign*half)
+            plan['planned_target_net_usdt']=str(target_net)
         plan['allocation_budget_usdt']=str(nominal)
         return plan,None
 
@@ -528,7 +622,22 @@ class PortfolioLedger(PaperLedger):
             if 'service' in p:s['service']=p['service']
         elif kind=='CONTROL':
             action=p.get('action')
-            if action in ('pause','resume'):s['paused']=action=='pause';self.audit('CONTROL',operator_action=action)
+            if action=='account-snapshot' and self.portfolio.account_driven:
+                try:
+                    snapshot=FuturesAccountSnapshot(**p['snapshot'])
+                    owned_ids={v['id'] for v in s['positions'].values()}
+                    updated,records=reconcile(s['account_capital'],snapshot,now_ms=available,owned_ids=owned_ids)
+                    s['account_capital']=updated
+                    for record in records:self.audit(record['event_type'],**{k:v for k,v in record.items() if k!='event_type'})
+                except (ValueError,TypeError,KeyError) as exc:
+                    s['account_capital'].update(status='DEGRADED',reason=str(exc),observed_unreconciled={k:v for k,v in (p.get('snapshot') if isinstance(p.get('snapshot'),dict) else {}).items() if k in ('account_id','snapshot_id','timestamp_ms','settled_cash','equity','free_margin','source_digest')})
+                    self.audit('ACCOUNT_RECONCILIATION_BLOCKED',reason=str(exc))
+            elif action=='account-disconnected' and self.portfolio.account_driven:
+                s['account_capital'].update(status='NOT_CONNECTED',reason='Read-only account transport disconnected')
+                self.audit('ACCOUNT_DISCONNECTED')
+            elif action in ('pause','resume'):s['paused']=action=='pause';self.audit('CONTROL',operator_action=action)
+            elif action=='capital-flow' and self.portfolio.account_driven:
+                self.audit('CONTROL_REJECTED',reason='Account cash changes require settled snapshot events; external allocation NOT_APPROVED')
             elif action=='capital-flow':
                 amount=D(p['amount'])
                 if amount!=money(amount) or D(s['quarantined_flows'])+amount<0:self.audit('CONTROL_REJECTED',reason='external_flows_quarantined_not_ladder_profit')
@@ -567,9 +676,10 @@ class PortfolioLedger(PaperLedger):
 
     def report(self):
         s=self.state;ladder=self.ladder();positions=list(s['positions'].values())
+        limits=self.account_limits()
         return {'status':'PAPER_ONLY','engine':'v4','live_orders_enabled':False,'strategy_validated':False,'production_ready':False,
             'initial_capital':self.portfolio.initial_capital,'initial_funding':s['initial_funding'],
-            'actual_exchange_balance_status':'NOT_CONNECTED','mode':self.portfolio.mode,
+            'account_status':limits,'actual_exchange_balance_status':'NOT_CONNECTED','mode':self.portfolio.mode,
             'execution_version':EXECUTION_VERSION,'money_quantum_usdt':str(MONEY_QUANTUM),'evidence_policy_sha256':self.evidence_policy_hash(),'cash':s['cash'],
             'equity_last_mark':s['last_equity'],'executable_equity':s['last_equity'] if s['equity_verified'] else None,
             'mark_status':s['mark_status'],'active_equity':s['active_equity'],'ladder':ladder.snapshot(),

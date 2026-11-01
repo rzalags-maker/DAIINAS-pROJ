@@ -78,7 +78,7 @@ def replay(sources,paper_path,policy=PaperPolicy(),shadow=ShadowPolicy(),*,ledge
         finally:ledger.close()
 
 
-async def service(args,config,paper,shadow):
+async def service(args,config,paper,shadow,*,account_adapter=None):
     pipeline=Pipeline(args.source_db,args.paper_db,paper,shadow,**account_factory(config))
     observer=ContinuousObserver(pipeline,source_path=args.source_db,deep=config.get('deep',5),
         refresh_seconds=config.get('refresh_seconds',180),dwell_ms=config.get('dwell_seconds',120)*1000,
@@ -123,6 +123,7 @@ async def service(args,config,paper,shadow):
                 await pipeline.append([('CONTROL',f'storage-pause:{boot}',{'action':'pause'}),
                     ('HEALTH',f'storage-halt:{boot}',{'state':'STORAGE_CAPACITY_HALT'})])
                 raise OSError('Storage capacity guard: paper state retained; archive/restore required')
+            if config.get('portfolio',{}).get('account_driven',False):await pipeline.poll_account(account_adapter)
             await pipeline.append([('CLOCK',f'clock:{boot}:{tick}',{'service':runtime})])
             await asyncio.sleep(1)
     runner=asyncio.create_task(loops());clock=asyncio.create_task(clocks());waiting=asyncio.create_task(stop.wait())
@@ -143,7 +144,7 @@ async def service(args,config,paper,shadow):
                        'normalized_event_counts':dict(observer.stats),
                        'source_code_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in
                            [Path(__file__),Path(__file__).with_name('continuous_paper.py'),Path(__file__).with_name('continuous_stream.py'),Path(__file__).with_name('continuous_store.py')]+
-                           ([Path(__file__).with_name(n+'.py') for n in ('capital_ladder','portfolio_paper','market_intelligence','hedge_research','funding')] if config.get('engine')=='v4' else [])}})
+                           ([Path(__file__).with_name(n+'.py') for n in ('capital_ladder','portfolio_paper','market_intelligence','hedge_research','funding','account_capital')] if config.get('engine')=='v4' else [])}})
         result['24h_host_gate']='PENDING — HOST ACCEPTANCE NOT RUN' if args.host_id else 'BLOCKED — HOST NOT PROVISIONED'
         if args.seconds:
             stats=observer.stream_stats

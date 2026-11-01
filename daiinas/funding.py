@@ -18,6 +18,12 @@ def validate_funding(source,amount):
     if not isinstance(source,dict):raise ValueError('Explicit typed opening funding source required; no v4 capital default')
     if source.get('kind')=='verified_readonly_exchange_snapshot':
         raise ValueError('ACTUAL_EXCHANGE_READ_ONLY: NOT_CONNECTED; no authorized private connector exists')
+    if source.get('kind')=='mock_futures_snapshot':
+        from .account_capital import FuturesAccountSnapshot
+        snapshot=FuturesAccountSnapshot(**source['snapshot']).validate(now_ms=source['timestamp_ms'])
+        expected=snapshot_funding(snapshot)
+        if source!=expected or dec(amount)!=dec(snapshot.settled_cash):raise ValueError('Conflicting snapshot opening funding')
+        return dict(source)
     required={'kind','account_id','scope','currency','amount','timestamp_ms','source_reference','source_evidence'}
     if set(source)!=required or source.get('kind')!='owner_confirmed_paper_scenario':raise ValueError('Unknown or incomplete funding source')
     if source['currency']!='USDT' or source['scope']!=PAPER_SCOPE:raise ValueError('Wrong funding currency or account scope')
@@ -76,3 +82,19 @@ def validate_readonly_snapshot(snapshot,*,account_id,now_ms,max_age_ms=15000):
     available=min(values['free_cash'],values['settled_cash']-sum((values[k] for k in ('frozen','pledged','locked','borrowed','margin_obligations')),Decimal(0)))
     if available<=0:raise ValueError('No settled unpledged eligible cash')
     return available
+
+
+def snapshot_funding(snapshot):
+    """Derive cycle-zero provenance from a strict MOCK account, never an input seed.
+
+    Authenticated initialization remains blocked until the approved adapter exists.
+    """
+    snapshot.validate(now_ms=snapshot.timestamp_ms)
+    if dec(snapshot.settled_cash)<=0:raise ValueError('Positive settled opening capital required')
+    if dec(snapshot.liabilities)>0:raise ValueError('Opening liabilities need verified owner-equity normalization; startup blocked')
+    return dict(kind='mock_futures_snapshot',account_id=snapshot.account_id,
+                scope='CLASSIC_FUTURES',currency=snapshot.settlement_currency,
+                amount=snapshot.settled_cash,timestamp_ms=snapshot.timestamp_ms,
+                opening_equity=snapshot.equity,initial_usable_margin=snapshot.free_margin,
+                source_reference=snapshot.snapshot_id,source_digest=snapshot.source_digest,
+                source_evidence='MOCK Futures account; not authenticated KuCoin',snapshot=snapshot.payload())

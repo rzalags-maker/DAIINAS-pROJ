@@ -1,6 +1,7 @@
 """WAL-safe two-file backup, immutable source segments, and read-only status."""
 from contextlib import contextmanager,closing
 from pathlib import Path
+from decimal import Decimal
 import fcntl
 import hashlib
 import json
@@ -50,7 +51,14 @@ def status(source_path,paper_path):
                                      for sym in active for k in ('tickerV2','level2'))
     healthy=(fresh_feeds and 0<=age<15000 and seq==state['cursor'] and service.get('connected',False) and state.get('connected',False)
              and set(active)<=set(verified) and not (pos and pos.get('unresolved')) and not unresolved)
-    return {'healthy':healthy,'live_orders_enabled':False,'checkpoint_age_ms':age,
+    account_status=None
+    if 'account_capital' in state:
+        from .account_capital import capital_status
+        account_status=capital_status(state['account_capital'],now_ms=now,
+            local_margin=sum((Decimal(p['margin_reserved_usdt']) for p in portfolio_positions+list(state.get('pending_entries',{}).values())),Decimal(0)),
+            local_risk=sum((Decimal(p.get('current_planned_loss_usdt',p['planned_loss_usdt'])) for p in portfolio_positions+list(state.get('pending_entries',{}).values())),Decimal(0)))
+        healthy=healthy and account_status['ready_for_paper']
+    return {'account_status':account_status,'healthy':healthy,'live_orders_enabled':False,'checkpoint_age_ms':age,
             'market_feeds_fresh':fresh_feeds,'unprocessed_records':seq-state['cursor'],'paused_new_entries':state['paused'],
             'halted':state['halted'],'cash':state['cash'],'equity_last_mark':state['last_equity'],
             'mark_status':state['mark_status'],'open_position':pos,'pending_entry':state['pending'],

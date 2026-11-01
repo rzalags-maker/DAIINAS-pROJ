@@ -523,6 +523,23 @@ class Pipeline:
     async def scan(self,rows,ticks,universe_policy,rotation):
         return await asyncio.get_running_loop().run_in_executor(self.executor,self._scan,rows,ticks,universe_policy,rotation)
 
+    async def poll_account(self,adapter=None):
+        """Journal adapter observations on the same single-writer transaction path.
+
+        No real private adapter is supplied. Absence/disconnection blocks account
+        entries without clearing exposure, historical funding or pause state.
+        """
+        from .account_capital import NotConnectedAdapter
+        from uuid import uuid4
+        try:
+            snapshot=await asyncio.wait_for(asyncio.to_thread((adapter or NotConnectedAdapter()).snapshot),timeout=5)
+            packet={'action':'account-disconnected'} if snapshot is None else {'action':'account-snapshot','snapshot':snapshot.payload()}
+        except Exception:
+            # Adapter errors may contain credential-bearing URLs. Persist a fixed
+            # diagnostic and keep public/open-position monitoring alive.
+            packet={'action':'account-disconnected','reason':'Read-only adapter failed'}
+        await self.append([('CONTROL','account-poll:'+uuid4().hex,packet)])
+
     async def report(self):
         return await asyncio.get_running_loop().run_in_executor(self.executor,self.ledger.report)
 

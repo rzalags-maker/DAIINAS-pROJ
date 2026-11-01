@@ -187,3 +187,17 @@ opening balance**. Choose an explicitly named PAPER funding source/amount;
 INITIAL_FUNDING is immutable and credited once. Actual exchange funding remains
 **NOT_CONNECTED**; public data cannot verify balances. See
 [funding requirements](docs/V4_FUNDED_ACCOUNT_BOOTSTRAP.md).
+
+## v4.6 current-account capital boundary (Issue #15)
+
+The account-driven profile now reconciles current Futures cash, equity, free
+margin, exposure and costs before sizing each paper entry. Opening funding stays
+immutable historical provenance. The authenticated adapter remains
+**NOT_CONNECTED**; only explicitly marked MOCK account observations are runnable.
+See [the interface, reproducible acceptance and connection blockers](docs/V46_ACCOUNT_DRIVEN_CAPITAL.md).
+
+```sh
+python scripts/verify_v46_account.py --output-dir /tmp/daiinas-v46-proof
+```
+
+This command is synthetic account validation, not a real-account or market-return test.

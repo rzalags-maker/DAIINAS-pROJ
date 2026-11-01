@@ -13,5 +13,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - run: python -m unittest discover -s tests -v
+      - name: All preserved and account-driven regression tests
+        run: |
+          set -o pipefail
+          python -m unittest discover -s tests -v 2>&1 | tee regression-tests.log
+      - name: Reproducible MOCK account cycles and restart/replay proof
+        run: python scripts/verify_v46_account.py --output-dir v46-proof
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v46-account-python-${{ matrix.python-version }}
+          path: |
+            regression-tests.log
+            v46-proof/status.json
+          retention-days: 14
       - run: python -m daiinas --help
