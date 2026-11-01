@@ -82,9 +82,10 @@ class BitsgapFuturesStream:
         self.observation_sink = observation_sink
         self.connection_sink = connection_sink
 
-    def _observe_value(self, topic, value, quality="VALIDATED", *, snapshot_response=False):
+    def _observe_value(self, topic, value, quality="VALIDATED", *, snapshot_response=False,
+                       received_ms=None):
         if self.observation_sink is not None:
-            now = self.observer._clock_ms()
+            now = self.observer._clock_ms() if received_ms is None else received_ms
             self.observation_sink(topic=topic, value=value, source="WS",
                 market_id=self.observer._futures_em, started_ms=now,
                 received_ms=now, quality=quality, snapshot_response=snapshot_response)
@@ -110,9 +111,15 @@ class BitsgapFuturesStream:
         self._snapshot_pending = {topic: sent_at for topic in _SUBS}
         self.snapshot_batches += 1
 
-    def _snapshot_response(self, topic):
-        sent_at = self._snapshot_pending.pop(topic, None)
-        if sent_at is None or not 0 <= time.monotonic() - sent_at <= _SNAPSHOT_RESPONSE_WINDOW_SECONDS:
+    def _snapshot_response(self, topic, received_monotonic=None):
+        received_at = time.monotonic() if received_monotonic is None else received_monotonic
+        sent_at = self._snapshot_pending.get(topic)
+        # A receive task may finish before a timer/budget wait sends a new read.
+        # Processing later must neither consume that request nor renew old data.
+        if sent_at is None or received_at < sent_at:
+            return False
+        self._snapshot_pending.pop(topic, None)
+        if received_at - sent_at > _SNAPSHOT_RESPONSE_WINDOW_SECONDS:
             return False
         self.snapshot_responses += 1
         return True
@@ -133,7 +140,7 @@ class BitsgapFuturesStream:
         return {"type":"auth", "pubkey": public, "ts":timestamp,
                 "nonce":token, "signature":signed}
 
-    def _ingest(self, message):
+    def _ingest(self, message, *, received_monotonic=None, received_ms=None):
         if not isinstance(message, dict) or message.get("topic") not in _SUBS:
             _fail("WS_UNVERIFIED_TOPIC_FRAME")
         params = message.get("params")
@@ -146,16 +153,11 @@ class BitsgapFuturesStream:
             if topic in self._snapshot_pending:
                 self._snapshot_pending.pop(topic, None)
                 self.snapshot_rejections += 1
-            self._observe_value(topic, None, "UNVERIFIED")
+            self._observe_value(topic, None, "UNVERIFIED", received_ms=received_ms)
             return {"topic": topic, "event": "SUBSCRIPTION_REJECTED",
                     "funding_authorized": False}
         if message.get("ok") is not True:
             _fail("WS_UNVERIFIED_TOPIC_FRAME")
-        if "value" in message and message["value"] is None:
-            snapshot = self._snapshot_response(topic)
-            self._observe_value(topic, None, "PROVIDER_NO_DATA", snapshot_response=snapshot)
-            return {"topic": topic, "event": "PROVIDER_NO_DATA",
-                    "funding_authorized": False}
         if "value" not in message:
             if message.get("mes") == "subscribed" and set(message) <= {"ok", "topic", "params", "mes"}:
                 return {"topic": topic, "event": "SUBSCRIBED", "funding_authorized": False}
@@ -165,6 +167,12 @@ class BitsgapFuturesStream:
         if ("mes" in message and message["mes"] is not None
                 and not isinstance(message["mes"], str)):
             _fail("WS_UNVERIFIED_TOPIC_FRAME")
+        if message["value"] is None:
+            snapshot = self._snapshot_response(topic, received_monotonic)
+            self._observe_value(topic, None, "PROVIDER_NO_DATA", snapshot_response=snapshot,
+                                received_ms=received_ms)
+            return {"topic": topic, "event": "PROVIDER_NO_DATA",
+                    "funding_authorized": False}
         value = message["value"]
         if topic == "balance":
             self.observer._balance(value)
@@ -174,10 +182,10 @@ class BitsgapFuturesStream:
         else:
             count, _, _ = self.observer._positions(value, settings=(topic == "positions_settings"))
         self.updates += 1
-        snapshot = self._snapshot_response(topic)
+        snapshot = self._snapshot_response(topic, received_monotonic)
         if not snapshot:
             self.subscription_updates += 1
-        self._observe_value(topic, value, snapshot_response=snapshot)
+        self._observe_value(topic, value, snapshot_response=snapshot, received_ms=received_ms)
         # Raw private data never moves from the validation boundary to events/logs.
         return {"topic": topic, "event": "VALIDATED_UPDATE", "record_count": count,
                 "funding_authorized": False}
@@ -221,7 +229,10 @@ class BitsgapFuturesStream:
                 await self._request_snapshots(ws)
                 processed = 0
                 next_snapshot = asyncio.create_task(asyncio.sleep(_SNAPSHOT_INTERVAL_SECONDS))
-                incoming = asyncio.create_task(ws.recv())
+                async def receive_frame():
+                    raw = await ws.recv()
+                    return raw, time.monotonic(), self.observer._clock_ms()
+                incoming = asyncio.create_task(receive_frame())
                 try:
                     while max_messages is None or processed < max_messages:
                         done, _ = await asyncio.wait(
@@ -232,8 +243,9 @@ class BitsgapFuturesStream:
                                 asyncio.sleep(_SNAPSHOT_INTERVAL_SECONDS))
                         if incoming not in done:
                             continue
-                        frame = _parse_json(incoming.result())
-                        incoming = asyncio.create_task(ws.recv())
+                        raw, received_monotonic, received_ms = incoming.result()
+                        frame = _parse_json(raw)
+                        incoming = asyncio.create_task(receive_frame())
                         messages = frame if isinstance(frame, list) else [frame]
                         for msg in messages:
                             try:
@@ -249,7 +261,8 @@ class BitsgapFuturesStream:
                                              "event": "UNSCOPED_OK_RESPONSE",
                                              "funding_authorized": False}
                                 else:
-                                    event = self._ingest(msg)
+                                    event = self._ingest(msg, received_monotonic=received_monotonic,
+                                                         received_ms=received_ms)
                             except BitsgapError:
                                 self.last_frame_shape = _safe_envelope_shape(msg)
                                 raise

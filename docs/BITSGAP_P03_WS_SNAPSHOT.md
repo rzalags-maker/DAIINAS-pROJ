@@ -2,12 +2,10 @@
 
 ## Cause and scope
 
-Owner's live P0.2 Mac observation (2026-11-01) authenticated against Bitsgap
-KuCoin Futures `em=24`. REST balance was validated and showed a historical
-61.076916622 USDT observation. The private view reported a current REST sample
-but a WS sample ~23.6 seconds old, exceeding the 15-second freshness TTL.
-The next completed 60-second session retained a WS record from a previous
-generation and never established current cross-transport balance evidence.
+The owner's prior live P0.2 Mac observation authenticated against KuCoin Futures.
+REST balance validated, but WS receipt age exceeded the 15-second freshness TTL.
+A later session retained previous-generation WS evidence and did not establish
+current cross-transport balance evidence. Private financial amounts are omitted.
 
 Per the provider WS contract, `subs:true` creates an update subscription.
 An account that does not change need not emit another update. Omitting
@@ -62,3 +60,33 @@ receipt times, not exchange-signed timestamps.
 **Execution remains disabled.** No live order routing, Model A funding,
 position modes, risk parameters, keys, Github secrets or main branch are changed.
 Do not merge stacked PRs or run live order execution automatically.
+
+## Receive-time audit correction
+
+A completed receive task can wait for processing while a periodic snapshot or its
+shared-rate-budget wait runs. Snapshot provenance now compares the actual local
+receive-completion monotonic time to the request-send time, not processing time.
+A frame received before the new request cannot consume its pending topic or renew
+unchanged evidence. The stored local receipt timestamp likewise remains the receive
+time if processing is delayed. This cannot establish a server/exchange event time,
+and the protocol's missing correlation ID remains an explicit limitation.
+Null responses now pass the same strict envelope/metadata checks as non-null values
+before any pending snapshot is consumed. Neither correction changes exposure-null
+semantics, the signer, rate limits, Model A or execution permissions.
+
+### Audit evidence (cloud-only; owner Mac acceptance pending)
+
+The untouched P0.3 head `dcb4fde0df4f6e03cec50bccfebc951694e197e0`
+passed 459/459 tests on Linux Python 3.13.5. A new watch-loop test reproduced
+receive-time restamping against that untouched source; the corrected stream
+passes the same scenario. Four new tests cover the timer race, pre-request frames,
+delayed processing and malformed null envelopes. Final full regression: 463/463
+PASS; focused stream regression: 22/22 PASS, ordinary unittest without timer helper.
+Official WS/topic reference revision: `d27611b63d56c65c9797e61d34b40b1f175a7664`.
+
+Cloud dependencies: cryptography 43.0.0, websockets 16.0 and certifi 2025.1.31.
+The certifi trust context loads with CERT_REQUIRED and hostname checking enabled;
+this is not a live Bitsgap TLS handshake result. No owner credential file was
+accessed and no authenticated request was made. The owner must still run the
+bounded observer on the trusted Mac, compare timestamps/counters privately,
+check stop/reconnect generations and independently verify terminal parity.
