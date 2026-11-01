@@ -15,6 +15,10 @@ from .bitsgap_readonly import BitsgapError, _unique_object, _reject_constant
 from .bitsgap_futures_observe import BitsgapFuturesObserver, _fail
 
 _SUBS = ("balance", "orders", "positions", "positions_settings")
+# Snapshot responses refresh evidence; unchanged subscription frames do not.
+# A response must arrive within this window of an explicit one-off request.
+_SNAPSHOT_RESPONSE_WINDOW_SECONDS = 5.0
+_SNAPSHOT_INTERVAL_SECONDS = 8.0
 
 
 def _parse_json(raw):
@@ -70,15 +74,48 @@ class BitsgapFuturesStream:
         self.last_failure = None
         self.last_frame_shape = None
         self.unscoped_control_responses = 0
+        self.snapshot_batches = 0
+        self.snapshot_responses = 0
+        self.snapshot_rejections = 0
+        self.subscription_updates = 0
+        self._snapshot_pending = {}
         self.observation_sink = observation_sink
         self.connection_sink = connection_sink
 
-    def _observe_value(self, topic, value, quality="VALIDATED"):
+    def _observe_value(self, topic, value, quality="VALIDATED", *, snapshot_response=False):
         if self.observation_sink is not None:
             now = self.observer._clock_ms()
             self.observation_sink(topic=topic, value=value, source="WS",
                 market_id=self.observer._futures_em, started_ms=now,
-                received_ms=now, quality=quality)
+                received_ms=now, quality=quality, snapshot_response=snapshot_response)
+
+    def diagnostic_status(self):
+        """Fixed-vocabulary transport counters only: no keys, frames, balances or IDs."""
+        return {"ws_authenticated": self.authenticated,
+                "ws_snapshot_batches_sent": self.snapshot_batches,
+                "ws_snapshot_responses": self.snapshot_responses,
+                "ws_snapshot_rejections": self.snapshot_rejections,
+                "ws_subscription_updates": self.subscription_updates,
+                "ws_disconnects": self.disconnects,
+                "ws_last_failure": self.last_failure or "NONE"}
+
+    async def _request_snapshots(self, ws):
+        """Explicit WS read snapshots; share REST/WS topic budgets and account scope."""
+        if self.observer.request_budget is not None:
+            await asyncio.to_thread(self.observer.request_budget.acquire, _SUBS)
+        requests = [{"topic": topic, "params": {"em": self.observer._futures_em}}
+                    for topic in _SUBS]
+        await ws.send(json.dumps(requests, separators=(",", ":")))
+        sent_at = time.monotonic()
+        self._snapshot_pending = {topic: sent_at for topic in _SUBS}
+        self.snapshot_batches += 1
+
+    def _snapshot_response(self, topic):
+        sent_at = self._snapshot_pending.pop(topic, None)
+        if sent_at is None or not 0 <= time.monotonic() - sent_at <= _SNAPSHOT_RESPONSE_WINDOW_SECONDS:
+            return False
+        self.snapshot_responses += 1
+        return True
 
     def _connection(self, state):
         if self.connection_sink is not None:
@@ -105,15 +142,18 @@ class BitsgapFuturesStream:
             _fail("WS_FOREIGN_EXCHANGE_SCOPE")
         topic = message["topic"]
         if message.get("ok") is False:
-            # Some subscriptions are absent when the exchange has no data.
-            # Never claim a negative acknowledgment means zero orders/positions.
+            # No payload is evidence of neither emptiness nor a current snapshot.
+            if topic in self._snapshot_pending:
+                self._snapshot_pending.pop(topic, None)
+                self.snapshot_rejections += 1
             self._observe_value(topic, None, "UNVERIFIED")
             return {"topic": topic, "event": "SUBSCRIPTION_REJECTED",
                     "funding_authorized": False}
         if message.get("ok") is not True:
             _fail("WS_UNVERIFIED_TOPIC_FRAME")
         if "value" in message and message["value"] is None:
-            self._observe_value(topic, None, "PROVIDER_NO_DATA")
+            snapshot = self._snapshot_response(topic)
+            self._observe_value(topic, None, "PROVIDER_NO_DATA", snapshot_response=snapshot)
             return {"topic": topic, "event": "PROVIDER_NO_DATA",
                     "funding_authorized": False}
         if "value" not in message:
@@ -134,7 +174,10 @@ class BitsgapFuturesStream:
         else:
             count, _, _ = self.observer._positions(value, settings=(topic == "positions_settings"))
         self.updates += 1
-        self._observe_value(topic, value)
+        snapshot = self._snapshot_response(topic)
+        if not snapshot:
+            self.subscription_updates += 1
+        self._observe_value(topic, value, snapshot_response=snapshot)
         # Raw private data never moves from the validation boundary to events/logs.
         return {"topic": topic, "event": "VALIDATED_UPDATE", "record_count": count,
                 "funding_authorized": False}
@@ -145,6 +188,7 @@ class BitsgapFuturesStream:
             _fail("FUTURES_DISCOVERY_REQUIRED")
         self.connected = False
         self.authenticated = False
+        self._snapshot_pending.clear()
         self._connection("CONNECTING")
         # Snapshot-before-subscribe is NOT atomic with WS. It cannot release a
         # funded slot, and reconciliation must re-snapshot on every reconnect.
@@ -171,31 +215,52 @@ class BitsgapFuturesStream:
                     # snapshot. Buffered WS values still require comparison.
                     await asyncio.to_thread(self.observer.wallet_observation)
                     self._connection("REST_RESYNC_COMPLETE")
+                # Request a one-time account snapshot separately from subscription.
+                # The protocol has no request ID. A response can be treated as
+                # explicit only if it follows the matching scoped read promptly.
+                await self._request_snapshots(ws)
                 processed = 0
-                while max_messages is None or processed < max_messages:
-                    frame = _parse_json(await ws.recv())
-                    messages = frame if isinstance(frame, list) else [frame]
-                    for msg in messages:
-                        try:
-                            # Bitsgap may acknowledge a batch with {ok, mes} and
-                            # no topic. This is NOT a scoped subscription ACK.
-                            if (isinstance(msg, dict) and set(msg) == {"ok", "mes"}
-                                    and type(msg["ok"]) is bool
-                                    and isinstance(msg["mes"], str)):
-                                if not msg["ok"]:
-                                    _fail("WS_UNSCOPED_REJECTION")
-                                self.unscoped_control_responses += 1
-                                event = {"topic": "account", "event": "UNSCOPED_OK_RESPONSE",
-                                         "funding_authorized": False}
-                            else:
-                                event = self._ingest(msg)
-                        except BitsgapError:
-                            self.last_frame_shape = _safe_envelope_shape(msg)
-                            raise
-                        await on_event(event)
-                        processed += 1
-                        if max_messages is not None and processed >= max_messages:
-                            break
+                next_snapshot = asyncio.create_task(asyncio.sleep(_SNAPSHOT_INTERVAL_SECONDS))
+                incoming = asyncio.create_task(ws.recv())
+                try:
+                    while max_messages is None or processed < max_messages:
+                        done, _ = await asyncio.wait(
+                            (incoming, next_snapshot), return_when=asyncio.FIRST_COMPLETED)
+                        if next_snapshot in done:
+                            await self._request_snapshots(ws)
+                            next_snapshot = asyncio.create_task(
+                                asyncio.sleep(_SNAPSHOT_INTERVAL_SECONDS))
+                        if incoming not in done:
+                            continue
+                        frame = _parse_json(incoming.result())
+                        incoming = asyncio.create_task(ws.recv())
+                        messages = frame if isinstance(frame, list) else [frame]
+                        for msg in messages:
+                            try:
+                                # Bitsgap may acknowledge a batch with {ok, mes}
+                                # and no topic. Never count it as account data.
+                                if (isinstance(msg, dict) and set(msg) == {"ok", "mes"}
+                                        and type(msg["ok"]) is bool
+                                        and isinstance(msg["mes"], str)):
+                                    if not msg["ok"]:
+                                        _fail("WS_UNSCOPED_REJECTION")
+                                    self.unscoped_control_responses += 1
+                                    event = {"topic": "account",
+                                             "event": "UNSCOPED_OK_RESPONSE",
+                                             "funding_authorized": False}
+                                else:
+                                    event = self._ingest(msg)
+                            except BitsgapError:
+                                self.last_frame_shape = _safe_envelope_shape(msg)
+                                raise
+                            await on_event(event)
+                            processed += 1
+                            if max_messages is not None and processed >= max_messages:
+                                break
+                finally:
+                    next_snapshot.cancel()
+                    incoming.cancel()
+                    await asyncio.gather(next_snapshot, incoming, return_exceptions=True)
         except BitsgapError as exc:
             self.last_failure = exc.category
             raise
@@ -210,6 +275,7 @@ class BitsgapFuturesStream:
         finally:
             self.connected = False
             self.disconnects += 1
+            self._snapshot_pending.clear()
             self._connection("DISCONNECTED")
 
     async def observe_forever(self, connect, *, on_event, stop_event, delay_seconds=1):
