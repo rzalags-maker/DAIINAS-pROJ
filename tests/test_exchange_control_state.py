@@ -150,5 +150,22 @@ class ExchangeMirrorTests(unittest.TestCase):
                               records=[])
 
 
+    def test_old_ws_event_does_not_resurrect_snapshot_absent_order(self):
+        m = ExchangeMirror('acct-1', 'UTA')
+        m.start_sync()
+        m.ingest_event({'id': 'old-order', 'account_id': 'acct-1',
+                        'scope': 'orders', 'timestamp_ms': 1000,
+                        'action': 'UPSERT',
+                        'record': {'id': 'already-cancelled', 'status': 'OPEN'}})
+        for scope, records in (
+            ('balances', [{'id': 'USDT', 'free': '60', 'locked': '0'}]),
+            ('orders', []), ('positions', []), ('fills', [])):
+            m.ingest_snapshot(scope=scope, account_id='acct-1',
+                              timestamp_ms=2000, records=records)
+        m.complete_sync()
+        self.assertNotIn('already-cancelled', m.orders)
+        self.assertEqual(m.health, 'RECONCILED_READONLY')
+
+
 if __name__ == '__main__':
     unittest.main()
