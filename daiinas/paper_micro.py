@@ -86,7 +86,7 @@ def prepare_rules(scan_report):
     return result
 
 
-def size_for_quote(*, equity, peak, quote, direction, rules, observed_fee, policy):
+def size_for_quote(*, equity, peak, quote, direction, rules, observed_fee, policy, risk_budget_usdt=None, margin_budget_usdt=None):
     """Conservative market-taker entry/stop/target quote model.
 
     All prices used here come from decision-time quote plus explicitly modeled
@@ -124,8 +124,11 @@ def size_for_quote(*, equity, peak, quote, direction, rules, observed_fee, polic
     gain_one=(s*(target_fill-entry)-fee*(entry+target_fill))*unit
     if loss_one<=0 or gain_one<=0:
         return None,'target_not_net_profitable_after_costs'
-    by_risk=equity*risk/loss_one
-    by_margin=equity*policy.margin_fraction/(entry*unit*(1/policy.leverage+2*fee))
+    risk_limit=min(equity*risk,risk_budget_usdt) if risk_budget_usdt is not None else equity*risk
+    margin_limit=min(equity*policy.margin_fraction,margin_budget_usdt) if margin_budget_usdt is not None else equity*policy.margin_fraction
+    if risk_limit<=0 or margin_limit<=0:return None,'no_available_portfolio_risk_or_margin'
+    by_risk=risk_limit/loss_one
+    by_margin=margin_limit/(entry*unit*(1/policy.leverage+2*fee))
     quantity=rules.quantity(min(by_risk,by_margin,float(rules.max_qty)))
     if not rules.valid(quantity,entry) or quantity<=0:
         return None,'minimum_lot_exceeds_account_risk_or_margin'
@@ -142,7 +145,7 @@ def size_for_quote(*, equity, peak, quote, direction, rules, observed_fee, polic
         'planned_stop_quote':worst_stop_quote,
         'planned_target_net_usdt':gain_one*quantity,
         'planned_loss_usdt':loss_one*quantity,
-        'risk_budget_usdt':equity*risk,
+        'risk_budget_usdt':risk_limit,
         'margin_reserved_usdt':entry*unit*quantity/policy.leverage,
         'entry_notional_usdt':entry*unit*quantity,
     },None

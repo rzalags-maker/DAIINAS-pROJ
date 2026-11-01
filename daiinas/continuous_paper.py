@@ -21,12 +21,14 @@ from .continuous_store import SourceJournal, Timeline, canonical, digest, connec
 
 
 class PaperLedger:
-    def __init__(self,path,source_id,policy=PaperPolicy(),shadow=ShadowPolicy()):
-        if policy.initial_capital_usdt!=8 or policy.margin_fraction>.8:
+    def __init__(self,path,source_id,policy=PaperPolicy(),shadow=ShadowPolicy(),*,_profile=None):
+        if (_profile is None and policy.initial_capital_usdt!=8) or policy.margin_fraction>.8:
             raise ValueError('v3.3 starts with one 8-USDT account and <=80% margin')
-        self.db=connect_owned(path,'v33-paper-ledger')
+        self.db=connect_owned(path,'v33-paper-ledger' if _profile is None else 'v4-paper-portfolio')
         self.policy,self.shadow=policy,shadow
-        identity=canonical({'source_id':source_id,'paper':asdict(policy),'shadow':asdict(shadow),'schema':1})
+        identity_fields={'source_id':source_id,'paper':asdict(policy),'shadow':asdict(shadow),'schema':1}
+        if _profile is not None:identity_fields.update(schema=4,portfolio=_profile)
+        identity=canonical(identity_fields)
         row=self.db.execute("SELECT value FROM v33_meta WHERE key='identity'").fetchone()
         if row and row[0]!=identity:
             self.db.close();raise ValueError('Account/source/policy identity changed; never reset existing money state')
@@ -337,7 +339,8 @@ class PaperLedger:
                 s=self.state;s['now_ms']=available
                 if s['pending'] and available-s['pending']['signal_ms']>self.policy.entry_ttl_ms:
                     self.audit('UNFILLED',reason='entry_ttl',signal_id=s['pending']['id']);s['pending']=None
-                if kind=='SCAN':self.scan(payload)
+                if self.portfolio_event(kind,payload,available):pass
+                elif kind=='SCAN':self.scan(payload)
                 elif kind=='SNAPSHOT':
                     if payload.get('sha256')!=digest(payload['snapshot']):raise ValueError('Book snapshot digest mismatch')
                     s['books'].pop(payload['symbol'],None)
@@ -409,6 +412,12 @@ class PaperLedger:
             finally:self.state=previous
             raise
 
+    def portfolio_event(self,kind,payload,available):
+        return False
+
+    def observation_equity(self):
+        return min(self.state['cash'],self.state['last_equity'])
+
     def report(self):
         s=self.state
         result={'status':'PAPER_ONLY','live_orders_enabled':False,'strategy_validated':False,
@@ -433,13 +442,13 @@ class PaperLedger:
 
 class Pipeline:
     """One dedicated writer thread; source commit precedes idempotent paper apply."""
-    def __init__(self,source_path,paper_path,policy=PaperPolicy(),shadow=ShadowPolicy()):
+    def __init__(self,source_path,paper_path,policy=PaperPolicy(),shadow=ShadowPolicy(),*,ledger_factory=PaperLedger,ledger_options=None):
         if Path(source_path).resolve()==Path(paper_path).resolve():raise ValueError('Independent source and paper files required')
         self.executor=ThreadPoolExecutor(max_workers=1,thread_name_prefix='v33-sqlite')
         def initialize():
             self.source=SourceJournal(source_path)
             try:
-                self.ledger=PaperLedger(paper_path,self.source.source_id,policy,shadow)
+                self.ledger=ledger_factory(paper_path,self.source.source_id,policy,shadow,**(ledger_options or {}))
                 self.recover()
             except BaseException:
                 if hasattr(self,'ledger'):self.ledger.close()
@@ -468,7 +477,7 @@ class Pipeline:
         self.recover()
         captured=clock_ms()
         if len({r['symbol'] for r in rows})!=len(rows):raise ValueError('Duplicate public contract identity')
-        equity=min(self.ledger.state['cash'],self.ledger.state['last_equity'])
+        equity=self.ledger.observation_equity()
         if equity>0:
             report=scan(rows,ticks,now_ms=captured,equity=equity,policy=universe_policy)
         else:

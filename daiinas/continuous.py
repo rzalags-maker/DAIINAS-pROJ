@@ -24,7 +24,13 @@ from .service import single_worker
 def settings(path):
     config=json.loads(Path(path).read_text())
     paper=PaperPolicy(**config.get('paper',{}));shadow=ShadowPolicy(**config.get('shadow',{}))
-    if paper.initial_capital_usdt!=8 or paper.margin_fraction>.8:raise ValueError('One 8-USDT account, <=80% margin')
+    if config.get('engine','v33') not in ('v33','v4'):raise ValueError('Unknown account engine')
+    if (config.get('engine','v33')=='v33' and paper.initial_capital_usdt!=8) or paper.margin_fraction>.8:
+        raise ValueError('Legacy 8-USDT account or separate opt-in portfolio, <=80% margin')
+    if config.get('engine')=='v4':
+        from .portfolio_paper import PortfolioPolicy
+        portfolio=PortfolioPolicy(**config.get('portfolio',{}))
+        if float(portfolio.initial_capital)!=paper.initial_capital_usdt:raise ValueError('Separate explicit portfolio capital required')
     if not 3<=config.get('deep',5)<=8 or not 30<=config.get('refresh_seconds',180)<=3600:
         raise ValueError('Deep watchlist 3..8; public scan cadence 30..3600 seconds')
     return config,paper,shadow
@@ -38,7 +44,14 @@ def source_rows(path):
     finally:c.close()
 
 
-def replay(sources,paper_path,policy=PaperPolicy(),shadow=ShadowPolicy()):
+def account_factory(config):
+    if config.get('engine')=='v4':
+        from .portfolio_paper import PortfolioLedger
+        return {'ledger_factory':PortfolioLedger,'ledger_options':{'portfolio':config.get('portfolio',{})}}
+    return {}
+
+
+def replay(sources,paper_path,policy=PaperPolicy(),shadow=ShadowPolicy(),*,ledger_factory=PaperLedger,ledger_options=None):
     ids=[]
     for path in sources:
         with closing(readonly(path)) as c:ids.append(c.execute("SELECT value FROM v33_meta WHERE key='source_id'").fetchone()[0])
@@ -46,7 +59,7 @@ def replay(sources,paper_path,policy=PaperPolicy(),shadow=ShadowPolicy()):
     if any(Path(x).resolve()==Path(paper_path).resolve() for x in sources):raise ValueError('Replay output must remain separate')
     Path(paper_path).parent.mkdir(parents=True,exist_ok=True)
     with single_worker(paper_path):
-        ledger=PaperLedger(paper_path,ids[0],policy,shadow)
+        ledger=ledger_factory(paper_path,ids[0],policy,shadow,**(ledger_options or {}))
         try:
             batch=[];last=None
             for row in heapq.merge(*(source_rows(p) for p in sources),key=lambda r:r[0]):
@@ -61,7 +74,7 @@ def replay(sources,paper_path,policy=PaperPolicy(),shadow=ShadowPolicy()):
 
 
 async def service(args,config,paper,shadow):
-    pipeline=Pipeline(args.source_db,args.paper_db,paper,shadow)
+    pipeline=Pipeline(args.source_db,args.paper_db,paper,shadow,**account_factory(config))
     observer=ContinuousObserver(pipeline,source_path=args.source_db,deep=config.get('deep',5),
         refresh_seconds=config.get('refresh_seconds',180),dwell_ms=config.get('dwell_seconds',120)*1000,
         queue_size=config.get('queue_size',20000))
@@ -147,8 +160,8 @@ def main(argv=None):
     p=argparse.ArgumentParser(description='Continuous dynamic paper engine. LIVE ORDERS DISABLED.')
     p.add_argument('command',choices=['run','replay','stop','resume','status','reset-halt','capital-flow','backup','verify-backup','archive-source'])
     p.add_argument('--config',type=Path,default=Path('configs/continuous.json'))
-    p.add_argument('--source-db',type=Path,default=Path('state/v33-source.sqlite3'))
-    p.add_argument('--paper-db',type=Path,default=Path('state/v33-paper.sqlite3'))
+    p.add_argument('--source-db',type=Path,default=None)
+    p.add_argument('--paper-db',type=Path,default=None)
     p.add_argument('--source-archive',type=Path,action='append',default=[])
     p.add_argument('--report',type=Path)
     p.add_argument('--seconds',type=int,default=0)
@@ -158,6 +171,10 @@ def main(argv=None):
     p.add_argument('--destination',type=Path)
     p.add_argument('--host-id')
     a=p.parse_args(argv)
+    path_config,path_paper,path_shadow=settings(a.config)
+    prefix='v4-'+str(path_config.get('portfolio',{}).get('initial_capital','8')) if path_config.get('engine')=='v4' else 'v33'
+    if a.source_db is None:a.source_db=Path('state')/(prefix+'-source.sqlite3')
+    if a.paper_db is None:a.paper_db=Path('state')/(prefix+'-paper.sqlite3')
     if a.source_db.resolve()==a.paper_db.resolve():p.error('Independent source/paper databases required')
     if a.seconds<0 or not 1<=a.renew_seconds<=72000:p.error('Invalid duration or token renewal')
     if a.command=='run':
@@ -166,7 +183,7 @@ def main(argv=None):
         with single_worker(a.paper_db),single_worker(a.source_db):return asyncio.run(service(a,cfg,paper,shadow))
     if a.command=='replay':
         cfg,paper,shadow=settings(a.config)
-        result=replay([*a.source_archive,a.source_db],a.paper_db,paper,shadow)
+        result=replay([*a.source_archive,a.source_db],a.paper_db,paper,shadow,**account_factory(cfg))
         if a.report:
             a.report.parent.mkdir(parents=True,exist_ok=True);a.report.write_text(json.dumps(result,indent=2)+'\n')
         print(json.dumps(result,indent=2));return 0

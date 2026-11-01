@@ -1,0 +1,267 @@
+name: v4 Capital Ladder and per-market PAPER acceptance
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/v4-ladder-integration]
+    paths:
+      - 'daiinas/*.py'
+      - 'tests/test_portfolio_paper.py'
+      - 'tests/test_hedge_research.py'
+      - 'tests/test_capital_ladder.py'
+      - 'daiinas/paper_audit.py'
+      - 'daiinas/host_acceptance.py'
+      - 'tests/test_v33_audit.py'
+      - 'configs/*.json'
+      - 'tests/test_continuous*.py'
+      - 'scripts/verify_v33.py'
+      - 'scripts/verify_v4.py'
+      - '.github/workflows/v4-acceptance.yml'
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: continuous-paper-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  public-integrity:
+    if: github.ref == 'refs/heads/feature/v4-ladder-integration'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install '.[live]'
+      - name: Independent original-capture audit (read-only public-data artifact)
+        id: original
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json,os,urllib.request,pathlib,zipfile,io
+          repo=os.environ['GITHUB_REPOSITORY']
+          class SafeRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self,req,fp,code,msg,headers,newurl):
+                  result=super().redirect_request(req,fp,code,msg,headers,newurl)
+                  if result is not None:result.remove_header('Authorization')
+                  return result
+          opener=urllib.request.build_opener(SafeRedirect())
+          def api(path):
+              return opener.open(urllib.request.Request('https://api.github.com/repos/'+repo+path,
+                headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'}),timeout=60)
+          try:
+              with api('/actions/runs/41251111492/artifacts') as r:items=json.load(r)['artifacts']
+              a=next(x for x in items if x['name']=='v33-public-source-paper-restart-replay' and not x['expired'])
+              with api('/actions/artifacts/'+str(a['id'])+'/zip') as r:data=r.read()
+              root=pathlib.Path('state/original');root.mkdir(parents=True,exist_ok=True)
+              with zipfile.ZipFile(io.BytesIO(data)) as z:
+                  for info in z.infolist():
+                      path=pathlib.PurePosixPath(info.filename)
+                      if path.is_absolute() or '..' in path.parts:raise ValueError('Unsafe artifact path')
+                  z.extractall(root)
+              result={'status':'downloaded','run_id':41251111492,'artifact_id':a['id'],'bytes':len(data),
+                 'sha256':__import__('hashlib').sha256(data).hexdigest()}
+          except Exception as exc:
+              result={'status':'blocked','exception_type':type(exc).__name__}
+              if isinstance(exc,urllib.error.HTTPError):
+                  result['http_status']=exc.code
+                  try:result['reason']=json.loads(exc.read()).get('message','HTTP request rejected')
+                  except Exception:result['reason']='HTTP request rejected'
+              elif isinstance(exc,StopIteration):result['reason']='Original artifact missing or expired'
+              else:result['reason']='Original artifact retrieval failed; see CI logs for transport diagnostics'
+          pathlib.Path('reports/v33-original-artifact.json').write_text(json.dumps(result,indent=2)+'\n')
+          print(json.dumps(result,indent=2))
+          if result['status']!='downloaded':raise SystemExit(1)
+          PY
+          python -m daiinas.paper_audit --source state/original/state/v33-source.sqlite3 --paper state/original/state/v33-paper.sqlite3
+          python -m daiinas.continuous replay --source-db state/original/state/v33-source.sqlite3 --paper-db state/original-replay.sqlite3 --report reports/v33-original-replay.json
+          python - <<'PY'
+          import json,pathlib
+          a=json.load(open('reports/v33-runs/41251111492/restart.json'));b=json.load(open('reports/v33-original-replay.json'))
+          keys=['cash','fees','modeled_carry','realized_net_pnl','maximum_drawdown','input_digest','source_cursor']
+          assert all(a[k]==b[k] for k in keys)
+          pathlib.Path('reports/v33-original-parity.json').write_text(json.dumps({'financial_replay_identical':True,'compared_keys':keys},indent=2)+'\n')
+          PY
+      - name: Capture official public host pricing reference (no provisioning)
+        continue-on-error: true
+        run: |
+          python - <<'PY'
+          import urllib.request,hashlib,json,pathlib,re,datetime
+          from html.parser import HTMLParser
+          url='https://aws.amazon.com/lightsail/pricing/'
+          result={'source_url':url,'retrieved_utc':datetime.datetime.now(datetime.timezone.utc).isoformat()}
+          try:
+              raw=urllib.request.urlopen(url,timeout=30).read()
+              class Text(HTMLParser):
+                  def __init__(self):super().__init__();self.parts=[]
+                  def handle_data(self,t):self.parts.append(t)
+              p=Text();p.feed(raw.decode());text=re.sub(r'\s+',' ',' '.join(p.parts))
+              result.update(status='retrieved_official_page',sha256=hashlib.sha256(raw).hexdigest(),
+                 excerpts=[text[max(0,m.start()-120):m.end()+180] for m in re.finditer(r'\$12|2 GB|2GB|60 GB',text)][:20],
+                 caveat='Provider quote, region, tax, storage and egress must be reviewed; no purchase made.')
+          except Exception as exc:result.update(status='not_verified',error=type(exc).__name__+': '+str(exc))
+          pathlib.Path('reports/v33-host-pricing.json').write_text(json.dumps(result,indent=2)+'\n')
+          PY
+      - name: Remove prior generated reports; never relabel old evidence
+        run: |
+          if [ -f reports/v33-pr.json ]; then cp reports/v33-pr.json /tmp/v33-pr-previous.json; fi
+          for name in tests first restart replay acceptance pr ci-status; do rm -f "reports/v33-$name.json"; done
+          for name in v4-first v4-restart v4-replay v4-validation V41_HEDGE_COMPARISON; do rm -f "reports/$name.json"; done
+      - name: All original and new deterministic tests
+        id: tests
+        run: |
+          python - <<'PY'
+          import json, pathlib, sys, unittest
+          suite=unittest.defaultTestLoader.discover('tests')
+          result=unittest.TextTestRunner(verbosity=2).run(suite)
+          summary={'tests_run':result.testsRun,'failures':len(result.failures),'errors':len(result.errors),
+                   'skipped':len(result.skipped),'expected_failures':len(result.expectedFailures),
+                   'unexpected_successes':len(result.unexpectedSuccesses),'successful':result.wasSuccessful()}
+          pathlib.Path('reports').mkdir(exist_ok=True)
+          pathlib.Path('reports/v33-tests.json').write_text(json.dumps(summary,indent=2)+'\n')
+          sys.exit(0 if result.wasSuccessful() else 1)
+          PY
+      - name: Actual public multi-scan process with scheduled public renewal
+        id: first
+        continue-on-error: true
+        run: python -m daiinas.continuous run --config configs/continuous-smoke.json --seconds 150 --renew-seconds 65 --source-db state/v33-source.sqlite3 --paper-db state/v33-paper.sqlite3 --report reports/v33-first.json
+      - name: A second real process resumes the SAME source and money state
+        id: restart
+        continue-on-error: true
+        run: python -m daiinas.continuous run --config configs/continuous-smoke.json --seconds 80 --renew-seconds 35 --source-db state/v33-source.sqlite3 --paper-db state/v33-paper.sqlite3 --report reports/v33-restart.json
+      - name: Independent deterministic offline multi-scan replay
+        id: replay
+        continue-on-error: true
+        run: python -m daiinas.continuous replay --config configs/continuous-smoke.json --source-db state/v33-source.sqlite3 --paper-db state/v33-replay.sqlite3 --report reports/v33-replay.json
+      - name: Verify online/restart/replay, cash, quote latency and backups
+        if: always()
+        id: verify
+        continue-on-error: true
+        run: python scripts/verify_v33.py
+      - name: Real adaptive 100-USDT process with public renewal
+        id: v4first
+        continue-on-error: true
+        run: python -m daiinas.continuous run --config configs/v4-smoke.json --seconds 150 --renew-seconds 65 --source-db state/v4-source.sqlite3 --paper-db state/v4-paper.sqlite3 --report reports/v4-first.json
+      - name: Resume exact SAME portfolio in another process
+        id: v4restart
+        continue-on-error: true
+        run: python -m daiinas.continuous run --config configs/v4-smoke.json --seconds 80 --renew-seconds 35 --source-db state/v4-source.sqlite3 --paper-db state/v4-paper.sqlite3 --report reports/v4-restart.json
+      - name: Offline adaptive portfolio replay
+        id: v4replay
+        continue-on-error: true
+        run: python -m daiinas.continuous replay --config configs/v4-smoke.json --source-db state/v4-source.sqlite3 --paper-db state/v4-replay.sqlite3 --report reports/v4-replay.json
+      - name: Independent money and protected reserve reconciliation
+        if: always()
+        id: v4verify
+        continue-on-error: true
+        run: python scripts/verify_v4.py
+      - name: Same actual observations through all 8/60/100 M0-M3 accounts
+        id: comparison
+        continue-on-error: true
+        run: python -m daiinas.hedge_research --source state/v4-source.sqlite3 --output-dir state/v41-comparison --report reports/V41_HEDGE_COMPARISON.json
+      - name: Preserve known PR policy blocker and exact nested compare
+        if: always()
+        run: |
+          python - <<'PY'
+          import json,pathlib
+          pathlib.Path('reports/v33-pr.json').write_text(json.dumps({
+            'status':'blocked_existing_repository_actions_pr_policy',
+            'prior_denial':'GitHub Actions is not permitted to create or approve pull requests.',
+            'manual_compare_url':'https://github.com/rzalags-maker/DAIINAS-pROJ/compare/feature/v33-risk-acceptance...feature/v4-ladder-integration',
+            'note':'No PR API mutation retried. PR #7 and stable branch remain unchanged.'},indent=2)+'\n')
+          PY
+      - name: Attach exact tested revision and run provenance
+        if: always()
+        env:
+          V4FIRST_OUTCOME: ${{ steps.v4first.outcome }}
+          V4RESTART_OUTCOME: ${{ steps.v4restart.outcome }}
+          V4REPLAY_OUTCOME: ${{ steps.v4replay.outcome }}
+          V4VERIFY_OUTCOME: ${{ steps.v4verify.outcome }}
+          COMPARISON_OUTCOME: ${{ steps.comparison.outcome }}
+          ORIGINAL_OUTCOME: ${{ steps.original.outcome }}
+          TESTS_OUTCOME: ${{ steps.tests.outcome }}
+          FIRST_OUTCOME: ${{ steps.first.outcome }}
+          RESTART_OUTCOME: ${{ steps.restart.outcome }}
+          REPLAY_OUTCOME: ${{ steps.replay.outcome }}
+          VERIFY_OUTCOME: ${{ steps.verify.outcome }}
+        run: |
+          python - <<'PY'
+          import os,json,pathlib
+          outcomes={k.lower():os.environ.get(k+'_OUTCOME','unknown') for k in ('ORIGINAL','TESTS','FIRST','RESTART','REPLAY','VERIFY','V4FIRST','V4RESTART','V4REPLAY','V4VERIFY','COMPARISON')}
+          pathlib.Path('reports/v33-ci-status.json').write_text(json.dumps(outcomes,indent=2)+'\n')
+          for name in ('tests','first','restart','replay','acceptance','pr','ci-status','risk-audit','original-artifact','original-parity','host-pricing'):
+              p=pathlib.Path(f'reports/v33-{name}.json')
+              if not p.exists():continue
+              data=json.loads(p.read_text());data['tested_commit']=os.environ['GITHUB_SHA']
+              data['github_run_url']=f'https://github.com/{os.environ["GITHUB_REPOSITORY"]}/actions/runs/{os.environ["GITHUB_RUN_ID"]}'
+              p.write_text(json.dumps(data,indent=2)+'\n')
+          for name in ('v4-first','v4-restart','v4-replay','v4-validation','V41_HEDGE_COMPARISON'):
+              p=pathlib.Path('reports/'+name+'.json')
+              if p.exists():
+                  d=json.loads(p.read_text());d['tested_commit']=os.environ['GITHUB_SHA']
+                  d['github_run_url']=f'https://github.com/{os.environ["GITHUB_REPOSITORY"]}/actions/runs/{os.environ["GITHUB_RUN_ID"]}'
+                  p.write_text(json.dumps(d,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v4-public-source-account-comparison
+          path: |
+            reports/v33-*.json
+            reports/v4-*.json
+            reports/V41_HEDGE_COMPARISON.json
+            state/v4-*.sqlite3*
+            state/v4-backup/
+            state/v41-comparison/
+            state/v33-*.sqlite3*
+            state/v33-backup/
+            state/original/
+            state/original-replay.sqlite3*
+          retention-days: 14
+      - name: Preserve evidence without changing newer source commits
+        if: always()
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          export GIT_INDEX_FILE="$RUNNER_TEMP/v33-evidence-index"
+          for attempt in 1 2 3; do
+            git fetch origin "$BRANCH"
+            latest="$(git rev-parse FETCH_HEAD)"
+            git read-tree "$latest"
+            for name in tests first restart replay acceptance pr ci-status risk-audit original-artifact original-parity host-pricing; do
+              path="reports/v33-$name.json"
+              if [ ! -f "$path" ]; then continue; fi
+              blob="$(git hash-object -w "$path")"
+              git update-index --add --cacheinfo "100644,$blob,$path"
+              git update-index --add --cacheinfo "100644,$blob,reports/v4-runs/$GITHUB_RUN_ID/$name.json"
+            done
+            for name in v4-first v4-restart v4-replay v4-validation V41_HEDGE_COMPARISON; do
+              path="reports/$name.json"
+              if [ ! -f "$path" ]; then continue; fi
+              blob="$(git hash-object -w "$path")"
+              git update-index --add --cacheinfo "100644,$blob,$path"
+              git update-index --add --cacheinfo "100644,$blob,reports/v4-runs/$GITHUB_RUN_ID/$name.json"
+            done
+            tree="$(git write-tree)"
+            commit="$(git commit-tree "$tree" -p "$latest" -m 'Record v4 public portfolio restart, financial and same-data strategy evidence')"
+            if git push origin "$commit:refs/heads/$BRANCH"; then exit 0; fi
+          done
+          exit 1
+      - name: Require actual integrity verification
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          result=json.load(open('reports/v33-acceptance.json'))
+          assert result['status']=='passed',result.get('error','Actual integrity verification did not pass')
+          audit=json.load(open('reports/v33-risk-audit.json'))
+          assert audit['source_status']=='VERIFIED_FULL_HASH_CHAIN',audit
+          assert json.load(open('reports/v33-original-parity.json'))['financial_replay_identical']
+          assert json.load(open('reports/v4-validation.json'))['status']=='passed'
+          assert json.load(open('reports/V41_HEDGE_COMPARISON.json'))['strategy_validated'] is False
+          assert json.load(open('reports/v33-ci-status.json'))['comparison']=='success'
+          PY

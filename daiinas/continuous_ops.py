@@ -28,7 +28,7 @@ def readonly(path):
 def state_at(path):
     with closing(readonly(path)) as c:
         owner=c.execute("SELECT value FROM v33_meta WHERE key='owner'").fetchone()
-        if not owner or owner[0]!='v33-paper-ledger':raise ValueError('Not a v3.3 paper ledger')
+        if not owner or owner[0] not in ('v33-paper-ledger','v4-paper-portfolio'):raise ValueError('Not a v3.3 paper ledger')
         row=c.execute('SELECT payload FROM checkpoint WHERE id=1').fetchone()
         return json.loads(row[0]) if row else None
 
@@ -42,17 +42,21 @@ def status(source_path,paper_path):
         seq=max(seq,int(base[0]) if base else 0)
     now=time.time_ns()//1_000_000;service=state.get('service',{})
     age=now-state['now_ms'];pos=state['position']
+    portfolio_positions=list(state.get('positions',{}).values())
+    unresolved=any(p.get('unresolved') for p in portfolio_positions)
     active=service.get('active',[]);verified=service.get('verified_books',[])
     feed_ages=service.get('feed_age_ms',{})
     fresh_feeds=bool(active) and all(0<=feed_ages.get(sym,{}).get(k,10**12)+max(age,0)<=2000
                                      for sym in active for k in ('tickerV2','level2'))
     healthy=(fresh_feeds and 0<=age<15000 and seq==state['cursor'] and service.get('connected',False) and state.get('connected',False)
-             and set(active)<=set(verified) and not (pos and pos.get('unresolved')))
+             and set(active)<=set(verified) and not (pos and pos.get('unresolved')) and not unresolved)
     return {'healthy':healthy,'live_orders_enabled':False,'checkpoint_age_ms':age,
             'market_feeds_fresh':fresh_feeds,'unprocessed_records':seq-state['cursor'],'paused_new_entries':state['paused'],
             'halted':state['halted'],'cash':state['cash'],'equity_last_mark':state['last_equity'],
             'mark_status':state['mark_status'],'open_position':pos,'pending_entry':state['pending'],
-            'pending_exit':state['exit_request'],'service':service,
+            'pending_exit':state['exit_request'],'positions':portfolio_positions,
+            'pending_entries':list(state.get('pending_entries',{}).values()),'exit_requests':state.get('exit_requests',{}),
+            'ladder':json.loads(state['ladder']) if 'ladder' in state else None,'service':service,
             'disk_free_bytes':shutil.disk_usage(Path(source_path).parent).free,
             'source_bytes':file_bytes(source_path),'paper_bytes':file_bytes(paper_path)}
 
