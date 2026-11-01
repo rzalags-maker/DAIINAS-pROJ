@@ -208,3 +208,27 @@ NO_TRADE_ACCOUNT_NOT_RECONCILED.
 See BITSGAP_FUTURES_PROTECTION_AUDIT.md for the pinned public-contract audit,
 including contradictory transport documentation and unresolved native TP/SL
 persistence. No write command or protective-order transport was added.
+
+
+## Authenticated AccountState verification and mode-label fix (2026-11-01)
+
+[Read-only authenticated run 41344889512](https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41344889512)
+confirmed the **new AccountState service** captured actual Futures USDT balance
+on both REST and WS as `VALIDATED`, while `orders` and `positions`
+remained `PROVIDER_NO_DATA` on both transports. It preserved
+`READ_ONLY_SAFETY=PASS` and `SIGNED_BALANCE_OBSERVATION=PASS`;
+no private account amounts were logged. This is a PASS for authenticated
+observation, **not** reconciled collateral, positions or live trading.
+
+Follow-up [authenticated diagnosis run 41345423585](https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41345423585)
+proved the existing provider adapter accepted `positions_settings` but the
+new AccountState normalized result was `UNVERIFIED`. The live dynamic
+Bitsgap `position_mode` enum label is **`ONEWAY`**, whereas the new
+service initially required `ONE_WAY`. The bounded normalization maps only
+`ONEWAY` to the internal Model A `ONE_WAY` label. Unknown enum labels
+remain unknown, and no on-exchange position settings are modified.
+Recheck `positions_settings` after CI before claiming live normalized PASS.
+
+All private capital authorization, venue-wide exposure reconciliation,
+persistent TP/SL protection and real order routing remain disabled or
+unverified as appropriate.
