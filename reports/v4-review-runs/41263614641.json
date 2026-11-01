@@ -1,0 +1,8 @@
+{
+  "status": "pending_verified_validation",
+  "manual_compare_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/compare/feature/v33-risk-acceptance...feature/v4-ladder-integration",
+  "base": "feature/v33-risk-acceptance",
+  "head": "feature/v4-ladder-integration",
+  "reason": "Full original/audit/portfolio/comparison evidence must pass for unchanged implementation.",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41263614641"
+}
