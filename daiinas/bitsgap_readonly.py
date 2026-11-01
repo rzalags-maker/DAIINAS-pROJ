@@ -160,6 +160,8 @@ class BitsgapReadOnly:
             return obj
         if keys != {"data"}:
             raise BitsgapError("UNEXPECTED_RESPONSE_SHAPE")
+        if name in ("orders", "positions", "positions_settings") and obj["data"] is None:
+            raise BitsgapError("PROVIDER_NULL_RESPONSE")
         if name == "balance":
             # Direct topic value: {data: {USDT: {t,a}}}.
             # Wrapped envelope: {data: {data: {USDT: {t,a}}}}.
