@@ -134,6 +134,12 @@ class StreamTests(unittest.IsolatedAsyncioTestCase):
                    "params":{"em":72}, "value":self.w.balance,
                    "mes": {"private":"SECRET"}})
 
+    async def test_real_ws_topic_payload_with_nullable_message_metadata(self):
+        event = self.stream._ingest({"ok": True, "topic": "balance",
+                  "params":{"em":72}, "value":self.w.balance, "mes":None})
+        self.assertEqual(event["event"],"VALIDATED_UPDATE")
+        self.assertEqual(event["record_count"],1)
+        self.assertFalse(event["funding_authorized"])
     async def test_foreign_exchange_event_is_denied(self):
         ws=FakeWS([{"type":"auth_ok","sid":"ok"},
                    {"ok":True,"topic":"balance","params":{"em":71},"value":self.w.balance}])
