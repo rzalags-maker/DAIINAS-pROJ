@@ -2,6 +2,55 @@
 
 **Status:** design / acceptance contract, not implemented execution routing. Owner goal: an independently running DAIINAS worker that switches promptly between qualified order opportunities without repeated Codex prompts or GUI clicks. **LIVE_TRADING=DISABLED; DAIINAS_ORDER_ROUTING=DISABLED.** No authenticated account operations or orders are authorized by this document.
 
+## P0 verified 2026-11-01 — the exact Bitsgap terminal-to-exchange control protocol
+
+**Owner direction:** the existing linked Bitsgap ↔ KuCoin connection is the chosen integration route. No additional direct private KuCoin API login is a precondition for researching/using the documented Bitsgap API. Do not revive `feature/kucoin-futures-startup-preflight-20261101` as a required path. The operator reports active trading already works through the terminal. Our task is to learn/control the **Bitsgap command interface**, not challenge that observed terminal behavior.
+
+**Found the function window:** the official signed `{"topic":"manual"}` response is the **runtime topic/function catalog**, containing topic descriptions, `transport.ws/rest`, `subs`, per-topic limits, required parameters and examples. The signed `{"topic":"conf_enums"}` is the dynamic parameter/enum catalog, including `market.items` → exchange `em`, `order_side` → `eos`, `order_type` → `eot`, `order_state` → `eost`. This is not a secret browser bundle or an undocumented internal endpoint.
+
+**Official endpoints:**
+- WebSocket: `wss://stream.bitsgap.com/`; Ed25519-authenticated session, subscription and commands, with a fresh signed auth frame upon reconnect.
+- REST: `POST https://open.bitsgap.com/api/v1/topic`; one topic per signed request using a canonical Ed25519 signature. REST does not accept subscriptions.
+- Both are the client's **Bitsgap** connection. Bitsgap's separate server-side link to KuCoin is not directly visible from the browser's Network inspector; order lifecycle and exchange-assigned identifiers give its observable evidence.
+
+**Documented control-plane function map:**
+
+| Operator maneuver | Bitsgap topic | Required observation / identity |
+| --- | --- | --- |
+| Discover supported functions and limits | `manual` | Parse dynamic capabilities, not static assumptions |
+| Resolve connected market codes and buy/sell/state enums | `conf_enums` | Dynamically discover **real KuCoin Futures** `em`; never substitute Spot or a demo constant |
+| Resolve instrument tick/lot/minimum constraints | `conf_pairs` | Validate exact pair/config and costs before any strategy admission |
+| Observe funds | `balance` | Exchange-scoped currency records (not automatically Model A ACTIVE) |
+| Observe open orders | `orders` | Per-pair order state, `id`, `eid`, `apiid` and statuses |
+| Observe open positions and mode | `positions`, `positions_settings` | Pair/side/size/leverage/margin, `epmd` when account-wide |
+| Request creation (DOCUMENTED BUT DISABLED) | `order_place` | Futures fields `em,pair,eot,eos,am`, optional `epps,epm,lv,etif,ro,apiid`, price `pr` for limit |
+| Request cancellation (DISABLED) | `order_cancel` | Bitsgap `id` or exchange `eid`+pair, not an unverified symbol-only command |
+| Inspect a specific order | `order_detail` | `eost`, IDs, pair/side/amount/price |
+| Request position close (DISABLED) | `position_close` | Closing request, not proof of a flat position |
+| Request leverage/margin changes (DISABLED) | `leverage_change`, `margin_type_change`, `margin_size_change` | Re-read settings and risks; not owner authorization to mutate ONE_WAY |
+| Confirm settled execution/costs | `orders_history` | `order_id`, `apiid`, `ext` (external), filled amount, fee map and timestamps |
+
+**Observable packet chain:** `order_place` → `value.res=true,eost=3,id=<bitsgap-order-id>` = Bitsgap accepted/processing; `value.res=true,eost=4,id=<bitsgap-order-id>,eid=<exchange-order-id>` = placement reached exchange. **Neither event proves fill or protected position.** For each order, wait for `orders` and `positions` subscription updates and reconcile `orders_history`, fee attribution and no unrecognized external orders. `apiid` is a documented correlation identifier (up to 250 characters). Never release a conveyor slot solely on an order response or disappearance from the Open Orders list.
+
+**Official executable proof of mechanics:** `Bitsgap/bitsgap-api-docs/examples/python/examples/walkthrough.py`, `phase_futures` (approx. lines 279–324), uses a **demo** venue to subscribe to `positions`/`positions_settings`, submit `order_place`, observe `eost=4`, wait for position update, call `position_close`, then wait until positions report closure. Spot phase (approx. lines 140–274) traces `apiid`, Bitsgap order ID, order acknowledgement, balance lock, cancellation, and settled amounts. The reference code is vendor-supplied test evidence, NOT proof our own account or latency meets acceptance.
+
+**Hard gap:** the publicly documented `order_place` field list does NOT expose an explicit native bracket/stop-loss/take-profit set of parameters. Bitsgap's Smart Trade GUI capabilities must **not** be assumed equivalent to `order_place`. Before allowing even a demo autonomous full round-trip, determine from the live topic catalog and official vendor supported examples exactly how protective orders can be created, acknowledged, persisted after client disconnect and sized reduce-only. Otherwise the controller may observe and PAPER model but must not risk an unprotected real entry. A future close request is not equivalent to an acknowledged exchange-native SL.
+
+**Where to inspect the real browser exchange (read-only observation):** in the already logged-in Bitsgap Trading terminal, Chrome Developer Tools → Network → Fetch/XHR and WS → Messages. Identify interface-to-Bitsgap command/status packets and match topic names, order IDs and timestamps. Never copy Authorization headers, Cookies, signed frames, PEM material or private payloads; do not send a live order just to generate a test trace. **Do not assume** the site's private browser wire format equals the public developer API format.
+
+Vendor primary sources:
+- https://github.com/Bitsgap/bitsgap-api-docs/blob/main/docs/topics/reference.md
+- https://github.com/Bitsgap/bitsgap-api-docs/blob/main/docs/topics/trading.md
+- https://github.com/Bitsgap/bitsgap-api-docs/blob/main/docs/topics/portfolio.md
+- https://github.com/Bitsgap/bitsgap-api-docs/blob/main/docs/ws/README.md
+- https://github.com/Bitsgap/bitsgap-api-docs/blob/main/docs/rest/README.md
+- https://github.com/Bitsgap/bitsgap-api-docs/blob/main/examples/python/examples/walkthrough.py
+- https://bitsgap.com/blog/bitsgap-api-explained-bring-your-own-trading-strategy
+
+**Next implementation (separate reviewed code, not enabled here):** extend the existing Bitsgap Ed25519 **read-only** adapter with `manual` capability introspection, dynamic actual KuCoin Futures enum identification, and read-only `balance/orders/positions/positions_settings/orders_history/conf_pairs` requests, backed by malformed and partial-response tests. **No order commands, no live trades, no account secrets in logs**.
+
+---
+
 ## 1. Existing system is the authority; do not build a second trading bot
 
 Reuse `PortfolioLedger`, the v4.7 `ConveyorMixin` and single-writer durable journal, `CapitalLadder` Model A, `adaptive_execution.select_sniper`, the existing market/quote/deep-data observation path and `execution_boundary.InertOrderGateway`. The current `tests/test_v47_conveyor.py` already includes cycle turnover, partial fills, protection gating, ten-slot portfolio risk, crash/restart, pause/stop and pinned-stream tests. Their synthetic PAPER passes do **not** prove live exchange execution or latency.
