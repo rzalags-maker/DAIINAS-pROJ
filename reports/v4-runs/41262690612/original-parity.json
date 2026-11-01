@@ -1,0 +1,14 @@
+{
+  "financial_replay_identical": true,
+  "compared_keys": [
+    "cash",
+    "fees",
+    "modeled_carry",
+    "realized_net_pnl",
+    "maximum_drawdown",
+    "input_digest",
+    "source_cursor"
+  ],
+  "tested_commit": "5762ebe706e3249287bf7d15b081dd7df46d1e71",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41262690612"
+}

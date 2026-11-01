@@ -10,71 +10,71 @@
     "unexpected_successes": 0,
     "successful": true
   },
-  "market_scans": 14,
+  "market_scans": 15,
   "observed_contracts": 717,
   "public_event_counts": {
-    "execution": 157,
-    "level2": 13953,
-    "tickerV2": 1072
+    "execution": 88,
+    "level2": 20671,
+    "tickerV2": 1843
   },
   "process_boots": [
-    "e1e825264f4b49fa886e9cffdab1ec27",
-    "94baa2d3312d443a94786e607598f695"
+    "f3b6d22c7bf8430f945f8da35c117593",
+    "ba2f8448d94347abb7f84e5a94a37767"
   ],
-  "source_cursor": 15513,
-  "input_digest": "509ef254fcf963117e7b6cc806b1b6c696af6ce140995a8135ef8d36802d1241",
-  "cash": 7.990568245689473,
-  "equity_last_mark": 7.990568245689473,
-  "fees": 0.010570154399999998,
-  "modeled_carry": 1.5999105263055557e-06,
+  "source_cursor": 22946,
+  "input_digest": "75ed8ef2c2eb968555575b538625d4cd2b35411d6f5179a80204c6857877eae5",
+  "cash": 7.966369006086173,
+  "equity_last_mark": 7.966369006086173,
+  "fees": 0.0182503896,
+  "modeled_carry": 6.043138281805556e-07,
   "closed_summary": {
-    "count": 3,
-    "loss": 0.009613824159996075,
-    "losses": 2,
-    "profit": 0.00018206984946943488,
-    "wins": 1
+    "count": 6,
+    "loss": 0.03363099391382772,
+    "losses": 6,
+    "profit": 0.0,
+    "wins": 0
   },
   "open_position": null,
   "pending_entry": null,
   "pending_exit": null,
   "decision_counts": {
-    "BOOK_SNAPSHOT": 54,
-    "CLOSED": 3,
-    "EXIT_REQUEST": 3,
+    "BOOK_SNAPSHOT": 70,
+    "CLOSED": 6,
+    "EXIT_REQUEST": 6,
     "HEALTH": 33,
-    "OPENED": 3,
+    "OPENED": 6,
     "REJECTED": 3,
-    "REJECTED_EVENT": 39,
-    "RESOLVED": 360,
-    "SCAN": 14,
-    "SIGNAL": 6,
-    "UNRESOLVED": 392,
-    "VERIFIED_BOOK": 22
+    "REJECTED_EVENT": 149,
+    "RESOLVED": 248,
+    "SCAN": 15,
+    "SIGNAL": 9,
+    "UNRESOLVED": 277,
+    "VERIFIED_BOOK": 23
   },
   "rejected_and_unresolved_reasons": {
-    "EXIT_REQUEST:DATA_HEALTH": 3,
+    "EXIT_REQUEST:DATA_HEALTH": 4,
+    "EXIT_REQUEST:FLOW_INVALIDATION": 2,
     "REJECTED:unverified_or_unaligned_depth_at_entry": 3,
-    "REJECTED_EVENT:normalization_rule_version_mismatch": 39,
+    "REJECTED_EVENT:normalization_rule_version_mismatch": 149,
     "UNRESOLVED:CONNECTED": 4,
     "UNRESOLVED:CONNECTION_LOSS": 4,
     "UNRESOLVED:DISCONNECTED": 4,
-    "UNRESOLVED:insufficient_verified_depth_for_full_exit": 354,
-    "UNRESOLVED:missing_or_stale_executable_mark": 25,
-    "UNRESOLVED:BOOK_GAP": 1
+    "UNRESOLVED:insufficient_verified_depth_for_full_exit": 247,
+    "UNRESOLVED:missing_or_stale_executable_mark": 18
   },
   "replay_identical": true,
   "backup": {
-    "source_id": "a44152d57461457f8a07d70c4316a69b",
-    "paper_cursor": 15513,
-    "source_max_seq": 15513,
-    "paper_input_digest": "509ef254fcf963117e7b6cc806b1b6c696af6ce140995a8135ef8d36802d1241",
+    "source_id": "e93ed22954bb471f8498f93f14ef2bd0",
+    "paper_cursor": 22946,
+    "source_max_seq": 22946,
+    "paper_input_digest": "75ed8ef2c2eb968555575b538625d4cd2b35411d6f5179a80204c6857877eae5",
     "sha256": {
-      "source.sqlite3": "51648ba514a4c7888c92ce8cfcb74cbca48997b75462e25a312a95f40119fc82",
-      "paper.sqlite3": "7609d515e3ed4a1d71b10bcfea571ed56cc1b3383666d520256f12ca74e61726"
+      "source.sqlite3": "0075db4a8090f59e54c57f9941c2a5c7424361b3eedb49df12d0294e40233b59",
+      "paper.sqlite3": "1d6eab5672e7447af590f9bc478cc88c26bf1590f68b5c05d7907bc2b04812e7"
     }
   },
   "24h_host_gate": "BLOCKED \u2014 HOST NOT PROVISIONED",
   "performance_gate": "Not established by bounded infrastructure smoke",
-  "tested_commit": "e2ef382db91c20c14cd49c2a479d74dfcad35f19",
-  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41262305648"
+  "tested_commit": "5762ebe706e3249287bf7d15b081dd7df46d1e71",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41262690612"
 }
