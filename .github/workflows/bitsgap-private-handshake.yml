@@ -1,0 +1,56 @@
+name: Bitsgap authenticated read-only handshake (manual)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bitsgap-readonly-handshake
+  cancel-in-progress: false
+
+jobs:
+  authenticated-probe:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Ed25519 crypto dependency
+        run: python -m pip install "cryptography>=42,<47"
+      - name: Offline Bitsgap REST signing and command-denial tests
+        run: python -m unittest discover -s tests -p test_bitsgap_readonly.py -q
+      - name: Bitsgap signed REST account authorization (no trading commands)
+        shell: bash
+        env:
+          BITSGAP_PRIVATE_KEY_PEM: ${{ secrets.BITSGAP_PRIVATE_KEY_PEM }}
+        run: |
+          python - <<'PY'
+          import sys
+          from daiinas.bitsgap_readonly import BitsgapError, BitsgapReadOnly
+
+          print("DAIINAS_ORDER_ROUTING=DISABLED")
+          print("BITSGAP_TOPICS_ALLOWLIST=manual,conf_enums")
+          print("KUCOIN_ACCOUNT_RECONCILED=NO")
+          try:
+              client = BitsgapReadOnly.from_env()
+              status = client.handshake()
+              if status.get("bitsgap_authenticated") is not True:
+                  print("BITSGAP_API_AUTH=FAIL; CATEGORY=UNEXPECTED_STATUS")
+                  sys.exit(1)
+              print("BITSGAP_API_AUTH=PASS")
+              print("KUCOIN_ACCOUNT_ACCESS=NOT_YET_TESTED")
+          except BitsgapError as exc:
+              # Never print keys, signatures, raw bodies or account data.
+              print("BITSGAP_API_AUTH=FAIL; CATEGORY=" + exc.category)
+              sys.exit(1)
+          except Exception as exc:
+              print("BITSGAP_API_AUTH=FAIL; CATEGORY=UNEXPECTED_RUNTIME; TYPE=" + type(exc).__name__)
+              sys.exit(1)
+          PY
