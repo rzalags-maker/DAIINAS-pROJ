@@ -99,3 +99,37 @@ jobs:
               print("ACCOUNT_STATE_LIVE=UNVERIFIED_LOCAL_RUNTIME")
               raise SystemExit(2)
           PY
+
+      - name: Signed position-settings schema classification only (no values)
+        env:
+          BITSGAP_PRIVATE_KEY_PEM: ${{ secrets.BITSGAP_PRIVATE_KEY_PEM }}
+        shell: bash
+        run: |
+          python -B - <<'PY'
+          import os, time
+          from daiinas.bitsgap_futures_observe import BitsgapFuturesObserver, safe_diagnostic_category
+          from daiinas.bitsgap_readonly import BitsgapError
+          from daiinas.bitsgap_account_state import AccountState
+          try:
+              client=BitsgapFuturesObserver(os.environ.get("BITSGAP_PRIVATE_KEY_PEM"))
+              client.discover()
+              start=int(time.time()*1000)
+              value=client.read("positions_settings")
+              print("SETTINGS_SIGNED_READ=RECEIVED")
+              count, mode, margin=client._positions(value, settings=True)
+              print("SETTINGS_LEGACY_PARSER=VALIDATED")
+              print("SETTINGS_MODE_CANONICAL=" + str(mode in ("ONE_WAY","HEDGE","UNVERIFIED")))
+              print("SETTINGS_MARGIN_CANONICAL=" + str(margin in ("CROSS","ISOLATED","UNVERIFIED")))
+              state=AccountState(client,scope_ref="settings-diagnostic-no-private-output")
+              receipt=int(time.time()*1000)
+              category=state.ingest(topic="positions_settings",value=value,source="REST",
+                   market_id=client._futures_em,started_ms=start,received_ms=receipt)
+              print("SETTINGS_ACCOUNTSTATE_INGEST=" + category)
+              print("SETTINGS_ACCOUNTSTATE_FIELDS_VALIDATED=" +
+                    str(bool(state.records[("positions_settings","REST")].values)))
+              print("ORDER_ROUTING=DISABLED")
+          except BitsgapError as exc:
+              print("SETTINGS_SIGNED_READ_OR_PARSER=" + safe_diagnostic_category(exc.category))
+          except Exception:
+              print("SETTINGS_DIAGNOSTIC=LOCAL_UNVERIFIED")
+          PY
