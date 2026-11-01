@@ -88,18 +88,26 @@ jobs:
           except Exception:
               print('FUTURES_CATALOG=UNVERIFIED; REASON=LOCAL_RUNTIME')
               raise SystemExit(2)
-          try:
-              snap = client.snapshot()
-              print('FUTURES_ACCOUNT=' + snap.completeness)
-              print('FUTURES_WALLET_FIELDS=OBSERVED_REDACTED')
-              print('ORDER_ROUTING=DISABLED')
-          except BitsgapError as exc:
-              category = exc.category
-              if category.startswith('HTTP_') and len(category) == 8 and category[5:].isdigit():
-                  safe.add(category)
-              print('FUTURES_ACCOUNT=UNVERIFIED; REASON=' + (category if category in safe else 'OTHER_AUTH_OR_SCHEMA_FAILURE'))
-              raise SystemExit(2)
-          except Exception:
-              print('FUTURES_ACCOUNT=UNVERIFIED; REASON=LOCAL_RUNTIME')
-              raise SystemExit(2)
+          observed = {}
+          for topic in ('balance', 'orders', 'positions', 'positions_settings'):
+              try:
+                  value = client.read(topic)
+                  if topic == 'balance':
+                      client._balance(value)
+                  elif topic == 'orders':
+                      client._orders(value)
+                  else:
+                      client._positions(value, settings=(topic == 'positions_settings'))
+                  observed[topic] = 'VALIDATED'
+              except BitsgapError as exc:
+                  category = exc.category
+                  if category.startswith('HTTP_') and len(category) == 8 and category[5:].isdigit():
+                      safe.add(category)
+                  observed[topic] = 'UNVERIFIED:' + (category if category in safe else 'OTHER_AUTH_OR_SCHEMA_FAILURE')
+              except Exception:
+                  observed[topic] = 'UNVERIFIED:LOCAL_RUNTIME'
+              print('OBSERVE_' + topic.upper() + '=' + observed[topic])
+          print('MODEL_A_ACCOUNT_RECONCILED=NO')
+          print('ORDER_ROUTING=DISABLED')
+          raise SystemExit(0 if all(v == 'VALIDATED' for v in observed.values()) else 2)
           PY
