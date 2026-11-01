@@ -61,7 +61,7 @@ jobs:
                   try:
                       count, mode, margin = observer._positions(settings_value, settings=True)
                       print("SETTINGS_ADAPTER_VALIDATION=PASS")
-                      print("SETTINGS_MODE_CLASS=" + ("ONE_WAY" if mode == "ONE_WAY" else "HEDGE" if mode == "HEDGE" else "UNVERIFIED" if mode == "UNVERIFIED" else "OTHER"))
+                      print("SETTINGS_MODE_CLASS=" + ("ONE_WAY" if mode == "ONE_WAY" else "ONEWAY" if mode == "ONEWAY" else "HEDGE" if mode == "HEDGE" else "UNVERIFIED" if mode == "UNVERIFIED" else "OTHER"))
                       print("SETTINGS_MARGIN_CLASS=" + ("CROSS" if margin == "CROSS" else "ISOLATED" if margin == "ISOLATED" else "UNVERIFIED" if margin == "UNVERIFIED" else "OTHER"))
                   except BitsgapError:
                       print("SETTINGS_ADAPTER_VALIDATION=UNVERIFIED")
