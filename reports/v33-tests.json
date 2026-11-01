@@ -5,5 +5,7 @@
   "skipped": 0,
   "expected_failures": 0,
   "unexpected_successes": 0,
-  "successful": true
+  "successful": true,
+  "tested_commit": "8b374c8e5e9d304eb7bff95ce98cfefaddb3fe20",
+  "github_run_url": "https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41262183418"
 }
