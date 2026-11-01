@@ -80,7 +80,7 @@ class PortfolioLedger(PaperLedger):
     def request(self,key,reason):
         p=self.state['positions'].get(key)
         if not p:return
-        priority={'STOP':0,'ACCOUNT_HALT':1,'CAMPAIGN_STOP':1,'CONTRACT_CHANGED':1,'CAPITAL_REDUCTION':2,
+        priority={'STOP':0,'ACCOUNT_HALT':1,'PORTFOLIO_RISK_CAP':1,'CAMPAIGN_STOP':1,'CONTRACT_CHANGED':1,'CAPITAL_REDUCTION':2,
                   'TARGET':3,'CAMPAIGN_TARGET':3,'REGIME_EXIT':4,'TIME':5,'DATA_HEALTH':6}
         old=self.state['exit_requests'].get(key)
         if old and priority.get(old['reason'],7)<=priority.get(reason,7):return
@@ -170,7 +170,7 @@ class PortfolioLedger(PaperLedger):
         for key,p in s['positions'].items():
             if D(p.get('current_planned_loss_usdt',p['planned_loss_usdt']))>per_leg:self.request(key,'CAPITAL_REDUCTION')
         if s['halted'] or self.planned()>max(ZERO,active_equity)*D('.01'):
-            for key in s['positions']:self.request(key,'ACCOUNT_HALT')
+            for key in s['positions']:self.request(key,'ACCOUNT_HALT' if s['halted'] else 'PORTFOLIO_RISK_CAP')
         for campaign in list(s['campaigns'].values()):
             if campaign['settled']:continue
             legs=[p for p in s['positions'].values() if p['campaign_id']==campaign['id']]
@@ -203,6 +203,7 @@ class PortfolioLedger(PaperLedger):
 
     def cancel(self,key,reason):
         p=self.state['pending_entries'].pop(key)
+        self.state['cooldowns'][p['symbol']]=self.state['now_ms']+self.portfolio.cooldown_ms
         c=self.state['campaigns'][p['campaign_id']]
         c['allocated']=str(max(ZERO,D(c['allocated'])-D(p['allocation_budget_usdt'])))
         self.audit('UNFILLED',signal_id=p['id'],symbol=p['symbol'],reason=reason)
@@ -269,7 +270,9 @@ class PortfolioLedger(PaperLedger):
         if key in s['positions'] or key in s['pending_entries']:return False
         plan,reason=self.plan(sym,side,q)
         if not plan:
+            if sym in s['market_states']:s['market_states'][sym].update(rejection_reason=reason,last_rejection_ms=s['now_ms'])
             self.audit('REJECTED',symbol=sym,positionSide=side,reason=reason);return False
+        if sym in s['market_states']:s['market_states'][sym]['rejection_reason']=None
         signal=f'signal:{self.seq}:{sym}:{side}'
         campaign_id=campaign_id or 'campaign:'+signal
         if campaign_id not in s['campaigns']:
@@ -350,6 +353,8 @@ class PortfolioLedger(PaperLedger):
             elif depth[side]<needed:plan=None;reason='shared_observed_depth_exhausted'
             if not plan:
                 c=s['campaigns'][p['campaign_id']];c['allocated']=str(max(ZERO,D(c['allocated'])-D(p['allocation_budget_usdt'])))
+                s['cooldowns'][sym]=now+self.portfolio.cooldown_ms
+                if sym in s['market_states']:s['market_states'][sym].update(rejection_reason=reason,last_rejection_ms=now)
                 self.audit('REJECTED',symbol=sym,reason=reason,signal_id=p['id']);self.settle(c);continue
             depth[side]-=needed
             pos={**plan,'id':'position:'+p['id'],'campaign_id':p['campaign_id'],'symbol':sym,'direction':p['direction'],
