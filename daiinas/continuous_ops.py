@@ -63,7 +63,11 @@ def status(source_path,paper_path):
             local_risk=sum((Decimal(p.get('current_planned_loss_usdt',p['planned_loss_usdt'])) for p in portfolio_positions+list(state.get('pending_entries',{}).values())),Decimal(0)))
         if state.get('paper_cash_model'):account_status.update(effective_active_after_paper_marks=state['active_equity'],paper_equity_with_exit_costs=state['last_equity'],position_scope='Local virtual positions; MOCK cash snapshot, not real KuCoin positions')
         healthy=healthy and account_status['ready_for_paper']
-    return {'account_status':account_status,'healthy':healthy,'live_orders_enabled':False,'checkpoint_age_ms':age,
+    session=state.get('session')
+    if session:
+        observed=('STOPPED_WITH_EXPOSURE' if portfolio_positions or state.get('pending_native_receipts') else 'STOPPED_FLAT') if session['desired']=='DISARMED' else 'LAST_CHECKPOINT_ARMED'
+        session={**session,'state':observed,'runtime_ack_fresh':0<=age<15000 and seq==state['cursor']}
+    return {'session':session,'account_status':account_status,'healthy':healthy,'live_orders_enabled':False,'checkpoint_age_ms':age,
             'market_feeds_fresh':fresh_feeds,'unprocessed_records':seq-state['cursor'],'paused_new_entries':state['paused'],
             'halted':state['halted'],'cash':state['cash'],'equity_last_mark':state['last_equity'],
             'mark_status':state['mark_status'],'open_position':pos,'pending_entry':state['pending'],

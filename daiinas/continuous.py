@@ -151,7 +151,7 @@ async def service(args,config,paper,shadow,*,account_adapter=None):
                        'normalized_event_counts':dict(observer.stats),
                        'source_code_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in
                            [Path(__file__),Path(__file__).with_name('continuous_paper.py'),Path(__file__).with_name('continuous_stream.py'),Path(__file__).with_name('continuous_store.py')]+
-                           ([Path(__file__).with_name(n+'.py') for n in ('capital_ladder','portfolio_paper','market_intelligence','hedge_research','funding','account_capital','adaptive_execution','position_conveyor','market_pulse','paper_session','execution_boundary')] if config.get('engine')=='v4' else [])}})
+                           ([Path(__file__).with_name(n+'.py') for n in ('capital_ladder','portfolio_paper','market_intelligence','hedge_research','funding','account_capital','adaptive_execution','position_conveyor','market_pulse','paper_session','execution_boundary','candle_context')] if config.get('engine')=='v4' else [])}})
         result['24h_host_gate']='PENDING — HOST ACCEPTANCE NOT RUN' if args.host_id else 'BLOCKED — HOST NOT PROVISIONED'
         if args.seconds:
             stats=observer.stream_stats
@@ -172,7 +172,7 @@ async def service(args,config,paper,shadow,*,account_adapter=None):
 
 def main(argv=None):
     p=argparse.ArgumentParser(description='Continuous dynamic paper engine. LIVE ORDERS DISABLED.')
-    p.add_argument('command',choices=['run','replay','stop','resume','status','reset-halt','capital-flow','backup','verify-backup','archive-source'])
+    p.add_argument('command',choices=['run','replay','start','pause','stop','resume','status','reset-halt','capital-flow','backup','verify-backup','archive-source'])
     p.add_argument('--config',type=Path,default=Path('configs/continuous.json'))
     p.add_argument('--source-db',type=Path,default=None)
     p.add_argument('--paper-db',type=Path,default=None)
@@ -182,6 +182,9 @@ def main(argv=None):
     p.add_argument('--start-session',action='store_true',help='Explicitly arm a bounded v4.7 PAPER session; never clears pause/risk halt')
     p.add_argument('--renew-seconds',type=int,default=72000)
     p.add_argument('--review-note',default='')
+    p.add_argument('--actor',default='local-cli')
+    p.add_argument('--command-id')
+    p.add_argument('--session-seconds',type=int,default=18000)
     p.add_argument('--amount',type=float)
     p.add_argument('--destination',type=Path)
     p.add_argument('--host-id')
@@ -213,8 +216,14 @@ def main(argv=None):
         result=(backup_pair if a.command=='backup' else rotate_source)(a.source_db,a.paper_db,a.destination)
         print(json.dumps(result,indent=2));return 0
     if not a.source_db.exists():p.error('Source journal does not exist')
-    action='pause' if a.command=='stop' else a.command
+    is_v47=path_config.get('portfolio',{}).get('strategy_version')=='v47'
+    if a.command=='start' and not is_v47:p.error('Session START is v4.7-only; legacy resume remains available')
+    action=('session-stop' if is_v47 else 'pause') if a.command=='stop' else 'session-start' if a.command=='start' else a.command
     payload={'action':action}
+    if action=='session-start':
+        if not 1<=a.session_seconds<=18000 or len(a.actor.strip())<3:p.error('Session duration 1..18000 seconds and actor required')
+        payload.update(request_id=a.command_id or uuid4().hex,actor=a.actor,duration_ms=a.session_seconds*1000)
+    if action=='session-stop':payload.update(reason='LOCAL_OWNER_STOP',actor=a.actor)
     if action=='reset-halt':
         if len(a.review_note.strip())<8:p.error('Explicit --review-note required')
         payload['review_note']=a.review_note
@@ -226,7 +235,8 @@ def main(argv=None):
         try:rows=source.append([('CONTROL',f'operator:{uuid4().hex}',payload)])
         finally:source.close()
     print(canonical({'accepted_source_seq':rows[0][0],'action':action,
-                     'note':'Applied by the running worker or recovered at next start; open exits remain active.'}))
+                     'ack':'SOURCE_ACCEPTED_AWAITING_WORKER','runtime_effect_confirmed':False,
+                     'note':'Applied by the running worker or recovered at next start; existing PAPER exposure is retained.'}))
     return 0
 
 

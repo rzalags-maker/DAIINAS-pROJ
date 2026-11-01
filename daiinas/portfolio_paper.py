@@ -51,6 +51,7 @@ class PortfolioPolicy:
     stop_candidates: tuple=('.005','.01')
     entry_kind: str='MARKET_IOC'
     session_duration_ms: int=18000000
+    require_candle_context: bool=False
 
     def __post_init__(self):
         if not isinstance(self.initial_capital,str):raise ValueError('Opening capital must be an exact decimal string')
@@ -60,6 +61,8 @@ class PortfolioPolicy:
         if self.strategy_version=='v47' and (not self.account_driven or self.funding.get('kind')!='mock_futures_snapshot'):
             raise ValueError('v4.7 requires an explicit reconciled MOCK Futures scope; private connector remains disabled')
         if self.paper_settlement and self.strategy_version!='v47':raise ValueError('Modeled settlement requires explicit v4.7')
+        if self.require_candle_context and self.strategy_version!='v47':raise ValueError('Closed candle admission is v4.7-only')
+        if type(self.require_candle_context) is not bool:raise ValueError('Explicit candle gate flag required')
         if self.entry_kind not in ('MARKET_IOC','LIMIT','POST_ONLY_LIMIT') or not 0<=D(self.maker_fee_rate)<D('.1') or not self.stop_candidates or any(D(x) not in (D('.005'),D('.01')) for x in self.stop_candidates):raise ValueError('Invalid execution/stop/fee scenario')
         if type(self.session_duration_ms) is not int or not 1000<=self.session_duration_ms<=18000000:raise ValueError('PAPER session must be bounded to <=5 hours')
         if not 0<=D(self.stop_gap_bps)<=50:raise ValueError('Invalid gap allowance')
@@ -170,6 +173,7 @@ class PortfolioLedger(SessionMixin,ConveyorMixin,PaperLedger):
 
     def profile_payload(self):
         result=asdict(self.portfolio)
+        if not result['require_candle_context']:result.pop('require_candle_context')
         if result['strategy_version']=='v46':
             for key in ('strategy_version','paper_settlement','stop_gap_bps','maker_fee_rate','stop_candidates','entry_kind','session_duration_ms'):result.pop(key)
         if not result['account_driven']:result.pop('account_driven')
@@ -438,6 +442,13 @@ class PortfolioLedger(SessionMixin,ConveyorMixin,PaperLedger):
         market=s['market_states'].get(sym,{})
         if self.v47():
             from .adaptive_execution import select_sniper
+            candle_context=s.get('candle_contexts',{}).get(sym)
+            if self.portfolio.require_candle_context:
+                from .candle_context import admission
+                reason=admission(candle_context,side=side,now_ms=s['now_ms'])
+                if reason:return None,reason
+                market={**market,'volatility_bps':max(market.get('volatility_bps',0),float(candle_context['frames']['1']['atr_bps'])/2),
+                        'closed_candle_structure':candle_context['frames']['1']}
             maximum=spec.get('max_leverage')
             if maximum is None or spec.get('margin_mode')!='ISOLATED':return None,'missing_per_instrument_execution_capability'
             selection=select_sniper(maker_fee_rate=spec.get('maker_fee_rate',self.portfolio.maker_fee_rate),stop_candidates=self.portfolio.stop_candidates,entry_kind=self.portfolio.entry_kind,rules=rules,quote=data,side=side,allocation=nominal,
@@ -448,6 +459,9 @@ class PortfolioLedger(SessionMixin,ConveyorMixin,PaperLedger):
                 campaign_loss_fraction=self.portfolio.campaign_loss_fraction)
             s.setdefault('leverage_selections',{})[sym]=selection.payload()
             self.audit('LEVERAGE_SELECTION',symbol=sym,positionSide=side,**selection.payload())
+            if selection.selected and self.portfolio.require_candle_context:
+                selection.selected.update(candle_context_sha256=candle_context['packet_sha256'],closed_candle_directions={n:f['direction'] for n,f in candle_context['frames'].items()},
+                    closed_1m_structure=candle_context['frames']['1'])
             return (dict(selection.selected),None) if selection.selected else (None,selection.reason)
         effective_policy=replace(self.policy,stop_bps=max(self.policy.stop_bps,min(500,2*market.get('volatility_bps',0))),
             target_bps=max(self.policy.target_bps,min(1000,4*market.get('volatility_bps',0))))
@@ -732,6 +746,16 @@ class PortfolioLedger(SessionMixin,ConveyorMixin,PaperLedger):
                 snap=s['account_capital']['snapshot'] or self.portfolio.funding['snapshot']
                 if (s['account_capital']['snapshot'] is None or available>snap['timestamp_ms']) and not s.get('paper_settlements'):self.apply_model_snapshot(snap)
                 if 'session' not in s:self.session_start(request_id='AUTO:'+s['initial_funding']['event_id'],actor='explicit-paper-config')
+            elif action=='public-candles' and self.v47():
+                from .candle_context import analyze
+                packet=p.get('packet',{});symbol=packet.get('symbol') if isinstance(packet,dict) else None;spec=self.spec(symbol) if isinstance(symbol,str) else None
+                try:
+                    if not spec:raise ValueError('Unknown candle contract')
+                    record=analyze(packet,now_ms=available,expected_multiplier=spec['rules']['contract_size'])
+                    self.audit('CANDLE_CONTEXT_VERIFIED',symbol=symbol,packet_sha256=record['packet_sha256'])
+                except (ValueError,TypeError,KeyError,ArithmeticError) as exc:
+                    record={'status':'UNAVAILABLE','reason':str(exc),'asof_ms':available};self.audit('CANDLE_CONTEXT_REJECTED',symbol=symbol,reason=str(exc))
+                if isinstance(symbol,str) and spec:s.setdefault('candle_contexts',{})[symbol]=record
             elif action=='session-start' and self.v47():self.session_start(request_id=p.get('request_id'),actor=p.get('actor'),duration_ms=p.get('duration_ms'))
             elif action=='session-stop' and self.v47():self.session_stop(p.get('reason','OWNER_STOP'))
             elif action=='native-mock-fill' and self.v47():self.handle_native_mock_fill(p.get('receipt'))
@@ -801,7 +825,7 @@ class PortfolioLedger(SessionMixin,ConveyorMixin,PaperLedger):
         limits=self.account_limits()
         return {'status':'PAPER_ONLY','engine':'v4','live_orders_enabled':False,'strategy_validated':False,'production_ready':False,
             'initial_capital':self.portfolio.initial_capital,'initial_funding':s['initial_funding'],
-            'session':self.session_status() if self.v47() else None,'venue_orders':s.get('venue_orders',{}),'strategy_version':self.portfolio.strategy_version,'leverage_selections':s.get('leverage_selections',{}),'whole_market_pulse':s.get('whole_market_pulse',{}),'conveyor':s.get('conveyor',{}),'pending_paper_cash_settlements':s.get('paper_settlements',[]),'entry_capacity':s.get('last_entry_capacity'),'account_status':limits,'actual_exchange_balance_status':'NOT_CONNECTED','mode':self.portfolio.mode,
+            'candle_contexts':s.get('candle_contexts',{}),'session':self.session_status() if self.v47() else None,'venue_orders':s.get('venue_orders',{}),'strategy_version':self.portfolio.strategy_version,'leverage_selections':s.get('leverage_selections',{}),'whole_market_pulse':s.get('whole_market_pulse',{}),'conveyor':s.get('conveyor',{}),'pending_paper_cash_settlements':s.get('paper_settlements',[]),'entry_capacity':s.get('last_entry_capacity'),'account_status':limits,'actual_exchange_balance_status':'NOT_CONNECTED','mode':self.portfolio.mode,
             'execution_version':EXECUTION_VERSION,'money_quantum_usdt':str(MONEY_QUANTUM),'evidence_policy_sha256':self.evidence_policy_hash(),'cash':s['cash'],
             'equity_last_mark':s['last_equity'],'executable_equity':s['last_equity'] if s['equity_verified'] else None,
             'mark_status':s['mark_status'],'active_equity':s['active_equity'],'ladder':ladder.snapshot(),

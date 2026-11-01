@@ -5,7 +5,7 @@ on:
     branches: [feature/v4-ladder-integration]
     paths:
       - 'daiinas/*.py'
-      - 'tests/test_v47_conveyor.py'
+      - 'tests/test_v47*.py'
       - 'scripts/verify_v47*.py'
       - '.github/workflows/v47-acceptance.yml'
 permissions:
@@ -26,6 +26,7 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install '.[live]'
       - name: Recover immutable first-failure diagnostics (GitHub artifact only)
+        if: hashFiles('reports/v47-runs/41276729611/first.json') == ''
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

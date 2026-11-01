@@ -75,7 +75,7 @@ def run(output):
         result['coupled_stop_fee_matrix'][side]=matrix.payload()
     result['source_sha256']={str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in [
         Path('daiinas/portfolio_paper.py'),Path('daiinas/adaptive_execution.py'),Path('daiinas/position_conveyor.py'),
-        Path('daiinas/market_pulse.py'),Path('daiinas/paper_session.py'),Path('daiinas/execution_boundary.py'),Path('tests/test_v47_conveyor.py')]}
+        Path('daiinas/market_pulse.py'),Path('daiinas/candle_context.py'),Path('tests/test_v47_candles.py'),Path('daiinas/paper_session.py'),Path('daiinas/execution_boundary.py'),Path('tests/test_v47_conveyor.py')]}
     result['status']='PASS';(output/'status.json').write_text(json.dumps(result,indent=2)+'\n')
     return result
 

@@ -105,6 +105,8 @@ def select_leverage(*,rules,quote,side,allocation,margin_budget,risk_budget,fee_
                         price_tick_size=str(price_step),stop_gap_allowance_bps=str(stop_gap_bps))
                     if target<=0 or required>observed or prospective<allocation*D(target_fraction):row['reason']='net_target_outside_observed_move_envelope'
                     elif loss>budget:row['reason']='rounded_full_cost_stop_exceeds_budget'
+                    elif market.get('closed_candle_structure') and sign*(stop-D(market['closed_candle_structure']['swing_low' if side=='LONG' else 'swing_high']))>0:
+                        row['reason']='price_stop_inside_recent_closed_structure'
                     else:row.update(accepted=True,reason='feasible_resized_risk_and_costs');valid.append(row)
             alternatives.append(row)
         selected=dict(valid[0]) if valid else None  # smallest leverage that meets economics

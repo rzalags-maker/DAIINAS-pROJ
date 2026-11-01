@@ -40,6 +40,7 @@ class ContinuousObserver(Observer):
         self.stream_stats=Counter()
         self.v47_isolation=getattr(getattr(pipeline,'ledger',None),'v47',lambda:False)()
         self.quarantined={}
+        self.candle_cache={}
 
     async def preflight(self,pinned=()):
         # Actual pins are selected atomically on the ledger writer thread, not
@@ -50,6 +51,11 @@ class ContinuousObserver(Observer):
         self.watch=result['watch'];self.last_scan=result
         for sym,spec in result['specs'].items():self.contracts[sym]=ContractRules(**spec['rules'])
         self.stream_stats['market_scans']+=1
+        if self.v47_isolation and self.pipeline.ledger.portfolio.require_candle_context:
+            from .candle_context import download
+            packets=await download(self.rest,self.watch['deep_symbols'],result['specs'],asof_ms=now_ms(),cache=self.candle_cache)
+            await self.pipeline.append([('CONTROL','public-candles:'+digest(p),{'action':'public-candles','packet':p}) for p in packets])
+            self.stream_stats['candle_context_packets']+=len(packets)
         return result
 
     async def health_event(self,state,symbol=None,reason=None):

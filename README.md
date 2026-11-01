@@ -222,3 +222,9 @@ exit. Restart an intentionally stopped session with `run --start-session` using
 the same configuration and databases; PAUSE/HALT are not cleared. Five-hour expiry
 is tested with a virtual clock, not claimed as real hosted uptime. Maker fees and
 native receipts are explicitly labeled scenarios/MOCK; real order transport is inert.
+
+Newly generated v4.7 profiles also require verified closed 1m/5m/15m OHLCV for
+the deep shortlist, in addition to actual public trade/L2 evidence. Missing,
+stale or countertrend context yields NO_TRADE. Use `continuous pause` to retain
+worker monitoring, `continuous stop` to disarm the v4.7 session, and `continuous
+start` to queue another bounded session; queued commands are not a runtime ACK.

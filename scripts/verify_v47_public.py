@@ -22,6 +22,12 @@ def verify(root):
     for key,value in replica.items():assert second[key]==value,('replay mismatch',key)
     assert replica['strategy_version']=='v47' and replica['actual_exchange_balance_status']=='NOT_CONNECTED'
     assert not replica['live_orders_enabled'] and not replica['strategy_validated']
+    assert replica['counts'].get('CANDLE_CONTEXT_VERIFIED',0)>0
+    candle_verified={s:c for s,c in replica['candle_contexts'].items() if c['status']=='VERIFIED_CLOSED_OHLCV'}
+    assert candle_verified
+    for context in candle_verified.values():
+        assert set(context['frames'])=={'1','5','15'}
+        assert all(f['count']==16 and f['closed_through_ms']<=context['asof_ms'] for f in context['frames'].values())
     assert replica['whole_market_pulse']['catalog_count']==second['observed_contracts']>0
     with sqlite3.connect(root/'paper.sqlite3') as db:
         assert db.execute('PRAGMA integrity_check').fetchone()[0]=='ok'
@@ -64,7 +70,8 @@ def verify(root):
         'closed_summary':replica['closed_summary'],'open_positions':replica['positions'],
         'pending_entries':replica['pending_entries'],'exit_requests':replica['exit_requests'],
         'selected_leverages':sorted({p['leverage'] for p in [*closed,*replica['positions']]}),
-        'decision_counts':replica['counts'],'reason_counts':replica['reason_counts'],'account_status':replica['account_status'],
+        'closed_candle_contexts':replica['candle_contexts'],'closed_candle_verified_symbols':sorted(candle_verified),
+        'session':replica['session'],'decision_counts':replica['counts'],'reason_counts':replica['reason_counts'],'account_status':replica['account_status'],
         'conveyor':replica['conveyor'],'errors':first.get('errors',[])+second.get('errors',[]),
         'replay_identical':True,'cash_independently_reconciled':True,'backup':backup,
         'out_of_sample_status':'SHORT_INFRASTRUCTURE_SMOKE_NOT_ECONOMIC_VALIDATION',
