@@ -33,6 +33,7 @@ class BitsgapFuturesStream:
     def __init__(self, observer: BitsgapFuturesObserver):
         self.observer = observer
         self.connected = False
+        self.authenticated = False
         self.last_rest_observation = None
         self.updates = 0
         self.disconnects = 0
@@ -51,14 +52,23 @@ class BitsgapFuturesStream:
                 "nonce":token, "signature":signed}
 
     def _ingest(self, message):
-        if (not isinstance(message, dict) or message.get("ok") is not True
-                or message.get("topic") not in _SUBS):
+        if not isinstance(message, dict) or message.get("topic") not in _SUBS:
             _fail("WS_UNVERIFIED_TOPIC_FRAME")
         params = message.get("params")
         if (not isinstance(params, dict) or set(params) != {"em"}
                 or type(params["em"]) is not int or params["em"] != self.observer._futures_em):
             _fail("WS_FOREIGN_EXCHANGE_SCOPE")
         topic = message["topic"]
+        if message.get("ok") is False:
+            # Some subscriptions are absent when the exchange has no data.
+            # Never claim a negative acknowledgment means zero orders/positions.
+            return {"topic": topic, "event": "SUBSCRIPTION_REJECTED",
+                    "funding_authorized": False}
+        if message.get("ok") is not True:
+            _fail("WS_UNVERIFIED_TOPIC_FRAME")
+        if "value" in message and message["value"] is None:
+            return {"topic": topic, "event": "PROVIDER_NO_DATA",
+                    "funding_authorized": False}
         if "value" not in message:
             if message.get("mes") == "subscribed" and set(message) <= {"ok", "topic", "params", "mes"}:
                 return {"topic": topic, "event": "SUBSCRIBED", "funding_authorized": False}
@@ -83,9 +93,12 @@ class BitsgapFuturesStream:
         if self.observer._futures_em is None:
             _fail("FUTURES_DISCOVERY_REQUIRED")
         self.connected = False
+        self.authenticated = False
         # Snapshot-before-subscribe is NOT atomic with WS. It cannot release a
         # funded slot, and reconciliation must re-snapshot on every reconnect.
-        self.last_rest_observation = await asyncio.to_thread(self.observer.snapshot)
+        # REST orders/positions may literally be null. This must not prevent the
+        # independent WS investigation of those same topics.
+        self.last_rest_observation = await asyncio.to_thread(self.observer.wallet_observation)
         try:
             async with connect("wss://stream.bitsgap.com/") as ws:
                 await ws.send(json.dumps(self.auth_frame(), separators=(",", ":")))
@@ -93,6 +106,7 @@ class BitsgapFuturesStream:
                 if (not isinstance(auth, dict) or auth.get("type") != "auth_ok"
                         or not isinstance(auth.get("sid"), (str, int)) or type(auth.get("sid")) is bool):
                     _fail("WS_AUTH_UNVERIFIED")
+                self.authenticated = True
                 subscribe = [{"topic": topic, "params": {"em": self.observer._futures_em}, "subs": True}
                              for topic in _SUBS]
                 await ws.send(json.dumps(subscribe, separators=(",", ":")))
