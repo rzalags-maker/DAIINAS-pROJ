@@ -172,3 +172,44 @@ reconciliation, not a fabricated zero or an order placed for testing.
 Provider primary source:
 https://github.com/Bitsgap/bitsgap-api-docs/blob/main/docs/topics/trading.md
 and https://github.com/Bitsgap/bitsgap-api-docs/blob/main/docs/ws/README.md.
+
+
+### Live authenticated WebSocket verification — 2026-11-01 18:34 UTC
+
+[GitHub Actions run 41337235142](https://github.com/rzalags-maker/DAIINAS-pROJ/actions/runs/41337235142)
+used the existing Bitsgap GitHub secret and the bounded **read-only**
+`daiinas.bitsgap_futures_ws_probe` (8 seconds of observation). It
+returned the following real, sanitized statuses:
+
+| Scope | Authenticated result |
+| --- | --- |
+| WS Ed25519 authorization | `PASS` |
+| REST Futures USDT balance | `VALIDATED` |
+| WS `balance` | `VALIDATED_UPDATE` |
+| WS `positions_settings` | `VALIDATED_UPDATE` |
+| WS `orders` | `PROVIDER_NO_DATA` |
+| WS `positions` | `PROVIDER_NO_DATA` |
+| All new-entry and capital authorization | `DISABLED / NOT RECONCILED` |
+
+**Root cause of former parser failures:** (1) strict REST snapshot was
+required before WS connection, but `orders`/`positions` returned
+`null`; (2) the provider sends an `{ok,mes}` unscoped control message
+without `topic`; (3) a scoped `{ok,topic,params,value,mes}` message
+has `mes:null`. The observer now correctly classifies these protocol
+frames while still validating account-topic values and foreign scope.
+No raw signed auth frames, account amounts, order IDs, positions, or
+server free-text messages were logged.
+
+**Interpretation:** `PROVIDER_NO_DATA` means the documented API did
+not supply an order/position list **at this observation time**. It is
+consistent with the provider's statement that no data on an exchange
+(e.g. no open orders) may prevent a subscription, but it is NOT a
+confirmed `cnt=0` venue snapshot. The operator terminal can contain
+information not exposed via the current API read. Account risk and
+position reconciliation must keep unknown scope `UNVERIFIED`, not zero,
+until an independently verified positions/orders reconciliation exists.
+
+**Next acceptance:** independently correlate Bitsgap terminal display and
+API data under the same account and current session, and determine
+whether exchange data is genuinely empty versus filtered/missing.
+Do not open a live trade just to create test data.
