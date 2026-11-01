@@ -159,3 +159,10 @@ in [the v3.3 runbook](docs/V33_CONTINUOUS_PAPER.md). It retains the old systems
 and uses separate source/account files. **LIVE ORDERS DISABLED.**
 See [the validation record](reports/V33_VALIDATION.md) for real public-data evidence
 and open gates. The independent 24-hour host gate remains blocked until a persistent server is provisioned.
+
+
+Issue #8 follows up with [financial/risk audit findings](reports/V33_RISK_AUDIT.md),
+[the independent-host acceptance kit](docs/V33_HOST_ACCEPTANCE.md), and a
+[design-only future account boundary](docs/KUCOIN_ACCOUNT_BOUNDARY.md).
+The 24h host gate, economic validation and live authorization remain separate;
+**LIVE ORDERS DISABLED**.
