@@ -367,6 +367,52 @@ p.apply(src.after(p.state['cursor']))
 
 
 class RuntimeBoundaryTests(unittest.IsolatedAsyncioTestCase):
+    async def test_failed_symbol_is_quarantined_but_pinned_exposure_is_never_unsubscribed(self):
+        from unittest.mock import AsyncMock,Mock
+        from daiinas.continuous_stream import ContinuousObserver
+        from daiinas.providers.kucoin import DataGap
+        from daiinas.continuous_paper import Pipeline
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);pipeline=Pipeline(root/'source.db',root/'paper.db')
+            observer=ContinuousObserver(pipeline,source_path=root/'source.db',deep=3,refresh_seconds=30)
+            try:
+                observer.v47_isolation=True;observer.books={'PIN':Mock(),'OBS':Mock()}
+                observer.restore_book=AsyncMock(side_effect=DataGap('Unbridged sequence'))
+                observer.retire_stream=AsyncMock();pipeline.report=AsyncMock(return_value={'pins':['PIN']})
+                ws=object()
+                await observer.restore_or_quarantine(ws,'PIN');await observer.restore_or_quarantine(ws,'OBS')
+                observer.retire_stream.assert_awaited_once_with(ws,'OBS')
+                self.assertEqual(set(observer.quarantined),{'PIN','OBS'})
+                observer.books['PIN'].reset.assert_called_once()
+                self.assertEqual(observer.stream_stats['quarantined_books'],2)
+            finally:observer.close();pipeline.close()
+
+    async def test_cached_snapshot_retries_wait_without_weakening_sequence_bridge(self):
+        import asyncio
+        from unittest.mock import AsyncMock
+        from daiinas.continuous_stream import ContinuousObserver
+        from daiinas.providers.kucoin import OrderBook
+        from daiinas.continuous_paper import Pipeline
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);pipeline=Pipeline(root/'source.db',root/'paper.db')
+            observer=ContinuousObserver(pipeline,source_path=root/'source.db',deep=3,refresh_seconds=30)
+            try:
+                sym='UPUSDTM';rule=ContractRules(sym,'1','100000','1','.0001','0','1')
+                observer.contracts[sym]=rule;observer.books[sym]=OrderBook(sym,rule,exchange_symbol=sym)
+                now=__import__('time').time_ns()//1000000;calls=[]
+                async def snapshot(symbol):
+                    sequence=100 if not calls else 101;calls.append(sequence)
+                    observer.books[symbol].snapshot(dict(symbol=symbol,sequence=sequence,ts=now*1000000,bids=[['1','100']],asks=[['1.0002','100']]),now)
+                observer.snapshot=snapshot
+                observer.snapshot_buffers[sym]=[({'topic':'/contractMarket/level2:'+sym,'data':{'sequence':102,'timestamp':now,'change':'1,buy,100'}},now)]
+                with patch('daiinas.continuous_stream.asyncio.sleep',new_callable=AsyncMock) as wait:
+                    await observer.restore_book(sym)
+                    wait.assert_awaited_once_with(1)
+                self.assertEqual(calls,[100,101]);self.assertTrue(observer.books[sym].verified)
+                self.assertEqual(observer.books[sym].sequence,102);self.assertNotIn(sym,observer.snapshotting)
+                self.assertEqual(observer.stream_stats['snapshot_bridge_retries'],1)
+            finally:observer.close();pipeline.close()
+
     async def test_existing_pipeline_bootstraps_explicit_mock_and_scans_full_catalog(self):
         from daiinas.v47 import configuration
         from daiinas.continuous import settings,account_factory

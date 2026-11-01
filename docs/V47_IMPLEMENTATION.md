@@ -177,3 +177,13 @@ When no worker runs there is no observation, discovery, replacement or modeled
 quote exit. Tests can inject a reconciled offline native MOCK fill after restart;
 actual exchange-native protection requires a separately authorized implementation
 and venue verification. Live routing, keys and private API activation remain off.
+
+
+Full-universe transport isolates an unbridged symbol in a 30-second quarantine
+rather than letting it repeatedly tear down healthy markets. REST snapshot retries
+wait 1 then 2 seconds for a fresh snapshot; **only contiguous post-snapshot deltas**
+verify L2. Unpinned failed observations are unsubscribed, while owned/pending
+exposure stays subscribed, untrusted and pinned for recovery. Quarantine and exact
+expected/received gap diagnostics appear in runtime/health evidence. No synthetic
+bridge, skipped sequence or snapshot-only trust is used. Legacy transport semantics
+remain unchanged outside v4.7.

@@ -38,6 +38,8 @@ class ContinuousObserver(Observer):
         self.reconcile_lock=asyncio.Lock()
         self.last_seen={};self.last_wire={}
         self.stream_stats=Counter()
+        self.v47_isolation=getattr(getattr(pipeline,'ledger',None),'v47',lambda:False)()
+        self.quarantined={}
 
     async def preflight(self,pinned=()):
         # Actual pins are selected atomically on the ledger writer thread, not
@@ -104,6 +106,7 @@ class ContinuousObserver(Observer):
         async with self.reconcile_lock:
             account=await self.pipeline.report()
             desired=set(self.watch['deep_symbols'])|set(account['pins'])
+            desired={sym for sym in desired if sym in account['pins'] or now_ms()>=self.quarantined.get(sym,{}).get('retry_after_ms',0)}
             if len(desired)>20:raise DataGap('Pinned risks exceed provider hard capacity')
             additions=desired-self.active
             removals=self.active-desired
@@ -117,19 +120,19 @@ class ContinuousObserver(Observer):
                     await self.retire_stream(ws,sym)
                 removals-=self.retired
                 if len(self.active|additions)>20:raise DataGap('Provider capacity exhausted by pinned risks')
-            changed=[s for s in self.active&desired if s in self.books and self.books[s].rule!=self.contracts[s]]
+            changed=[s for s in self.active&desired if s in self.books and (self.books[s].rule!=self.contracts[s] or s in self.quarantined and now_ms()>=self.quarantined[s]['retry_after_ms'])]
             for sym in changed:
                 self.snapshotting.add(sym);self.snapshot_buffers[sym]=[]
                 self.books[sym]=OrderBook(sym,self.contracts[sym],exchange_symbol=sym)
                 await self.health_event('CONTRACT_BOOK_RESET',sym)
-                await self.restore_book(sym)
+                await self.restore_or_quarantine(ws,sym)
             for sym in sorted(additions):
                 if sym not in self.contracts:raise DataGap('Pinned symbol has no last-known public contract rules')
                 self.books[sym]=OrderBook(sym,self.contracts[sym],exchange_symbol=sym)
                 self.snapshotting.add(sym);self.snapshot_buffers[sym]=[]
                 self.active.add(sym);self.retired.discard(sym)
                 await self.command(ws,sym,'subscribe')
-                await self.restore_book(sym)
+                await self.restore_or_quarantine(ws,sym)
             for sym in sorted(removals):
                 # A ledger transition could have pinned this symbol while ACKs
                 # were pending. Recheck before ANY unsubscribe.
@@ -145,10 +148,27 @@ class ContinuousObserver(Observer):
             if key[0]==sym:self.sequences.pop(key,None);self.last_event_times.pop(key,None)
         self.stream_stats['retired_markets']+=1
 
+    async def restore_or_quarantine(self,ws,symbol):
+        try:
+            await self.restore_book(symbol)
+            self.quarantined.pop(symbol,None)
+        except DataGap as exc:
+            if not self.v47_isolation:raise
+            self.books[symbol].reset()
+            self.quarantined[symbol]={'retry_after_ms':now_ms()+30000,'reason':str(exc)}
+            self.stream_stats['quarantined_books']+=1
+            await self.health_event('BOOK_UNAVAILABLE',symbol,str(exc))
+            # A failed observation must not tear down every healthy market.
+            # Pinned risk stays subscribed/untrusted and is retried, never erased.
+            if symbol not in (await self.pipeline.report())['pins']:
+                await self.retire_stream(ws,symbol)
+
     async def restore_book(self,symbol):
         self.snapshotting.add(symbol)
         self.snapshot_buffers.setdefault(symbol,[])
+        last_gap=None
         for attempt in range(3):
+            if attempt:await asyncio.sleep(2**(attempt-1))
             await self.snapshot(symbol)
             buffered=self.snapshot_buffers[symbol];self.snapshot_buffers[symbol]=[]
             packets=[]
@@ -162,10 +182,12 @@ class ContinuousObserver(Observer):
                 if packets:await self.pipeline.append(packets)
                 self.stream_stats['book_resyncs']+=1
                 return
-            except SequenceGap:
+            except SequenceGap as exc:
+                last_gap=str(exc)
+                self.stream_stats['snapshot_bridge_retries']+=1
                 self.snapshot_buffers[symbol]=buffered+self.snapshot_buffers[symbol]
                 if len(self.snapshot_buffers[symbol])>self.queue_size:raise DataGap('Book restore overflow')
-        raise DataGap('Book restore retry limit exceeded')
+        raise DataGap(f'Book restore retry limit exceeded: {symbol}; {last_gap}')
 
     async def session(self,*,seconds=None,renew_after=72000):
         if not 1<=renew_after<=72000:raise ValueError('Public token renewal must be before 24 hours')
@@ -220,7 +242,7 @@ class ContinuousObserver(Observer):
                             if packets:await self.pipeline.append(packets);packets=[]
                             await self.health_event('BOOK_GAP',sym,str(exc))
                             self.snapshotting.add(sym);self.snapshot_buffers[sym]=[(msg,received)]
-                            tasks.create_task(self.restore_book(sym))
+                            tasks.create_task(self.restore_or_quarantine(ws,sym))
                     if packets:await self.pipeline.append(packets)
 
             async def refresh():
@@ -267,5 +289,6 @@ class ContinuousObserver(Observer):
         now=now_ms()
         return {'connected':self.connected,'session_id':self.session_id,'active':sorted(self.active),
                 'verified_books':sorted(s for s,b in self.books.items() if b.verified),
+                'quarantined_books':dict(self.quarantined),
                 'feed_age_ms':{s:{k:now-self.last_seen.get((s,k),0) for k in CHANNELS} for s in sorted(self.active)},
                 'stream_counts':dict(self.stream_stats),'unavailable':self.last_scan.get('unavailable',[]) if self.last_scan else []}
