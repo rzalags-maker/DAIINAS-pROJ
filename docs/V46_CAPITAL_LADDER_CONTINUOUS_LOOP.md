@@ -2,6 +2,37 @@
 
 **Owner clarification: 2026-11-01. Priority P0.** Read together with Issue #15 (Futures account cycle-zero and rolling balance), Issue #10 (Capital Ladder Model A), `docs/V4_CAPITAL_LADDER.md`, and v4.5 PAPER strategy specification on `feature/v42-kucoin-control-plane`. This adds an **early-stage win-gated eligibility mechanism** to the existing capital-funded ladder; it does not authorize live trading, margin transfers, or automatic position openings.
 
+## ONE EXECUTABLE RUNTIME CONTRACT — NO COMPETING LADDER MODELS
+
+This is **ONE state machine**, not a request to choose between original PR #9 and newer v4.6. Original Model A remains the financial allocation algorithm for the funded stage. The owner's subsequent per-winning-campaign unlock is the **early-stage capacity policy**, implemented in front of the same ledger. Both consume the **same current Futures account reconciliation** and the same journal, with a single worker/transaction writer. **Do not create a second strategy, account, reserve allocator, or separate loop.**
+
+### Canonical state and precedence
+
+Track `account_identity`, immutable `initial_funding`, `current_futures_equity`, `verified_free_margin`, `active`, `reserve`, `pending`, `external_unallocated`, `deficit`, `allocation_stage`, `earned_early_ports`, `funded_slot_ceiling`, `risk_allowed_slot_ceiling`, `open_and_pending_slots`, deduplicated closed `campaign_ids`, and `reconciliation_status`. Never use current equity as a substitute for free margin or vice versa.
+
+For every cycle, first atomically reconcile balance / fills / fees / funding / external flows / owned and unknown orders. Then update the existing Capital Ladder ledger **once** for newly finalized net P&L; only then recompute slot capacity, allocation and the next entry size. No account re-initialization occurs on any stage transition or restart.
+
+1. **Not yet activated (verified Futures portfolio total <100 USDT):** `allocation_stage=BOOTSTRAP`; `reserve=0`; one candidate is initially eligible. Each *unique completely settled, net-positive campaign* increments `earned_early_ports` by one, capped at 10. Losing campaigns/marked drawdown can reduce actually allowed new entries through funded-margin and risk gates, without erasing open exchange positions.
+2. **First reach of 100 USDT settled, eligible allocated capital:** perform one idempotent `ACTIVATE_LADDER` **inside the existing account**, `reserve=50, active=50, funded_slot_ceiling=2` at exactly 100, with delta handled by the accepted Model A. Keep earned wins as historical audit only: from this point **funded capacity is governed by Model A**, not winner count. Candidate permissions never create capital or override margin/risk. If there are already >2 real open/pending legs, block additional entry and manage existing positions safely, no fabricated close or automatic account reset.
+3. **Above 100 USDT in Model A:** each full additional 25 USDT *eligible settled net trading profit* allocated to ACTIVE finances one more slot, max 10 at 300 total; after ten, complete +50 profit steps alternate `RESERVE` then `ACTIVE`. When account starts *already above 100*, initialize directly into the appropriate Model A allocation **based on actual verified initial equity**; do not invent prior winning campaigns. A 450-USDT verified opening leads directly to its corresponding stage.
+4. **Losing or dropping below a previous threshold:** remain in the **previously activated stage** and reverse available *financial* slot capacity/risk; **DO NOT return to bootstrap or unlock reserve** merely because equity falls from 100 to 99.99. Losses reduce ACTIVE and entry limits; any unrecoverable excess is explicit deficit; only realized recovery can reauthorize loss-latched slots. Reserve stays budget-restricted.
+5. **New-entry decision:** `entry_slots = max(0, min(stage_eligible_ceiling, capital_funded_ceiling, risk_eligible_ceiling) - open_and_pending_slots)`; for BOOTSTRAP stage, `stage_eligible_ceiling=earned_early_ports`; for ACTIVATED, use Model A `funded_slot_ceiling`. `capital_funded_ceiling` is computed using *current* strategy ACTIVE budget, actual spendable free Futures margin, existing commitments, required minimum lot and full stop/cost accounting. No arbitrary extra sub-100 slot cap. If any verified data missing, zero new entries and keep existing-risk monitoring. Individual trade margin/risk sizing must still pass strict independent checks. **The count is the maximum eligible number, never a command to place that many orders.**
+6. **Next cycle:** after a close (profit or loss), market change or restart, use the updated *reconciled* account and persistent ladder/campaign journal; rescan the market and create a new PAPER intent only if the present opportunity passes all gates. Current balance is not permanently capped by initial funding. External deposits never masquerade as profit or auto-scale an unapproved budget.
+
+### Required nonconflicting acceptance matrix
+
+- 60 initial / no wins => 1 candidate; +0.50 realized net => 60.50 and 2 candidate permissions; +0.50 => 61 and 3 earned. **Actually financeable slots still depend on true ACTIVE, free margin, contract min and current risks.** Replay same campaign does not add a fourth permission.
+- 99.50 actual verified account +0.50 settled net => existing ledger activates once at 100, R50/A50 and 2 funded slots; the historical early-win counter persists but does not override the new stage. If >2 positions existed at transition, no new entries, existing positions remain tracked until safe confirmed exits.
+- 100 start -> 125 -> 300 => R50/A250 and max 10 funded slots, **only** on actual finalized monetary rungs; a +0.50 winning 25-USDT slot does NOT become a funded +25 slot above 100.
+- 300 -> 260 (realized -40): R50/A210, cap 8; +14 => active224/cap8; +1 => active225/cap9; +25 => active250/cap10. No reserve movement.
+- 100 -> 99.99 after realized loss => remain in activated stage, R50/A49.99; **no bootstrap reset**, cap decreases as its monetary/risk gates dictate.
+- 450 actual starting Futures funds => direct Model A R150/A300, 10 maximum nominal slots; after +0.50 net => current total 450.50; after -0.20 => 450.30; process restart resumes 450.30 and same historical INITIAL_FUNDING and campaign IDs, not a new 8/100/450 seed.
+- Unknown manual KuCoin position, stale data, missing protection or insufficient min-lot exposure => NO_TRADE, no duplicate entries and no fictitious fills. Existing positions remain tracked.
+
+**Implementation delivery, not prose-only:** wire this transition into the existing `PortfolioLedger`/CapitalLadder with explicit versioned execution policy and atomic events; test the cases above end-to-end on a mocked Futures account stream and run existing v3.3/v4 test suites. An unimplemented diagram, separate standalone calculator, or only green historical tests do NOT satisfy this acceptance. Live API/orders remain disabled.
+
+---
+
 ## Meaning of a "win" versus a funded trade port
 
 - A **WIN** is one **fully closed, reconciled campaign** with **strictly positive realized NET P&L after fees, slippage and funding**. An unrealized gain, open winning leg of an unfinished hedge/campaign, deposit, refund, positive mark, or partial exit does NOT count as a win.
