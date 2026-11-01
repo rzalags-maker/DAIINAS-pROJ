@@ -91,7 +91,7 @@ class BitsgapFuturesStream:
 
     def diagnostic_status(self):
         """Fixed-vocabulary transport counters only: no keys, frames, balances or IDs."""
-        return {"ws_authenticated": self.authenticated,
+        return {"ws_auth_succeeded_in_last_session": self.authenticated,
                 "ws_snapshot_batches_sent": self.snapshot_batches,
                 "ws_snapshot_responses": self.snapshot_responses,
                 "ws_snapshot_rejections": self.snapshot_rejections,
