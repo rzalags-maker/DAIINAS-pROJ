@@ -1,0 +1,62 @@
+name: DAIINAS pinned main source archive for Codex
+
+on:
+  push:
+    branches:
+      - delivery/daiinas-main-97af926-archive-20261101
+    paths:
+      - .github/workflows/daiinas-main-source-archive-20261101.yml
+
+permissions:
+  contents: read
+
+jobs:
+  archive-verified-main:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact verified main commit
+        uses: actions/checkout@v4
+        with:
+          ref: 97af92639b6fe2f30b6f4289e9c5a6827f72da95
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Verify pinned commit and archive tracked sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "97af92639b6fe2f30b6f4289e9c5a6827f72da95"
+          echo "VERIFIED_SOURCE_SHA=$actual"
+          git archive --format=zip --prefix=DAIINAS-pROJ-97af926/ --output="$RUNNER_TEMP/DAIINAS-pROJ-main-97af926.zip" HEAD
+          python - <<'PY'
+          from pathlib import Path
+          import zipfile
+          from os import environ
+          file = Path(environ["RUNNER_TEMP"]) / "DAIINAS-pROJ-main-97af926.zip"
+          with zipfile.ZipFile(file) as z:
+              names = z.namelist()
+              required = [
+                  "AGENTS.md",
+                  "daiinas/bitsgap_futures_observe.py",
+                  "daiinas/bitsgap_futures_stream.py",
+                  "daiinas/bitsgap_futures_ws_probe.py",
+                  "docs/BITSGAP_FUTURES_OBSERVE.md",
+              ]
+              missing = [path for path in required
+                         if not any(name.endswith("/" + path) for name in names)]
+              if missing:
+                  raise SystemExit("Required files missing in archive: " + ", ".join(missing))
+              if any("/.git/" in n for n in names):
+                  raise SystemExit("Unexpected Git metadata")
+              print("ARCHIVE_VALIDATED=YES")
+              print("TRACKED_ARCHIVE_ENTRIES=" + str(len(names)))
+          PY
+          sha256sum "$RUNNER_TEMP/DAIINAS-pROJ-main-97af926.zip"
+      - name: Upload complete pinned main source archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: DAIINAS-pROJ-main-97af926-source
+          path: ${{ runner.temp }}/DAIINAS-pROJ-main-97af926.zip
+          retention-days: 7
+          if-no-files-found: error
