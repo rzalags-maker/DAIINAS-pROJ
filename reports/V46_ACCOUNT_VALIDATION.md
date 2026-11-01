@@ -66,6 +66,16 @@ Other executed acceptance cases:
 
 The opening matrix also executes 17/60/99.99/100/175/200/300/350/400/450/500/1000/5000. No new account uses an implicit default or caps opening capital at 100/300. Funding wallet/MetaMask are outside the accepted snapshot schema; they cannot inflate Futures funds. UTA is explicitly unsupported rather than double-counted.
 
+## Concurrent next-stage specification
+
+After the tested v4.6 source was pushed, owner documentation commits `5262d40` /
+`27c8c6e` introduced the **v4.7** adaptive 1–5x research specification. Those
+commits were preserved. This delivery implements the requested **v4.6 Issue #15**
+and retains its expressly requested v4.5 isolated 1–2x execution policy. A 1–5x
+selector, expanded forecasting/selection and protection-conveyor acceptance are
+not implemented or claimed by this report; they are additional v4.7 work. No
+risk limit was widened while reconciling documentation updates.
+
 ## Remaining authenticated KuCoin and hosting gates
 
 1. Authorized persistent host, durable storage/backup/supervision and secure owner control channel. Codex/GitHub CI is not a 24/7 runtime; no deployed START ACK or 24h claim is made.
