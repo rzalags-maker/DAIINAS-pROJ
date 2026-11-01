@@ -124,7 +124,9 @@ class KucoinSpotReadOnlyTests(unittest.TestCase):
         self.calls = []
         self.enums = {"market": {"alias": "em", "items": {
             "KUCOIN_SPOT": 731, "KUCOIN_DEMO": 732, "KUCOIN_FUTURES": 733}},
-            "order_type": {"items": {"LIMIT": 1, "MARKET": 2}}}
+            "order_type": {"items": {"LIMIT": 1, "MARKET": 2}},
+            "order_state": {"alias": "eost", "items": {"OPEN": 3, "OPENED": 4}},
+            "order_side": {"alias": "eos", "items": {"BUY": 1, "SELL": 2}}}
         self.balance = {"data": {"USDT": {"t": "12.5", "a": "12", "l": "0.5"}}}
         self.orders = {"data": {"BTC_USDT": [{"id": "synthetic", "eost": 4,
             "eot": 1, "eos": 1, "t0": 1781701135678, "am": "0.001", "pr": "65000"}]}, "cnt": 1}
@@ -199,6 +201,56 @@ class KucoinSpotReadOnlyTests(unittest.TestCase):
             self.api.resolve_kucoin_spot()
         with self.assertRaises(BitsgapError):
             self.api.check_orders()
+
+    def test_order_states_and_sides_match_dynamic_enum_and_valid_alternates_pass(self):
+        self.api.resolve_kucoin_spot()
+        record = self.orders["data"]["BTC_USDT"][0]
+        self.assertTrue(self.api.check_orders())
+        # Other documented enum values remain valid, not hardcoded to a fixture.
+        record["eost"] = 3
+        record["eos"] = 2
+        self.assertTrue(self.api.check_orders())
+        for field, category in (("eost", "UNVERIFIED_ORDER_STATE_ENUM"),
+                                ("eos", "UNVERIFIED_ORDER_SIDE_ENUM")):
+            old = record[field]
+            record[field] = 777
+            with self.assertRaisesRegex(BitsgapError, "^" + category + "$"):
+                self.api.check_orders()
+            record[field] = old
+        self.assertTrue(self.api.check_orders())
+
+    def test_missing_or_ambiguous_order_enum_is_unverified(self):
+        for enum_name, category in (("order_state", "UNVERIFIED_ORDER_STATE_ENUM"),
+                                    ("order_side", "UNVERIFIED_ORDER_SIDE_ENUM")):
+            original = copy.deepcopy(self.enums[enum_name])
+            for broken in (None, {"alias": "wrong", "items": original["items"]},
+                           {"alias": original["alias"], "items": {"X": 1, "Y": 1}},
+                           {"alias": original["alias"], "items": {"X": True}}):
+                if broken is None:
+                    del self.enums[enum_name]
+                else:
+                    self.enums[enum_name] = broken
+                self.api.resolve_kucoin_spot()
+                with self.assertRaisesRegex(BitsgapError, "^" + category + "$"):
+                    self.api.check_orders()
+            self.enums[enum_name] = original
+        self.api.resolve_kucoin_spot()
+        self.assertTrue(self.api.check_orders())
+
+    def test_duplicate_order_ids_rejected_with_matching_count(self):
+        self.api.resolve_kucoin_spot()
+        first = copy.deepcopy(self.orders["data"]["BTC_USDT"][0])
+        self.orders["data"]["BTC_USDT"].append(copy.deepcopy(first))
+        self.orders["cnt"] = 2
+        with self.assertRaisesRegex(BitsgapError, "^DUPLICATE_ORDER_ID$"):
+            self.api.check_orders()
+        # IDs must be unique across the entire snapshot, not just per pair.
+        self.orders["data"]["BTC_USDT"].pop()
+        self.orders["data"]["ETH_USDT"] = [copy.deepcopy(first)]
+        with self.assertRaisesRegex(BitsgapError, "^DUPLICATE_ORDER_ID$"):
+            self.api.check_orders()
+        self.orders["data"]["ETH_USDT"][0]["id"] = "synthetic-distinct"
+        self.assertTrue(self.api.check_orders())
 
     def test_empty_results_are_explicitly_unverified(self):
         self.api.resolve_kucoin_spot()
