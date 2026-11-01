@@ -1,0 +1,89 @@
+name: Prepare verified v4 Draft review (never merge)
+on:
+  workflow_dispatch:
+    inputs:
+      retry_after_settings_change:
+        description: Owner confirmed the repository Actions PR setting has changed
+        type: boolean
+        default: false
+  push:
+    branches: [feature/v4-ladder-integration]
+    paths:
+      - '.github/workflows/v4-review.yml'
+      - 'reports/V4_INTEGRATION_VALIDATION.md'
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: v4-review-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  draft:
+    if: github.ref == 'refs/heads/feature/v4-ladder-integration'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Create only a verified focused Draft PR; preserve policy failures
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RETRY_AFTER_SETTINGS_CHANGE: ${{ inputs.retry_after_settings_change }}
+        run: |
+          python - <<'PY'
+          import json,os,pathlib,subprocess,urllib.request,urllib.error,urllib.parse
+          root=pathlib.Path('reports');target=root/'v4-pr.json'
+          repo=os.environ['GITHUB_REPOSITORY'];head='feature/v4-ladder-integration';base='feature/v33-risk-acceptance'
+          compare=f'https://github.com/{repo}/compare/{base}...{head}'
+          result={'status':'pending_verified_validation','manual_compare_url':compare,'base':base,'head':head}
+          old=json.loads(target.read_text()) if target.exists() else {}
+          validation=json.loads((root/'v4-validation.json').read_text()) if (root/'v4-validation.json').exists() else {}
+          outcomes=json.loads((root/'v33-ci-status.json').read_text()) if (root/'v33-ci-status.json').exists() else {}
+          keys=('original','tests','first','restart','replay','verify','v4first','v4restart','v4replay','v4verify','comparison')
+          ready=validation.get('status')=='passed' and all(outcomes.get(k)=='success' for k in keys)
+          revision=validation.get('tested_commit')
+          if ready:
+              ready=subprocess.run(['git','diff','--quiet',revision,'HEAD','--','daiinas','configs','tests','scripts','.github/workflows/v4-acceptance.yml']).returncode==0
+          if not ready:result['reason']='Full original/audit/portfolio/comparison evidence must pass for unchanged implementation.'
+          elif old.get('http_status')==403 and os.environ.get('RETRY_AFTER_SETTINGS_CHANGE')!='true':
+              result=old;result['original_denial_run']=old.get('original_denial_run',old.get('github_run_url'));result['retry_skipped']='Prior denial retained; manual retry only after owner changes repository setting.'
+          else:
+              def api(path,data=None):
+                  payload=None if data is None else json.dumps(data).encode()
+                  req=urllib.request.Request('https://api.github.com/repos/'+repo+path,data=payload,
+                    headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','Content-Type':'application/json'})
+                  with urllib.request.urlopen(req,timeout=30) as r:return json.load(r)
+              try:
+                  owner=repo.split('/')[0]
+                  found=api('/pulls?'+urllib.parse.urlencode({'state':'open','head':owner+':'+head,'base':base}))
+                  if found:pr=found[0]
+                  else:
+                      pr=api('/pulls',{'title':'[P0 PAPER] Capital Ladder portfolio and per-token adaptive market research','head':head,'base':base,'draft':True,
+                        'body':'Refs #10 and #11; preserves #8.\n\nThe standalone allocator now runs inside the audited journal/checkpoint transaction with separate 8/60/100-USDT profiles, up to ten gross legs, protected reserve, active-only risk, independent per-token regimes and whole-campaign hedge accounting.\n\nAll regression tests and actual-public-data first/restart/replay, independent cash reconciliation and identical-source M0–M3 comparisons are recorded in reports/V4_INTEGRATION_VALIDATION.md and reports/V41_HEDGE_COMPARISON.json. Tested implementation: '+revision+'.\n\nLIVE ORDERS DISABLED. No private exchange requests or wallet actions. Hedge advantage and economic edge remain UNSUPPORTED; strategy_validated=false and production_ready=false. Independent 24h host gate: BLOCKED — HOST NOT PROVISIONED. No merge of this PR, #7 or #9 is requested.'})
+                  result={'status':'draft_pr_created' if pr.get('draft') else 'existing_pr','url':pr['html_url'],'number':pr['number'],
+                          'draft':pr.get('draft'),'manual_compare_url':compare,'tested_commit':revision}
+              except urllib.error.HTTPError as exc:
+                  try:reason=json.loads(exc.read()).get('message','GitHub rejected PR creation')
+                  except ValueError:reason='GitHub rejected PR creation'
+                  result={'status':'blocked','http_status':exc.code,'reason':reason,'manual_compare_url':compare,'tested_commit':revision}
+          result['github_run_url']=f'https://github.com/{repo}/actions/runs/{os.environ["GITHUB_RUN_ID"]}'
+          target.write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))
+          PY
+      - name: Preserve exact review outcome without changing source or merging
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          export GIT_INDEX_FILE="$RUNNER_TEMP/v4-review-index"
+          for attempt in 1 2 3; do
+            git fetch origin feature/v4-ladder-integration
+            latest="$(git rev-parse FETCH_HEAD)"
+            git read-tree "$latest"
+            blob="$(git hash-object -w reports/v4-pr.json)"
+            git update-index --add --cacheinfo "100644,$blob,reports/v4-pr.json"
+            git update-index --add --cacheinfo "100644,$blob,reports/v4-review-runs/$GITHUB_RUN_ID.json"
+            tree="$(git write-tree)"
+            commit="$(git commit-tree "$tree" -p "$latest" -m 'Record verified v4 Draft PR creation or exact policy blocker')"
+            if git push origin "$commit:refs/heads/feature/v4-ladder-integration"; then exit 0; fi
+          done
+          exit 1

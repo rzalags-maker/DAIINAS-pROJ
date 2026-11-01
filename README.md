@@ -166,3 +166,17 @@ Issue #8 follows up with [financial/risk audit findings](reports/V33_RISK_AUDIT.
 [design-only future account boundary](docs/KUCOIN_ACCOUNT_BOUNDARY.md).
 The 24h host gate, economic validation and live authorization remain separate;
 **LIVE ORDERS DISABLED**.
+
+
+## Opt-in v4 Capital Ladder and per-market PAPER portfolio
+
+[Integration and commands](docs/V4_LADDER_INTEGRATION.md) ·
+[Adaptive/hedge research contract](docs/V41_HEDGE_STRATEGY.md) ·
+[Verification and blockers](reports/V4_INTEGRATION_VALIDATION.md).
+
+Separate `configs/v4-8.json`, `v4-60.json`, `v4-100.json` accounts reuse the audited
+journal/writer/collector, add Decimal reserve/active/pending/deficit allocation,
+up to ten gross independent legs, per-token regimes and whole-campaign accounting.
+The original v3.3 account and Binance backtesting remain intact. Funded slots do
+not force trades; a hedge is unsupported without held-out evidence. No economic
+edge or 24h independent hosting is established. **LIVE ORDERS DISABLED.**

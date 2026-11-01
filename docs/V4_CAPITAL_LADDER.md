@@ -1,6 +1,6 @@
 # DAIINAS v4 — Capital Ladder: owner-approved capital allocation
 
-**Implemented here:** independent deterministic allocation controller and 15 automated financial transition tests. **NOT YET wired** to the running v3.3 paper engine, market entry signals or order execution. **LIVE ORDERS DISABLED.** Preserve the already-tested v3.3 engine and its separate account until Codex completes the audited integration stage.
+**PR #9 baseline:** independent deterministic allocation controller and 15 automated financial transition tests. The opt-in durable integration is now implemented in [the v4 portfolio](V4_LADDER_INTEGRATION.md), with [per-market hedge research](V41_HEDGE_STRATEGY.md). See [verification and remaining gates](../reports/V4_INTEGRATION_VALIDATION.md). The original v3.3 engine/account remain separate. **LIVE ORDERS DISABLED.**
 
 ## Agreed mathematical contract
 
@@ -64,7 +64,7 @@ state = a.export_state()
 assert CapitalLadder.restore(state).export_state() == state
 ~~~
 
-## Remaining mandatory Codex integration (do not infer it is finished)
+## Mandatory integration checklist (specification preserved; current status linked above)
 
 1. Perform the independent v3.3 risk-audit dependency (#8) and retain existing 180+ passing regression tests.
 2. Wire CapitalLadder inside the **v3.3 single-writer SQLite paper account transaction** (append-only source event, idempotent fill/debit, checkpoint, audit and wallet-migration boundaries in one transaction). Add explicit 60 and 100 USDT virtual policy scenarios; **do not silently mutate the existing 8-USDT baseline account**.
@@ -74,4 +74,4 @@ assert CapitalLadder.restore(state).export_state() == state
 6. Test multi-position P&L, recovery, 10-slot saturation, the alternating scale increments, reserve storage isolation, marked drawdown, contract minimums, fee costs, partial/unresolved exits, delisting, replay parity, restarts, strategy NO_TRADE, simulated external deposits separate from P&L.
 7. Update reports, sample dashboard, and 24-hour host evidence gates. No private KuCoin API and no exchange credentials. Do NOT merge into stable or turn on LIVE.
 
-**The stand-alone controller is executable and unit-tested; the integrated multi-position trading engine is not yet implemented.**
+**The stand-alone controller and opt-in multi-position paper integration are executable. Test/public-data evidence, economic validation and independent host acceptance are separate gates; consult the linked validation report.**
