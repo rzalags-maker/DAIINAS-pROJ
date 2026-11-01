@@ -47,6 +47,11 @@ def _safe_envelope_shape(value):
                      "FALSE" if value.get("ok") is False else "MISSING_OR_OTHER"),
         "params_class": ("OBJECT" if isinstance(value.get("params"), dict) else
                          "MISSING_OR_OTHER"),
+        "message_class": ("ABSENT" if "mes" not in value else
+                          "NULL" if value["mes"] is None else
+                          "STRING" if isinstance(value["mes"], str) else
+                          "OBJECT" if isinstance(value["mes"], dict) else
+                          "ARRAY" if isinstance(value["mes"], list) else "OTHER"),
         "value_class": ("NULL" if "value" in value and value["value"] is None else
                         "OBJECT" if isinstance(value.get("value"), dict) else
                         "ARRAY" if isinstance(value.get("value"), list) else
