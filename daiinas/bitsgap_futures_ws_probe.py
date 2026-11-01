@@ -57,6 +57,7 @@ async def probe_bounded(*, observer, connect, seconds=8):
         "websocket_auth": "PASS" if stream.authenticated else "UNVERIFIED",
         "websocket_topics": statuses,
         "diagnostic_outcome": failure,
+        "rejected_frame_envelope": stream.last_frame_shape,
         "absence_of_data_is_zero_exposure": False,
         "model_a_reconciled": False,
         "order_routing": "DISABLED",
