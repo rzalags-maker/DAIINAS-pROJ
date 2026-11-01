@@ -52,6 +52,21 @@ jobs:
               def secure_connect(url):
                   return connect(url, open_timeout=5, close_timeout=2, max_size=65536,
                                  max_queue=16, ping_interval=20)
+              # Isolate existing adapter validation vs new normalized AccountState.
+              # Only fixed categories; never print actual enum values or payloads.
+              from daiinas.bitsgap_account_state import AccountState
+              from daiinas.bitsgap_readonly import BitsgapError
+              try:
+                  settings_value = observer.read("positions_settings")
+                  try:
+                      count, mode, margin = observer._positions(settings_value, settings=True)
+                      print("SETTINGS_ADAPTER_VALIDATION=PASS")
+                      print("SETTINGS_MODE_CLASS=" + ("ONE_WAY" if mode == "ONE_WAY" else "HEDGE" if mode == "HEDGE" else "UNVERIFIED" if mode == "UNVERIFIED" else "OTHER"))
+                      print("SETTINGS_MARGIN_CLASS=" + ("CROSS" if margin == "CROSS" else "ISOLATED" if margin == "ISOLATED" else "UNVERIFIED" if margin == "UNVERIFIED" else "OTHER"))
+                  except BitsgapError:
+                      print("SETTINGS_ADAPTER_VALIDATION=UNVERIFIED")
+              except BitsgapError:
+                  print("SETTINGS_SIGNED_READ=UNVERIFIED")
               state = asyncio.run(observe_bounded(
                   observer, secure_connect, seconds=8,
                   scope_ref="bounded-ci-verification-only", store=None))
