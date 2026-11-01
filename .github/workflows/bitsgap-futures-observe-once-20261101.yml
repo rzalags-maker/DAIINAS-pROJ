@@ -65,7 +65,12 @@ jobs:
                       print('SAFE_ENVELOPE=' + (req_topic if req_topic in ('manual','conf_enums','balance','orders','positions','positions_settings') else 'UNKNOWN')
                             + ';SHAPE=' + ('DICT' if isinstance(obj,dict) else 'OTHER')
                             + ';KNOWN_FIELDS=' + (flags or 'NONE')
-                            + ';FIELD_COUNT=' + str(len(obj) if isinstance(obj,dict) else 0))
+                            + ';FIELD_COUNT=' + str(len(obj) if isinstance(obj,dict) else 0)
+                            + ';EXTRA_KEY_NAMES=' + (','.join(sorted(
+                                 k for k in obj
+                                 if isinstance(k,str) and k not in ('data','ok','topic','value','error','mes')
+                                 and 0 < len(k) <= 30 and k.replace('_','').isalnum()
+                                 )) if isinstance(obj,dict) else 'NONE'))
                   except Exception:
                       print('SAFE_ENVELOPE=NON_JSON_OR_UNVERIFIED')
                   return raw
