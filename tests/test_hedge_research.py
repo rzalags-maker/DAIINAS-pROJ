@@ -44,13 +44,13 @@ class IntelligenceTests(unittest.TestCase):
     def test_evidence_never_from_future_or_50_50_guess(self):
         policy=PortfolioPolicy(initial_capital='100')
         e={'sample_kind':'observed_public','source_sha256':'a'*64,'policy_sha256':digest(asdict(policy)),
-           'training_end_ms':10,'validation_start_ms':20,'validation_end_ms':100,'held_out_campaigns':30,
+           'training_end_ms':10,'validation_start_ms':20,'validation_end_ms':172800020,'held_out_windows':2,'held_out_campaigns':30,
            'net_return_lower_95pct':.001,'advantage_over_directional_lower_95pct':.0001,
            'advantage_over_flat_lower_95pct':.0001,'both_leg_exits_validated':True}
-        self.assertFalse(supported_hedge(e,99,digest(asdict(policy))))
-        self.assertTrue(supported_hedge(e,101,digest(asdict(policy))))
+        self.assertFalse(supported_hedge(e,172800019,digest(asdict(policy))))
+        self.assertTrue(supported_hedge(e,172800021,digest(asdict(policy))))
         e['net_return_lower_95pct']=0
-        self.assertFalse(supported_hedge(e,101,digest(asdict(policy))))
+        self.assertFalse(supported_hedge(e,172800021,digest(asdict(policy))))
         self.assertFalse(supported_hedge({'probability_up':.5},101,digest(asdict(policy))))
 
     def test_correlation_does_not_align_future_buckets(self):

@@ -219,3 +219,65 @@ class PortfolioTests(unittest.TestCase):
         self.assertTrue(self.paper.state['pending_entries'])
         self.send(300,('HEALTH','gap',{'state':'CONNECTION_LOSS'}))
         self.assertIn('S0USDTM',self.paper.pins())
+
+    def test_pending_entry_rechecks_wide_spread_and_later_wire_time(self):
+        self.start('126');self.signal('S0USDTM')
+        self.quote('S0USDTM',300,.999,1.001)
+        self.assertFalse(self.paper.state['positions'])
+        self.assertIn('REJECTED:spread_over_budget',self.paper.state['reason_counts'])
+
+    def test_fee_increase_revalues_remaining_stop_risk(self):
+        self.start('126');self.open('S0USDTM')
+        packet=f.scan(300,extra={'S0USDTM':f.specs('S0USDTM',fee=.02)['S0USDTM']})
+        self.send(300,packet)
+        self.assertTrue(self.paper.state['exit_requests'])
+        p=next(iter(self.paper.state['positions'].values()))
+        self.assertGreater(D(p['current_planned_loss_usdt']),D(p['planned_loss_usdt']))
+        self.assertEqual(self.paper.ladder().reserve,D(50))
+
+    def test_unverified_hours_accrue_carry_without_fictional_exit(self):
+        self.start('126');self.open('S0USDTM')
+        cash=self.paper.state['cash']
+        self.send(3000,('CLOCK','stale1',{}));first=D(self.paper.state['marked_unrealized'])
+        self.send(100000,('CLOCK','stale2',{}));second=D(self.paper.state['marked_unrealized'])
+        self.assertLess(second,first);self.assertEqual(self.paper.state['cash'],cash)
+        self.assertIsNone(self.paper.report()['executable_equity'])
+
+import asyncio
+import time
+from daiinas.continuous_paper import Pipeline
+from daiinas.continuous import replay
+from daiinas.continuous_stream import ContinuousObserver
+from test_continuous_stream import metadata
+
+class WriterIntegrationTests(unittest.IsolatedAsyncioTestCase):
+    async def test_live_writer_scan_pin_backup_and_offline_replay(self):
+        from daiinas.continuous_ops import backup_pair,verify_backup
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);src=root/'source.sqlite3';paper=root/'portfolio.sqlite3'
+            policy=PaperPolicy(initial_capital_usdt=126);pp=PortfolioPolicy(initial_capital='126',mode='M1',decision_model='pressure')
+            pipe=Pipeline(src,paper,policy,ledger_factory=PortfolioLedger,ledger_options={'portfolio':pp})
+            observer=None
+            try:
+                now=time.time_ns()//1000000;packet=f.scan(now)
+                packet[2]['report']['paper_contract_specs'][f.SYM]['captured_ms']=now
+                await pipe.append([packet])
+                for i in range(3):await pipe.append([f.market('execution',now,i+1)])
+                await pipe.append([f.market('level2',now,1,bid_size=10000,ask_size=1000),f.market('tickerV2',now,1,bid_size=10000,ask_size=1000)])
+                await asyncio.sleep(.12);later=time.time_ns()//1000000
+                await pipe.append([f.market('tickerV2',later,2,bid_size=10000,ask_size=1000)])
+                self.assertIn(f.SYM,(await pipe.report())['pins'])
+                def public(path):
+                    if path.endswith('active'):return [metadata(s) for s in ['AAAUSDTM','BBBUSDTM','CCCUSDTM']]
+                    return [{'symbol':s,'ts':time.time_ns(),'bestBidPrice':'1','bestAskPrice':'1.0002','bestBidSize':100000,'bestAskSize':100000}
+                            for s in ['AAAUSDTM','BBBUSDTM','CCCUSDTM']]
+                observer=ContinuousObserver(pipe,source_path=src,deep=3,market_get=public)
+                scan=await observer.preflight()
+                self.assertIn(f.SYM,scan['watch']['deep_symbols']);self.assertIn(f.SYM,scan['unavailable'])
+                expected=await pipe.report();self.assertTrue(expected['positions'])
+            finally:
+                if observer:observer.close()
+                pipe.close()
+            replica=replay([src],root/'replica.sqlite3',policy,ledger_factory=PortfolioLedger,ledger_options={'portfolio':pp})
+            self.assertEqual(expected,replica)
+            backup_pair(src,paper,root/'backup');self.assertTrue(verify_backup(root/'backup'))

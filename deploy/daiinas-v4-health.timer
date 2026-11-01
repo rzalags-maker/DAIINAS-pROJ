@@ -1,0 +1,10 @@
+[Unit]
+Description=Check DAIINAS v4 feed and account health
+
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=30
+Unit=daiinas-v4-health.service
+
+[Install]
+WantedBy=timers.target

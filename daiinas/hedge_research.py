@@ -80,7 +80,7 @@ def compare(sources,output_dir,capitals=('8','60','100')):
                 confidence_interval=None,expected_net_advantage='UNSUPPORTED',abstention_count=report['counts'].get('DECISION',0)-report['counts'].get('SIGNAL',0),
                 source_cursor=report['source_cursor'],input_digest=report['input_digest'],
                 comparison_policy='Same as-of observations, same initial capital and risk model; M2 is a negative control')
-            if mode=='M0' and (D(report['cash'])!=D(capital) or report['positions']):raise AssertionError('Flat control altered trading capital')
+            if mode=='M0' and (D(report['cash'])!=D(capital)+D(report['external_simulated_flows']) or report['positions']):raise AssertionError('Flat control altered trading capital')
     return {'live_orders_enabled':False,'sample_kind':'RECORDED_PUBLIC_MARKET_DATA','strategy_validated':False,'production_ready':False,
         'source_sha256':{str(p):hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in sources},
         'first_available_ms':first,'last_available_ms':last,'duration_seconds':(last-first)/1000,

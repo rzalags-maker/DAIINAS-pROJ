@@ -1,0 +1,11 @@
+[Unit]
+Description=Sample DAIINAS v4 paper portfolio health each minute
+
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=60
+AccuracySec=1
+Unit=daiinas-v4-sample.service
+
+[Install]
+WantedBy=timers.target

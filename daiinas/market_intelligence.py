@@ -79,7 +79,12 @@ def update(previous,*,now,quote,book,trades,fee_rate,slippage_bps,book_max_age=8
 def supported_hedge(evidence,now,policy_hash):
     if not evidence:return False
     try:
-        return (evidence['sample_kind']=='observed_public' and len(evidence['source_sha256'])==64
+        metrics=[evidence[k] for k in ('net_return_lower_95pct','advantage_over_directional_lower_95pct','advantage_over_flat_lower_95pct')]
+        return (all(isinstance(v,(int,float)) and not isinstance(v,bool) and math.isfinite(v) for v in metrics)
+            and evidence['sample_kind']=='observed_public' and len(evidence['source_sha256'])==64
+            and all(c in '0123456789abcdef' for c in evidence['source_sha256'])
+            and evidence.get('held_out_windows',0)>=2
+            and evidence['validation_end_ms']-evidence['validation_start_ms']>=172800000
             and evidence['policy_sha256']==policy_hash
             and 0<=evidence['training_end_ms']<evidence['validation_start_ms']<=evidence['validation_end_ms']<=now
             and evidence['held_out_campaigns']>=30 and evidence['net_return_lower_95pct']>0

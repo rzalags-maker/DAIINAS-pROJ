@@ -34,7 +34,9 @@ class PortfolioPolicy:
 
     def __post_init__(self):
         if self.decision_model not in ('adaptive','pressure') or D(self.initial_capital)<=0 or self.mode not in ('M0','M1','M2','M3'):raise ValueError('Invalid portfolio scenario')
-        if not 0<self.correlation_limit<1 or self.correlation_min_samples<4 or self.cooldown_ms<100:raise ValueError('Invalid evidence guards')
+        if (not isinstance(self.allow_research_expansion,bool) or not isinstance(self.cooldown_ms,int)
+                or isinstance(self.cooldown_ms,bool) or not isinstance(self.correlation_min_samples,int)
+                or not 0<self.correlation_limit<1 or self.correlation_min_samples<4 or self.cooldown_ms<100):raise ValueError('Invalid evidence guards')
         if not 0<D(self.correlated_risk_fraction)<=D('.01'):raise ValueError('Concentration risk too large')
         if not 0<D(self.campaign_loss_fraction)<=D('.01') or not 0<D(self.campaign_target_fraction)<=D('.1'):raise ValueError('Invalid campaign assumptions')
 
@@ -99,6 +101,7 @@ class PortfolioLedger(PaperLedger):
         ladder.realized_result(str(net));self.save_ladder(ladder)
         self.add('active_flow_adjustment',ladder.active-before-net)
         campaign['settled']=True;campaign['settled_seq']=self.seq;campaign['net_mark']=str(net)
+        campaign['net_return_on_allocation']=str(net/D(campaign['allocated'])) if D(campaign['allocated'])>0 else None
         self.db.execute('INSERT INTO campaign_records VALUES (?,?)',(campaign['id'],canonical(campaign)))
         self.state['campaigns'].pop(campaign['id'],None)
         self.audit('CAMPAIGN_SETTLED',campaign_id=campaign['id'],net_pnl=str(net),ladder=ladder.snapshot())
@@ -129,6 +132,9 @@ class PortfolioLedger(PaperLedger):
                 m=self.close_math(p,data,now,spec)['net_after_exit_only']
                 if p.get('unresolved'):self.audit('RESOLVED',position_id=p['id'],symbol=sym)
                 p.update(last_mark=str(m),last_mark_ms=now,last_good_mark_ms=now,unresolved=None)
+                net_mark=m-D(p['entry_fee_usdt'])
+                p['observed_mae_usdt']=str(min(D(p.get('observed_mae_usdt','0')),net_mark))
+                p['observed_mfe_usdt']=str(max(D(p.get('observed_mfe_usdt','0')),net_mark))
             marks+=m
             if spec and digest(spec['rules'])==p['rules_hash'] and q:
                 half=(D(q['ask'])-D(q['bid']))/2
@@ -210,6 +216,8 @@ class PortfolioLedger(PaperLedger):
         if not spec or sym not in scan['watch']['deep_symbols'] or sym in scan['watch'].get('blocked_new_entries',[]):return None,'missing_current_entry_rules_or_capacity'
         data=self.executable_quote(sym,q)
         if not data:return None,'unverified_or_unaligned_depth'
+        spread=(float(q['ask'])-float(q['bid']))/((float(q['ask'])+float(q['bid']))/2)*10000
+        if spread>self.shadow.max_spread_bps:return None,'spread_over_budget'
         dd=max(ZERO,(D(s['peak'])-effective)/D(s['peak']))
         budget=min(effective*D('.0025')*(D('.5') if dd>=D('.03') else 1),
                    max(ZERO,effective*D('.01')-self.planned())/max(1,allowed-count))
@@ -246,6 +254,7 @@ class PortfolioLedger(PaperLedger):
         plan['planned_loss_usdt']=str(D(plan['planned_loss_usdt'])+unit_carry*D(quantity))
         plan['entry_notional_usdt']=str(D(plan['entry_price'])*D(quantity)*D(plan['contract_multiplier']))
         plan['entry_fee_usdt']=str(D(plan['entry_notional_usdt'])*max(D(fee),D(self.policy.minimum_taker_fee_rate)))
+        if D(plan['planned_target_net_usdt'])<D(self.policy.minimum_net_target_usdt):return None,'target_net_below_budget_after_full_cost_sizing'
         plan['allocation_budget_usdt']=str(nominal)
         return plan,None
 
@@ -280,6 +289,7 @@ class PortfolioLedger(PaperLedger):
                 book=s['books'].get(sym) if self.book_ok(sym,q) else None,trades=s['trades'].get(sym,[]),
                 fee_rate=max(spec['taker_fee_rate'],self.policy.minimum_taker_fee_rate),
                 slippage_bps=self.policy.adverse_slippage_bps,book_max_age=self.shadow.max_book_age_ms)
+            s['market_states'][sym].update(contract_spec=spec,rules_hash=digest(spec['rules']))
         data=self.executable_quote(sym,q);spec=self.spec(sym)
         depth={side:D(data[side+'_base_size']) if data else ZERO for side in ('bid','ask')}
         for key,p in sorted(list(s['positions'].items())):

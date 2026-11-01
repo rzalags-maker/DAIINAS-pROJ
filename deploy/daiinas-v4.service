@@ -1,0 +1,26 @@
+[Unit]
+Description=DAIINAS opt-in 100-USDT adaptive PAPER portfolio - LIVE ORDERS DISABLED
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=daiinas
+Group=daiinas
+WorkingDirectory=/opt/daiinas
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/daiinas/.venv/bin/python -m daiinas.continuous run --config /opt/daiinas/configs/v4-100.json --source-db /var/lib/daiinas-v4-100/source.sqlite3 --paper-db /var/lib/daiinas-v4-100/paper.sqlite3 --report /var/lib/daiinas-v4-100/last-run.json
+StateDirectory=daiinas-v4-100
+UMask=0077
+Restart=on-failure
+RestartSec=15
+TimeoutStopSec=90
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/daiinas-v4-100
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=multi-user.target

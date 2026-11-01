@@ -1,0 +1,17 @@
+[Unit]
+Description=DAIINAS v4 read-only portfolio health/evidence probe
+After=daiinas-v4.service
+
+[Service]
+Type=oneshot
+User=daiinas
+Group=daiinas
+WorkingDirectory=/opt/daiinas
+Environment=PYTHONDONTWRITEBYTECODE=1
+UMask=0077
+ExecStart=/opt/daiinas/.venv/bin/python -m daiinas.host_acceptance sample --source-db /var/lib/daiinas-v4-100/source.sqlite3 --paper-db /var/lib/daiinas-v4-100/paper.sqlite3 --host-id %H --samples /var/lib/daiinas-v4-100/evidence/health.jsonl
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/daiinas-v4-100

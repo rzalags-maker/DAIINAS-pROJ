@@ -137,7 +137,8 @@ async def service(args,config,paper,shadow):
                        'observed_contracts':observer.last_scan.get('observed_contracts',0) if observer.last_scan else 0,
                        'normalized_event_counts':dict(observer.stats),
                        'source_code_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in
-                           [Path(__file__),Path(__file__).with_name('continuous_paper.py'),Path(__file__).with_name('continuous_stream.py'),Path(__file__).with_name('continuous_store.py')]}})
+                           [Path(__file__),Path(__file__).with_name('continuous_paper.py'),Path(__file__).with_name('continuous_stream.py'),Path(__file__).with_name('continuous_store.py')]+
+                           ([Path(__file__).with_name(n+'.py') for n in ('capital_ladder','portfolio_paper','market_intelligence','hedge_research')] if config.get('engine')=='v4' else [])}})
         result['24h_host_gate']='PENDING — HOST ACCEPTANCE NOT RUN' if args.host_id else 'BLOCKED — HOST NOT PROVISIONED'
         if args.seconds:
             stats=observer.stream_stats

@@ -1,0 +1,15 @@
+[Unit]
+Description=DAIINAS v4 read-only health probe
+
+[Service]
+Type=oneshot
+User=daiinas
+Group=daiinas
+WorkingDirectory=/opt/daiinas
+Environment=PYTHONDONTWRITEBYTECODE=1
+UMask=0077
+ExecStart=/opt/daiinas/.venv/bin/python -m daiinas.continuous status --config /opt/daiinas/configs/v4-100.json --source-db /var/lib/daiinas-v4-100/source.sqlite3 --paper-db /var/lib/daiinas-v4-100/paper.sqlite3
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/daiinas-v4-100

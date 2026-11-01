@@ -18,7 +18,7 @@ def sample(source,paper,host_id):
         state=json.loads(c.execute('SELECT payload FROM checkpoint WHERE id=1').fetchone()[0])
         identity=json.loads(c.execute("SELECT value FROM v33_meta WHERE key='identity'").fetchone()[0])
         result.update(source_id=identity['source_id'],counts=state['counts'],pins=sorted({x['symbol'] for x in
-            (state['position'],state['pending'],state['exit_request']) if x}),
+            (state['position'],state['pending'],state['exit_request'],*state.get('positions',{}).values(),*state.get('pending_entries',{}).values()) if x}),
             source_cursor=state['cursor'],input_digest=state['input_digest'],
             current_paper_integrity=c.execute('PRAGMA quick_check').fetchone()[0])
     result.update(observed_ms=time.time_ns()//1000000,host_id=host_id,
