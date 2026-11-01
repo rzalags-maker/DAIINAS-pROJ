@@ -79,6 +79,26 @@ class StreamTests(unittest.IsolatedAsyncioTestCase):
         for s in ('{"ok":true,"ok":false}', '{"x":NaN}', '{not-json}'):
             with self.assertRaisesRegex(BitsgapError,"WS_BAD_FRAME"):_parse_json(s)
 
+    async def test_revoked_key_is_terminal_not_infinite_reconnect(self):
+        class Revoked(Exception):
+            def __init__(self):
+                self.rcvd = type("CloseFrame", (), {"code": 4403})()
+        class RevokedWS(FakeWS):
+            async def recv(self):
+                raise Revoked()
+        sessions=[]
+        stop=asyncio.Event()
+        events=[]
+        def connect(url):
+            ws=RevokedWS([])
+            sessions.append(ws)
+            return ws
+        async def handle(e):
+            events.append(e)
+        await asyncio.wait_for(self.stream.observe_forever(connect,on_event=handle,stop_event=stop),2)
+        self.assertEqual(len(sessions),1)
+        self.assertEqual(events[-1]["category"],"WS_TERMINAL_AUTH_FAILURE")
+
     async def test_restart_renews_rest_snapshot_and_disconnect_event(self):
         sessions=[]
         stop=asyncio.Event()
