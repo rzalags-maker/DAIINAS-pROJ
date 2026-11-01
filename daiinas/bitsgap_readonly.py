@@ -135,8 +135,32 @@ class BitsgapReadOnly:
             raise
         except (ValueError, TypeError, UnicodeError):
             raise BitsgapError("INVALID_RESPONSE") from None
-        if not isinstance(obj, dict) or set(obj) != {"data"}:
+        if not isinstance(obj, dict) or "data" not in obj:
             raise BitsgapError("UNEXPECTED_RESPONSE_SHAPE")
+        keys = set(obj)
+        # Real Bitsgap topic values may appear directly on REST:
+        # manual: {data, descr}; conf_enums: {data, aliases};
+        # orders/positions: {data, cnt, optional epmd/epm}.
+        # Preserve the historical {data: <topic-value>} envelope.
+        if name == "manual" and keys == {"data", "descr"}:
+            if not isinstance(obj["data"], dict) or not isinstance(obj["descr"], str):
+                raise BitsgapError("UNEXPECTED_RESPONSE_SHAPE")
+            return obj["data"]
+        if name == "conf_enums" and keys == {"data", "aliases"}:
+            if not isinstance(obj["data"], dict) or not isinstance(obj["aliases"], dict):
+                raise BitsgapError("UNEXPECTED_RESPONSE_SHAPE")
+            return obj["data"]
+        if name in ("orders", "positions", "positions_settings") and "cnt" in keys:
+            if (keys - {"data", "cnt", "epmd", "epm"} or type(obj["cnt"]) is not int
+                    or not isinstance(obj["data"], dict)):
+                raise BitsgapError("UNEXPECTED_RESPONSE_SHAPE")
+            return obj
+        if keys != {"data"}:
+            raise BitsgapError("UNEXPECTED_RESPONSE_SHAPE")
+        if name == "balance":
+            # Direct topic value: {data: {USDT: {t,a}}}.
+            # Wrapped envelope: {data: {data: {USDT: {t,a}}}}.
+            return obj["data"] if isinstance(obj["data"], dict) and "data" in obj["data"] else obj
         return obj["data"]
 
     @staticmethod
