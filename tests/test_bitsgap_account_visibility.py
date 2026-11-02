@@ -196,6 +196,78 @@ class VisibilityTests(unittest.TestCase):
         self.assertEqual(c['position_mode_outcome'],'STALE')
         self.assertEqual(c['overall_outcome'],'STALE')
 
+
+    def test_prompt_retries_lowercase_confirmation_blank_precision_and_bad_sample(self):
+        from daiinas.bitsgap_account_visibility import _prompt_terminal
+        answers = [
+            'yes', '', 'yes', '2', 'oneway',
+            'invalid', '913.25 812.14 incorrect ? NOW',
+            '913.25 812.14 ? ? NOW'
+        ]
+        output = io.StringIO()
+        with patch('builtins.input', side_effect=answers), patch('time.time', return_value=1), \
+                contextlib.redirect_stdout(output):
+            terminal = _prompt_terminal()
+        self.assertTrue(terminal['same_account_confirmed'])
+        self.assertEqual(terminal['precision'], 2)
+        self.assertEqual(terminal['position_mode'], 'ONE_WAY')
+        self.assertEqual(terminal['observed_ms'], 1000)
+        self.assertIsNone(terminal['open_orders'])
+        self.assertIn('INVALID_PRECISION', output.getvalue())
+        self.assertIn('INVALID_LIVE_SAMPLE', output.getvalue())
+        self.assertNotIn('913.25', output.getvalue())
+
+    def test_prompt_unconfirmed_account_never_claims_identity(self):
+        from daiinas.bitsgap_account_visibility import _prompt_terminal
+        answers = ['NO', '2', 'UNVERIFIED', '913.25 812.14 ? ? NOW']
+        with patch('builtins.input', side_effect=answers), patch('time.time', return_value=1), \
+                contextlib.redirect_stdout(io.StringIO()):
+            terminal = _prompt_terminal()
+        self.assertFalse(terminal['same_account_confirmed'])
+        self.assertEqual(terminal['identity_basis'], 'UNVERIFIED')
+
+    def test_prompt_eof_returns_non_sensitive_cancellation_without_checkpoint(self):
+        out = io.StringIO()
+        with patch('daiinas.bitsgap_account_visibility.trusted_terminal', return_value=True), \
+                patch('builtins.input', side_effect=EOFError), \
+                patch('daiinas.bitsgap_account_visibility.PrivateStore', side_effect=AssertionError()), \
+                contextlib.redirect_stdout(out):
+            result = main(['--state-file', 'unused', '--scope-ref', 'x',
+                '--private-panel', '--compare', '--comparison-file', 'different'])
+        self.assertEqual(result, 2)
+        self.assertIn('LOCAL_INPUT_CANCELLED', out.getvalue())
+        self.assertNotIn('unused', out.getvalue())
+
+    def test_comparison_summary_only_emits_redacted_status(self):
+        with tempfile.TemporaryDirectory() as d, patch.dict(os.environ, {}, clear=True):
+            statefile = Path(d) / 'account.sqlite'
+            comparison = Path(d) / 'comparison.sqlite'
+            writer = PrivateStore(statefile)
+            try:
+                self.state = self.make_state(store=writer)
+                self.ready()
+                output = io.StringIO()
+                args = ['--state-file', str(statefile), '--scope-ref', 'synthetic-owner-scope',
+                        '--private-panel', '--compare', '--summary-only',
+                        '--comparison-file', str(comparison)]
+                with patch('daiinas.bitsgap_account_visibility.trusted_terminal', return_value=True), \
+                     patch('daiinas.bitsgap_account_visibility._prompt_terminal',
+                           return_value=self.terminal()), \
+                     patch('daiinas.bitsgap_account_state.time.time', return_value=1), \
+                     contextlib.redirect_stdout(output):
+                    self.assertEqual(main(args), 0)
+                result = json.loads(output.getvalue())
+                self.assertEqual(result['status'], 'PRIVATE_COMPARISON_RECORDED')
+                self.assertEqual(result['balance_terminal_parity'], 'MATCH')
+                self.assertEqual(result['terminal_parity'], 'MATCH')
+                self.assertFalse(result['orders_enabled'])
+                self.assertEqual(result['new_entry'], 'NO_TRADE_ACCOUNT_NOT_RECONCILED')
+                self.assertNotIn('913.2468', output.getvalue())
+                self.assertNotIn('812.1357', output.getvalue())
+                self.assertEqual(comparison.stat().st_mode & 0o777, 0o600)
+            finally:
+                writer.close()
+
     def test_prompt_labels_local_confirmation_time_without_provider_claim(self):
         from daiinas.bitsgap_account_visibility import _prompt_terminal
         answers=['YES','2','ONE_WAY','913.25 812.14 ? ? NOW']
