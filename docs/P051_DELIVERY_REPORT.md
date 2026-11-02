@@ -25,7 +25,8 @@ Contract: Section 10 of audit commit `d653362090fe3065585218da8b06344338ed2d40`.
   connected state. SQLite inode locking, schema version and money truth are unchanged.
 - F3: the original budget is factored into a dependency-free module and re-exported
   for compatibility. Every stream factory installs/reuses it before REST setup,
-  subscriptions and snapshots; reconnect shares the same topic windows. Existing
+  subscriptions and snapshots; reconnect shares the same topic windows. Bounded-worker cleanup cancels only
+  its own budget waiters while preserving the parent budget and shared rate history. Existing
   read-only allowlists and Ed25519 canonical signing bytes are unchanged.
 - The existing main-only manual workflow uses the redacted acceptance command.
   Standard CI installs the WS dependency and runs the full 3.11/3.12/3.13 matrix.

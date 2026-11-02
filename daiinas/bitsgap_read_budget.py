@@ -20,6 +20,12 @@ class AccountReadBudget:
         self.lock = threading.Lock()
         self.stopped = threading.Event()
 
+    def fork(self):
+        """Run-local cancellation, with rate history shared with the parent."""
+        child = AccountReadBudget(clock=self.clock)
+        child.events, child.lock = self.events, self.lock
+        return child
+
     def acquire(self, topics):
         topics = tuple(topics)
         if not topics or len(set(topics)) != len(topics) or not set(topics) <= set(TOPICS):

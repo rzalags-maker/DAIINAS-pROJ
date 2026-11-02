@@ -267,7 +267,16 @@ class RealStreamBudgetTests(unittest.IsolatedAsyncioTestCase):
             {'ok':True,'topic':topic,'params':{'em':72},'value':value}
             for topic,value in (('balance',wire.balance),('orders',wire.orders),
                                 ('positions',wire.positions),('positions_settings',wire.settings))]
+        prior=AccountReadBudget()
+        observer.request_budget=prior
         result=await acceptance.observe_session(observer,lambda _:QuietWS(frames),seconds=5)
+        self.assertIs(observer.request_budget,prior)
+        self.assertFalse(prior.stopped.is_set())
+        self.assertGreaterEqual(len(prior.events['positions_settings']),4)
+        child=prior.fork()
+        self.assertIs(child.events,prior.events)
+        child.stop()
+        self.assertFalse(prior.stopped.is_set())
         self.assertEqual(result['status'],'PASS')
         self.assertEqual(result['connection_after_stop'],'DISCONNECTED')
         self.assertGreater(result['observation_samples'],0)

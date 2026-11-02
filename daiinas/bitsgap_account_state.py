@@ -539,7 +539,7 @@ async def observe_bounded(observer, connect, *, seconds, scope_ref, store=None, 
     service = AccountState(observer, scope_ref=scope_ref, store=store, clock_ms=clock_ms)
     prior_sink = observer.observation_sink
     prior_budget = observer.request_budget
-    budget = prior_budget or AccountReadBudget()
+    budget = prior_budget.fork() if isinstance(prior_budget, AccountReadBudget) else AccountReadBudget()
     observer.request_budget = budget
     loop = asyncio.get_running_loop()
     accepting = threading.Event()
