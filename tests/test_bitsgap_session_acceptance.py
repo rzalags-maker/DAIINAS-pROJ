@@ -14,7 +14,7 @@ from unittest.mock import patch
 
 from daiinas import bitsgap_account_acceptance as acceptance
 from daiinas import bitsgap_futures_cli as legacy
-from daiinas.bitsgap_account_state import AccountState, AccountStateError, PrivateStore
+from daiinas.bitsgap_account_state import AccountState, AccountStateError, PrivateStore, session_sample
 from daiinas.bitsgap_account_visibility import load_state, visibility
 from daiinas.bitsgap_futures_observe import BitsgapFuturesObserver
 from daiinas.bitsgap_futures_stream import BitsgapFuturesStream
@@ -39,7 +39,7 @@ class SessionCohortTests(unittest.TestCase):
         for topic, value in (('balance',self.h.wire.balance),('orders',self.h.wire.orders),
                              ('positions',self.h.wire.positions),('positions_settings',self.h.wire.settings)):
             self.h.pair(topic,value)
-        self.samples.capture(self.state)
+        self.samples.capture(session_sample(self.state))
 
     def report(self):
         return self.samples.report(self.state,catalog={'balance':'LIVE_DISCOVERED'},now_ms=self.h.now)
@@ -57,6 +57,15 @@ class SessionCohortTests(unittest.TestCase):
         text=json.dumps(result)
         for sensitive in ('913.2468','812.1357','synthetic-owner-scope','fingerprint','market_id','count"'):
             self.assertNotIn(sensitive,text)
+
+    def test_lifecycle_hook_is_a_redacted_projection_not_private_service(self):
+        self.pair_all()
+        sample=session_sample(self.state)
+        self.assertIsInstance(sample,dict)
+        text=json.dumps(sample)
+        for sensitive in ('913.2468','812.1357','synthetic-owner-scope','fingerprint','values','count"'):
+            self.assertNotIn(sensitive,text)
+        self.assertNotIn('records',sample)
 
     def test_null_inventory_is_partial_and_not_zero(self):
         self.h.wire.orders=self.h.wire.positions=None
@@ -82,14 +91,14 @@ class SessionCohortTests(unittest.TestCase):
 
     def test_schema_mismatch_blocks_wallet(self):
         self.h.pair('balance',{'data':{'USDT':{'t':'bad-private-value','a':'0'}}})
-        self.samples.capture(self.state)
+        self.samples.capture(session_sample(self.state))
         self.assertEqual(self.report()['status'],'BLOCKED')
         self.assertNotIn('bad-private-value',json.dumps(self.report()))
 
     def test_foreign_scope_never_establishes_cohort(self):
         with self.assertRaisesRegex(AccountStateError,'ACCOUNT_SCOPE_MISMATCH'):
             self.h.push('balance',self.h.wire.balance,market_id=71)
-        self.samples.capture(self.state)
+        self.samples.capture(session_sample(self.state))
         self.assertEqual(self.report()['status'],'BLOCKED')
 
     def test_stale_cohort_is_not_rejuvenated_at_stop(self):
@@ -101,7 +110,7 @@ class SessionCohortTests(unittest.TestCase):
     def test_differing_source_phase_never_validates(self):
         self.h.push('balance',self.h.wire.balance)
         self.h.push('balance',self.h.wire.balance,'WS',when=7001)
-        self.samples.capture(self.state)
+        self.samples.capture(session_sample(self.state))
         report=self.report()
         self.assertEqual(report['status'],'BLOCKED')
         self.assertIn('OBSERVATION_WINDOW_MISMATCH',report['reasons'])
@@ -109,7 +118,7 @@ class SessionCohortTests(unittest.TestCase):
     def test_reconnect_drops_prior_generation(self):
         self.pair_all()
         self.state.connection('CONNECTING')
-        self.samples.capture(self.state)
+        self.samples.capture(session_sample(self.state))
         self.assertEqual(self.report()['status'],'BLOCKED')
         self.assertNotIn('session_evidence',self.report())
 
@@ -129,7 +138,7 @@ class SessionCohortTests(unittest.TestCase):
         first=self.samples.latest['oldest_receipt_ms']['balance']
         self.h.now+=1000
         self.h.push('balance',self.h.wire.balance,'WS')
-        self.samples.capture(self.state)
+        self.samples.capture(session_sample(self.state))
         self.assertEqual(self.samples.latest['oldest_receipt_ms']['balance'],first)
 
 

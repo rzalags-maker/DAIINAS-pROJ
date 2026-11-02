@@ -64,34 +64,18 @@ class SessionEvidence:
         self.first_ms = None
         self.last_ms = None
 
-    def capture(self, state):
-        if self.generation != state.generation:
-            self.generation = state.generation
+    def capture(self, sample):
+        if self.generation != sample['generation']:
+            self.generation = sample['generation']
             self.latest = None
-        if not state.connected or not state.resynced:
+        if not sample['connected'] or not sample['resynced']:
             return
-        status = state.status()
         self.sample_count += 1
-        now = state.clock()
+        now = sample['captured_ms']
         self.first_ms = now if self.first_ms is None else self.first_ms
         self.last_ms = now
-        # Explicit projection: no values, counts, IDs, fingerprints or scope_ref.
-        self.latest = {
-            'captured_ms': now,
-            'topics': {t: {k: d[k] for k in ('state','reason','last_update_ms')}
-                       for t,d in status['topics'].items()},
-            'oldest_receipt_ms': {t: min((r.received_ms for (topic,_),r in state.records.items()
-                if topic == t and r.generation == state.generation), default=None)
-                for t in status['topics']},
-            'position_mode': (status['observed_position_mode']
-                if status['topics']['positions_settings']['state'] == 'VALIDATED'
-                or status['topics']['positions']['state'] in ('VERIFIED_EMPTY','VERIFIED_ACTIVE')
-                else 'UNVERIFIED'),
-            'connection': status['connection'],
-            'sources': {t: {source: {'started_ms': r.started_ms, 'received_ms': r.received_ms,
-                'quality': r.quality} for (topic,source),r in state.records.items()
-                if topic == t and r.generation == state.generation} for t in status['topics']},
-        }
+        self.latest = {k: sample[k] for k in ('captured_ms','topics','oldest_receipt_ms',
+                                            'position_mode','connection','sources')}
 
     def report(self, service, *, catalog, now_ms):
         result = blocked_report('NO_CURRENT_SESSION_EVIDENCE')

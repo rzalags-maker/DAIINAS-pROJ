@@ -9,7 +9,7 @@ Contract: Section 10 of audit commit `d653362090fe3065585218da8b06344338ed2d40`.
 
 - Existing `bitsgap_account_acceptance --observe --seconds 60` now owns signed
   dynamic scope discovery, registry declaration discovery, bounded REST/WS
-  observation, redacted session evidence and cleanup. No prompts, market number,
+  observation, redacted lifecycle projections, session evidence and cleanup. No prompts, market number,
   private checkpoint, second adapter or UI prerequisite. Legacy checkpoint
   reporting remains available. See the updated private acceptance runbook.
 - PASS/PARTIAL/BLOCKED describe observation only, independently of permanently
@@ -33,8 +33,8 @@ Contract: Section 10 of audit commit `d653362090fe3065585218da8b06344338ed2d40`.
 
 ## Offline evidence
 
-Full Python 3.12 regression: **530 tests, PASS**. Full Python 3.13 regression:
-**530 tests, PASS**. The 509 original tests remain; 21 tests were added for
+Full Python 3.12 regression: **531 tests, PASS**. Full Python 3.13 regression:
+**531 tests, PASS**. The 509 original tests remain; 22 tests were added for
 headless session orchestration, redaction, normal stop, null/empty/active data,
 invalid/schema/scope/stale/phase/reconnect evidence, private boundaries, lease
 handoff/heartbeat, real parent/child missing-credential handling, hard deadline

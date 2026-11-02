@@ -514,6 +514,25 @@ class AccountState:
                                          initial_scenario=initial_scenario)
 
 
+def session_sample(service):
+    """Explicit public projection for optional lifecycle consumers; never values."""
+    status = service.status()
+    topics = status['topics']
+    return {'generation': service.generation, 'connected': service.connected,
+        'resynced': service.resynced, 'captured_ms': service.clock(),
+        'topics': {t: {k: d[k] for k in ('state','reason','last_update_ms')}
+                   for t,d in topics.items()},
+        'oldest_receipt_ms': {t: min((r.received_ms for (topic,_),r in service.records.items()
+            if topic == t and r.generation == service.generation), default=None) for t in TOPICS},
+        'position_mode': (status['observed_position_mode']
+            if topics['positions_settings']['state'] == 'VALIDATED'
+            or topics['positions']['state'] in ('VERIFIED_EMPTY','VERIFIED_ACTIVE') else 'UNVERIFIED'),
+        'connection': status['connection'],
+        'sources': {t: {source: {'started_ms': r.started_ms, 'received_ms': r.received_ms,
+            'quality': r.quality} for (topic,source),r in service.records.items()
+            if topic == t and r.generation == service.generation} for t in TOPICS}}
+
+
 async def observe_bounded(observer, connect, *, seconds, scope_ref, store=None, clock_ms=None, sample_sink=None):
     if type(seconds) is not int or not 1 <= seconds <= 3600:
         raise AccountStateError("INVALID_OBSERVER_DURATION")
@@ -527,7 +546,7 @@ async def observe_bounded(observer, connect, *, seconds, scope_ref, store=None, 
     accepting.set()
     def sample():
         if sample_sink is not None:
-            sample_sink(service)
+            sample_sink(session_sample(service))
     def connection(state):
         service.connection(state)
         sample()
