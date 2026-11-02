@@ -380,6 +380,10 @@ class PortfolioLedger(SessionMixin,ConveyorMixin,PaperLedger):
                 'net_after_exit_only':gross-fee-carry,'net':gross-fee-carry-D(p['entry_fee_usdt'])}
 
     def cancel(self,key,reason):
+        if self.state.get('p04_gateway'):
+            from .p04_gateway import may_cancel_locally
+            if not may_cancel_locally(self,self.state['pending_entries'][key]):
+                self.audit('P04_CANCEL_RECONCILIATION_REQUIRED',reason='MOCK_CANCEL_ACK_REQUIRED');return
         p=self.state['pending_entries'].pop(key)
         if self.v47() and p.get('order_ids'):self.state.get('venue_orders',{}).get(p['order_ids']['entry'],{}).update(status='MODEL_CANCELED')
         self.state['cooldowns'][p['symbol']]=self.state['now_ms']+self.portfolio.cooldown_ms
@@ -389,6 +393,10 @@ class PortfolioLedger(SessionMixin,ConveyorMixin,PaperLedger):
         self.settle(self.state['campaigns'][p['campaign_id']])
 
     def plan(self,sym,side,q):
+        if self.state.get('p04_gateway'):
+            from .p04_gateway import entry_gate
+            blocked=entry_gate(self)
+            if blocked:return None,blocked
         s=self.state;ladder=self.ladder();count=len(s['positions'])+len(s['pending_entries'])
         limits=self.account_limits()
         if self.v47() and (not self.session_armed() or s.get('pending_native_receipts')):return None,'session_not_armed_or_native_reconciliation_pending'
@@ -735,7 +743,11 @@ class PortfolioLedger(SessionMixin,ConveyorMixin,PaperLedger):
             s['books'].pop(p['symbol'],None);self.audit('BOOK_SNAPSHOT',symbol=p['symbol'])
         elif kind=='HEALTH':
             if p['state']=='CONNECTED':s['connected']=True;s['session_id']=p.get('session_id');s['trades'].clear()
-            elif p['state'] in ('DISCONNECTED','CONNECTION_LOSS','STORAGE_CAPACITY_HALT'):s['connected']=False
+            elif p['state'] in ('DISCONNECTED','CONNECTION_LOSS','STORAGE_CAPACITY_HALT'):
+                s['connected']=False
+                if s.get('p04_gateway'):
+                    s['p04_gateway'].update(mode='OBSERVE',last_result='CONNECTION_LOSS_DISARMED',last_ack_seq=self.seq)
+                    self.session_stop('P04_CONNECTION_LOSS')
             if p.get('symbol'):s['books'].pop(p['symbol'],None)
             else:s['books'].clear()
             self.audit('HEALTH',**p)
@@ -743,10 +755,13 @@ class PortfolioLedger(SessionMixin,ConveyorMixin,PaperLedger):
             if 'service' in p:s['service']=p['service']
         elif kind=='CONTROL':
             action=p.get('action')
-            if action=='paper-account-heartbeat' and self.v47() and self.portfolio.paper_settlement:
+            if isinstance(action,str) and action.startswith('p04-'):
+                from .p04_gateway import handle_control
+                handle_control(self,p)
+            elif action=='paper-account-heartbeat' and self.v47() and self.portfolio.paper_settlement:
                 snap=s['account_capital']['snapshot'] or self.portfolio.funding['snapshot']
                 if (s['account_capital']['snapshot'] is None or available>snap['timestamp_ms']) and not s.get('paper_settlements'):self.apply_model_snapshot(snap)
-                if 'session' not in s:self.session_start(request_id='AUTO:'+s['initial_funding']['event_id'],actor='explicit-paper-config')
+                if 'session' not in s and not s.get('p04_gateway'):self.session_start(request_id='AUTO:'+s['initial_funding']['event_id'],actor='explicit-paper-config')
             elif action=='public-candles' and self.v47():
                 from .candle_context import analyze
                 packet=p.get('packet',{});symbol=packet.get('symbol') if isinstance(packet,dict) else None;spec=self.spec(symbol) if isinstance(symbol,str) else None
@@ -824,7 +839,7 @@ class PortfolioLedger(SessionMixin,ConveyorMixin,PaperLedger):
     def report(self):
         s=self.state;ladder=self.ladder();positions=[s['positions'][k] for k in sorted(s['positions'])] if self.v47() else list(s['positions'].values())
         limits=self.account_limits()
-        return {'status':'PAPER_ONLY','engine':'v4','live_orders_enabled':False,'strategy_validated':False,'production_ready':False,
+        return {**({'p04_gateway':{**s['p04_gateway'],'orders_enabled':False,'live_transport':'NOT_IMPLEMENTED'}} if 'p04_gateway' in s else {}),'status':'PAPER_ONLY','engine':'v4','live_orders_enabled':False,'strategy_validated':False,'production_ready':False,
             'initial_capital':self.portfolio.initial_capital,'initial_funding':s['initial_funding'],
             'candle_contexts':s.get('candle_contexts',{}),'session':self.session_status() if self.v47() else None,'venue_orders':s.get('venue_orders',{}),'strategy_version':self.portfolio.strategy_version,'leverage_selections':s.get('leverage_selections',{}),'whole_market_pulse':s.get('whole_market_pulse',{}),'conveyor':s.get('conveyor',{}),'pending_paper_cash_settlements':s.get('paper_settlements',[]),'entry_capacity':s.get('last_entry_capacity'),'account_status':limits,'actual_exchange_balance_status':'NOT_CONNECTED','mode':self.portfolio.mode,
             'execution_version':EXECUTION_VERSION,'money_quantum_usdt':str(MONEY_QUANTUM),'evidence_policy_sha256':self.evidence_policy_hash(),'cash':s['cash'],

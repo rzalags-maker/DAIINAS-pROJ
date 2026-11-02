@@ -442,7 +442,8 @@ class PaperLedger:
 
 class Pipeline:
     """One dedicated writer thread; source commit precedes idempotent paper apply."""
-    def __init__(self,source_path,paper_path,policy=PaperPolicy(),shadow=ShadowPolicy(),*,ledger_factory=PaperLedger,ledger_options=None):
+    def __init__(self,source_path,paper_path,policy=PaperPolicy(),shadow=ShadowPolicy(),*,ledger_factory=PaperLedger,ledger_options=None,gateway_contract=None):
+        self.gateway=None
         if Path(source_path).resolve()==Path(paper_path).resolve():raise ValueError('Independent source and paper files required')
         self.executor=ThreadPoolExecutor(max_workers=1,thread_name_prefix='v33-sqlite')
         def initialize():
@@ -450,6 +451,11 @@ class Pipeline:
             try:
                 self.ledger=ledger_factory(paper_path,self.source.source_id,policy,shadow,**(ledger_options or {}))
                 self.recover()
+                if gateway_contract is not None:
+                    from .p04_gateway import P04MockWorker,MockExecutionContract,MockExecutionTransport
+                    from .bitsgap_capabilities import BitsgapCapabilityRegistry
+                    self.gateway=P04MockWorker(self.source,self.ledger,registry=BitsgapCapabilityRegistry.documented(),
+                        contract=MockExecutionContract(**gateway_contract),transport=MockExecutionTransport())
             except BaseException:
                 if hasattr(self,'ledger'):self.ledger.close()
                 self.source.close();raise
@@ -465,6 +471,7 @@ class Pipeline:
     def _append(self,packets):
         self.source.append(packets)
         self.recover()
+        if self.gateway is not None:self.gateway.submit_pending()
         return self.ledger.report()
 
     async def append(self,packets):
@@ -552,6 +559,16 @@ class Pipeline:
             # diagnostic and keep public/open-position monitoring alive.
             packet={'action':'account-disconnected','reason':'Read-only adapter failed'}
         await self.append([('CONTROL','account-poll:'+uuid4().hex,packet)])
+
+    async def gateway_control(self,mode,*,request_id,actor,duration_ms=0):
+        if self.gateway is None:raise ValueError('P04_NOT_ENABLED')
+        return await asyncio.get_running_loop().run_in_executor(self.executor,
+            lambda:self.gateway.control(mode,request_id=request_id,actor=actor,duration_ms=duration_ms))
+
+    async def observe_account_acceptance(self,evidence):
+        if self.gateway is None:raise ValueError('P04_NOT_ENABLED')
+        return await asyncio.get_running_loop().run_in_executor(self.executor,
+            lambda:self.gateway.observe_account(evidence))
 
     async def report(self):
         return await asyncio.get_running_loop().run_in_executor(self.executor,self.ledger.report)

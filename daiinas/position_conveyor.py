@@ -139,6 +139,9 @@ class ConveyorMixin:
             depth[side]-=quantity*unit
             self.book_exit_slice(key,p,quantity,q,now,spec,req)
         for key,intent in sorted(list(s['pending_entries'].items())):
+            if s.get('p04_gateway'):
+                from .p04_gateway import can_fill
+                if not can_fill(self,intent):continue
             if intent['symbol']!=sym:continue
             if intent.get('entry_kind')=='POST_ONLY_LIMIT':continue
             if any(p['protection']['state']!='MODELED_ACKED' for p in s['positions'].values()):continue
@@ -268,7 +271,10 @@ class ConveyorMixin:
             registry=s.get('venue_orders',{})
             if order_id not in registry:raise ValueError('Unknown order ownership')
             if packet.get('phase')=='ENTRY':
-                self.adopt_mock_entry(packet,identity);return
+                self.adopt_mock_entry(packet,identity)
+                command=s['venue_orders'][order_id].get('gateway_command_id')
+                if command:pending.pop('p04:'+command,None)
+                return
             if packet.get('phase')!='EXIT':raise ValueError('Unknown fill phase')
             pair=next(((key,p) for key,p in s['positions'].items() if order_id in (p['protection']['order_ids']['stop'],p['protection']['order_ids']['target'])),None)
             if not pair:raise ValueError('No matching owned open position')
@@ -288,6 +294,8 @@ class ConveyorMixin:
             seen[fill_id]=identity;pending.pop(fill_id,None)
             s['native_free_margin_cap']=packet['authority']['free_margin']
             s['last_native_authority']={**packet['authority'],'source_kind':'MOCK_NATIVE','fill_id':fill_id,'actual_exchange_connected':False}
+            command=registry.get(order_id,{}).get('gateway_command_id')
+            if command:pending.pop('p04:'+command,None)
             self.audit('NATIVE_MOCK_RECONCILED',fill_id=fill_id,order_id=order_id,phase='EXIT',actual_exchange_connected=False)
         except (ValueError,KeyError,TypeError,ArithmeticError) as exc:
             # Only owned receipts can create a durable reconciliation hold.
