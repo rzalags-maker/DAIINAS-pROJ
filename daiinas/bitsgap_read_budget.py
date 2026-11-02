@@ -46,5 +46,3 @@ class AccountReadBudget:
 
     def stop(self):
         self.stopped.set()
-
-
