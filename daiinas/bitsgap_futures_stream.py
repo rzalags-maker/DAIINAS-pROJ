@@ -65,6 +65,9 @@ def _safe_envelope_shape(value):
 
 class BitsgapFuturesStream:
     def __init__(self, observer: BitsgapFuturesObserver, *, observation_sink=None, connection_sink=None):
+        from .bitsgap_read_budget import AccountReadBudget
+        if observer.request_budget is None:
+            observer.request_budget = AccountReadBudget()
         self.observer = observer
         self.connected = False
         self.authenticated = False
@@ -202,8 +205,8 @@ class BitsgapFuturesStream:
         # funded slot, and reconciliation must re-snapshot on every reconnect.
         # REST orders/positions may literally be null. This must not prevent the
         # independent WS investigation of those same topics.
-        self.last_rest_observation = await asyncio.to_thread(self.observer.wallet_observation)
         try:
+            self.last_rest_observation = await asyncio.to_thread(self.observer.wallet_observation)
             async with connect("wss://stream.bitsgap.com/") as ws:
                 await ws.send(json.dumps(self.auth_frame(), separators=(",", ":")))
                 auth = _parse_json(await asyncio.wait_for(ws.recv(), 5))

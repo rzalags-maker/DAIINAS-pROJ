@@ -27,7 +27,7 @@ class ReadOnlyWSProbeTests(unittest.IsolatedAsyncioTestCase):
                         "value":None},
                        {"ok":True,"topic":"positions","params":{"em":72},
                         "mes":"subscribed"}])
-        r = await probe_bounded(observer=self.api, connect=lambda _:fake, seconds=2)
+        r = await probe_bounded(observer=self.api, connect=lambda _:fake, seconds=4)
         self.assertEqual(r["websocket_auth"], "PASS")
         self.assertEqual(r["rest_balance"], "VALIDATED")
         self.assertEqual(r["rest_orders"], "UNVERIFIED")
@@ -47,7 +47,7 @@ class ReadOnlyWSProbeTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_invalid_auth_never_sends_subscription(self):
         fake = FakeWS([{"type":"auth_rejected","detail":"PRIVATE_SESSION_ID"}])
-        r = await probe_bounded(observer=self.api, connect=lambda _:fake, seconds=2)
+        r = await probe_bounded(observer=self.api, connect=lambda _:fake, seconds=4)
         self.assertEqual(r["websocket_auth"], "UNVERIFIED")
         self.assertEqual(r["diagnostic_outcome"], "WS_AUTH_UNVERIFIED")
         self.assertEqual(len(fake.sent),1)

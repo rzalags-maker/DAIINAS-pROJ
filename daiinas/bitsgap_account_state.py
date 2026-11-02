@@ -16,6 +16,7 @@ import os
 import re
 from pathlib import Path
 import sqlite3
+import secrets
 import stat
 import sys
 import threading
@@ -50,48 +51,7 @@ def _fingerprint(topic, value, quality, normalized):
         separators=(",", ":"), allow_nan=False).encode()).hexdigest()
 
 
-class AccountStateError(RuntimeError):
-    """Fixed local error category only."""
-
-
-class AccountReadBudget:
-    """Shared REST/WS account-topic budget from the pinned public contract.
-
-    Optional to the existing observer, scoped to this worker. Waiting happens in
-    REST threads or via to_thread for WS; never blocks the event-loop writer.
-    """
-    def __init__(self, *, clock=None):
-        self.clock = clock or time.monotonic
-        self.events = {topic: [] for topic in TOPICS}
-        self.lock = threading.Lock()
-        self.stopped = threading.Event()
-
-    def acquire(self, topics):
-        topics = tuple(topics)
-        if not topics or len(set(topics)) != len(topics) or not set(topics) <= set(TOPICS):
-            raise AccountStateError("INVALID_BUDGET_TOPIC")
-        while not self.stopped.is_set():
-            with self.lock:
-                now = self.clock()
-                delay = 0
-                for topic in topics:
-                    history = [t for t in self.events[topic] if now - t < 10]
-                    self.events[topic] = history
-                    one, ten = (1, 5) if topic == "positions_settings" else (5, 20)
-                    recent = [t for t in history if now - t < 1]
-                    if len(recent) >= one:
-                        delay = max(delay, recent[-one] + 1 - now)
-                    if len(history) >= ten:
-                        delay = max(delay, history[-ten] + 10 - now)
-                if delay <= 0:
-                    for topic in topics:
-                        self.events[topic].append(now)
-                    return
-            self.stopped.wait(delay + 0.001)
-        raise AccountStateError("OBSERVATION_STOPPED")
-
-    def stop(self):
-        self.stopped.set()
+from .bitsgap_read_budget import AccountReadBudget, AccountStateError
 
 
 @dataclass(frozen=True, repr=False)
@@ -125,6 +85,7 @@ class PrivateStore:
         self.readonly = readonly
         self.fd = None
         self.db = None
+        self.writer_id = None
         if self.path.is_symlink() or self.lock_path.is_symlink():
             raise AccountStateError("UNSAFE_PRIVATE_STORE")
         if not readonly:
@@ -134,6 +95,10 @@ class PrivateStore:
                                   os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
                 self._check(os.fstat(self.fd))
                 fcntl.flock(self.fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                self.writer_id = secrets.token_hex(32)
+                os.ftruncate(self.fd, 0)
+                os.pwrite(self.fd, self.writer_id.encode("ascii"), 0)
+                os.fsync(self.fd)
                 db_fd = os.open(self.path,
                                 os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
                 try:
@@ -168,7 +133,7 @@ class PrivateStore:
         row = self.db.execute("SELECT payload FROM account_state WHERE id=1").fetchone()
         return json.loads(row[0]) if row else None
 
-    def writer_active(self):
+    def writer_active(self, writer_id=None):
         # A legacy checkpoint without a sidecar is never considered live.
         try:
             fd = os.open(self.lock_path, os.O_RDONLY | os.O_NOFOLLOW)
@@ -181,7 +146,9 @@ class PrivateStore:
             try:
                 fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
             except BlockingIOError:
-                return True
+                return (writer_id is None or (isinstance(writer_id, str)
+                        and len(writer_id) == 64
+                        and os.pread(fd, 65, 0) == writer_id.encode("ascii")))
             return False
         finally:
             os.close(fd)
@@ -229,12 +196,18 @@ class AccountState:
         self.post_subscribe_ms = None
         self.duplicates = 0
         self.state_version = 0
+        self.reader_lease = None
         if store is not None:
             saved = store.load()
             if saved is not None:
                 self._restore(saved)
                 # Recovery never reuses an old authenticated connection.
-                if status_reader and store.readonly and store.writer_active():
+                if (status_reader and store.readonly
+                        and isinstance(saved.get("writer_id"), str)
+                        and store.writer_active(saved["writer_id"])
+                        and type(saved.get("writer_heartbeat_ms")) is int
+                        and 0 <= self.clock() - saved["writer_heartbeat_ms"] <= self.max_age_ms):
+                    self.reader_lease = (saved["writer_id"], saved["writer_heartbeat_ms"])
                     self.connected = saved.get("connected") is True
                     self.resynced = saved.get("resynced") is True
                     self.post_subscribe_ms = saved.get("post_subscribe_ms")
@@ -306,7 +279,8 @@ class AccountState:
     def _save(self):
         self.state_version += 1
         if self.store is not None:
-            self.store.save({"version": 1, "market_id": self.market_id,
+            self.store.save({"writer_id": self.store.writer_id,
+                "writer_heartbeat_ms": self.clock(), "version": 1, "market_id": self.market_id,
                 "scope_ref": self.scope_ref, "currency": "USDT",
                 "max_age_ms": self.max_age_ms, "comparison_ms": self.comparison_ms,
                 "generation": self.generation,
@@ -448,6 +422,13 @@ class AccountState:
 
     def status(self, *, private=False):
         now = self.clock()
+        if self.reader_lease is not None:
+            writer_id, heartbeat = self.reader_lease
+            if (not 0 <= now - heartbeat <= self.max_age_ms
+                    or not self.store.writer_active(writer_id)):
+                self.connected = self.resynced = False
+                self.generation += 1
+                self.reader_lease = None
         topics = {t: self._topic(t, now) for t in TOPICS}
         positions = topics["positions"]["values"]
         settings = topics["positions_settings"]["values"]
@@ -533,21 +514,50 @@ class AccountState:
                                          initial_scenario=initial_scenario)
 
 
-async def observe_bounded(observer, connect, *, seconds, scope_ref, store=None, clock_ms=None):
+def session_sample(service):
+    """Explicit public projection for optional lifecycle consumers; never values."""
+    status = service.status()
+    topics = status['topics']
+    return {'generation': service.generation, 'connected': service.connected,
+        'resynced': service.resynced, 'captured_ms': service.clock(),
+        'topics': {t: {k: d[k] for k in ('state','reason','last_update_ms')}
+                   for t,d in topics.items()},
+        'oldest_receipt_ms': {t: min((r.received_ms for (topic,_),r in service.records.items()
+            if topic == t and r.generation == service.generation), default=None) for t in TOPICS},
+        'position_mode': (status['observed_position_mode']
+            if topics['positions_settings']['state'] == 'VALIDATED'
+            or topics['positions']['state'] in ('VERIFIED_EMPTY','VERIFIED_ACTIVE') else 'UNVERIFIED'),
+        'connection': status['connection'],
+        'sources': {t: {source: {'started_ms': r.started_ms, 'received_ms': r.received_ms,
+            'quality': r.quality} for (topic,source),r in service.records.items()
+            if topic == t and r.generation == service.generation} for t in TOPICS}}
+
+
+async def observe_bounded(observer, connect, *, seconds, scope_ref, store=None, clock_ms=None, sample_sink=None):
     if type(seconds) is not int or not 1 <= seconds <= 3600:
         raise AccountStateError("INVALID_OBSERVER_DURATION")
     service = AccountState(observer, scope_ref=scope_ref, store=store, clock_ms=clock_ms)
     prior_sink = observer.observation_sink
     prior_budget = observer.request_budget
-    budget = AccountReadBudget()
+    budget = prior_budget.fork() if isinstance(prior_budget, AccountReadBudget) else AccountReadBudget()
     observer.request_budget = budget
     loop = asyncio.get_running_loop()
     accepting = threading.Event()
     accepting.set()
+    def sample():
+        if sample_sink is not None:
+            sample_sink(session_sample(service))
+    def connection(state):
+        service.connection(state)
+        sample()
+    def apply(kwargs):
+        result = service.ingest(**kwargs)
+        sample()
+        return result
     async def commit(kwargs):
         if not accepting.is_set():
             return "UNVERIFIED"
-        return service.ingest(**kwargs)
+        return apply(kwargs)
     def ingest(**kwargs):
         # Existing REST reads run in to_thread; marshal all private checkpoint
         # mutations to the same event loop/SQLite writer as WS observations.
@@ -558,11 +568,11 @@ async def observe_bounded(observer, connect, *, seconds, scope_ref, store=None, 
         except RuntimeError:
             in_loop = False
         if in_loop:
-            return service.ingest(**kwargs)
+            return apply(kwargs)
         return asyncio.run_coroutine_threadsafe(commit(kwargs), loop).result(timeout=5)
     observer.observation_sink = ingest
     stream = BitsgapFuturesStream(observer, observation_sink=ingest,
-                                 connection_sink=service.connection)
+                                 connection_sink=connection)
     async def event(event):
         if event.get("event") == "DISCONNECTED":
             service.connection("DISCONNECTED")
@@ -604,7 +614,7 @@ def main(argv=None):
     parser.add_argument("--scope-ref", required=True, help="Non-secret operator namespace, not account ID")
     parser.add_argument("--seconds", type=int, default=8)
     args = parser.parse_args(argv)
-    if args.private_panel and (_ci() or not sys.stdout.isatty() or args.observe):
+    if args.private_panel and (_ci() or not sys.stdin.isatty() or not sys.stdout.isatty() or args.observe):
         print(json.dumps({"status": "PRIVATE_OUTPUT_DISALLOWED", "orders_enabled": False}))
         return 2
     if args.state_file is not None and _ci():

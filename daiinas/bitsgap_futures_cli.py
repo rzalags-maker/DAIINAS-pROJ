@@ -18,8 +18,8 @@ def main(argv=None):
     parser.add_argument("--private-panel", action="store_true")
     parser.add_argument("--watch", action="store_true")
     args = parser.parse_args(argv)
-    if args.private_panel and (os.environ.get("GITHUB_ACTIONS", "").lower() == "true"
-                               or args.watch):
+    from .bitsgap_account_visibility import trusted_terminal
+    if args.private_panel and (not trusted_terminal() or args.watch):
         print(json.dumps({"status":"PRIVATE_OUTPUT_DISALLOWED", "order_routing":"DISABLED"}))
         return 2
     if args.watch:

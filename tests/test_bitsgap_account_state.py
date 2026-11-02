@@ -375,6 +375,7 @@ class AccountStateTests(unittest.TestCase):
                 self.pair("balance", self.wire.balance)
                 output = io.StringIO()
                 with contextlib.redirect_stdout(output), patch.object(output, "isatty", return_value=True), \
+                     patch("sys.stdin.isatty", return_value=True), \
                      patch("daiinas.bitsgap_account_state.time.time", return_value=1), \
                      patch("daiinas.bitsgap_account_state.BitsgapFuturesObserver", side_effect=AssertionError("No API key access")):
                     code = main(["--status", "--private-panel", "--state-file", str(path),
