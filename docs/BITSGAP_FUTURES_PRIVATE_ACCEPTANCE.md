@@ -4,7 +4,70 @@ This extends PR #26 at `3f3baba04392a19946e73c84f4d8c80ea835b504`.
 It reuses the existing Ed25519 REST/WS adapters and single-writer checkpoint.
 No new provider adapter, trade command, position-mode switch or capital funding.
 
-## Status of this increment
+## P05.1: bounded, headless, redacted acceptance (preferred)
+
+With the existing credential already provisioned on a trusted host:
+
+```sh
+python -m daiinas.bitsgap_account_acceptance --observe --seconds 60
+```
+
+No prompt, entered market number, terminal transcription, checkpoint file or UI
+comparison is required. The existing signed REST discovery resolves real KuCoin
+Futures scope; the existing registry separately checks catalog declarations. The
+existing AccountState worker and read-only WS client perform observation. No
+second adapter, order transport, Model A mapping or financial normalization exists.
+
+The default uses `BITSGAP_PRIVATE_KEY_PEM` supplied by the host's secret manager.
+An explicitly selected owner-host `--credential-file /private/path/key.pem` is
+also supported (regular, owner-only, single-link, bounded file; no symlink; not CI).
+Never use that option to read an owner's key from Codex/remote environments.
+There is no automatic search for owner files and no key-as-command-argument option.
+No new credential is requested. Nothing is written to a checkpoint by this command.
+
+The observer window is 1–3600 seconds (default 60), **not** a promise of exactly
+60 wall-clock seconds. Discovery uses four existing signed metadata reads, each
+with the existing 15-second REST timeout. The parent imposes a hard process
+ceiling of `65 + seconds + 20` seconds (setup allowance + window + cleanup allowance),
+killing a stuck worker on expiry. This deadline includes DNS and executor cleanup;
+expiry returns BLOCKED/SESSION_DEADLINE_EXCEEDED, never partial worker output.
+Normal WS close uses a 2-second timeout; a pending REST read may take up to its
+15-second timeout. TLS verification and configured proxy/CA trust stay enabled.
+
+Output is one redacted JSON report. `PASS` means the **read-only observation
+procedure** captured coherent, current-generation REST/WS wallet and explicit API
+inventory evidence with observed ONE_WAY. `PARTIAL` means wallet observation
+succeeded but inventory/mode/transport evidence is incomplete. Provider null is
+`NULL_IS_NOT_ZERO` / `EXPOSURE_UNVERIFIED`. Setup/auth/no valid scoped wallet cohort
+or stale evidence is `BLOCKED`. Completed PASS/PARTIAL exits 0, BLOCKED exits 2.
+All results preserve `NO_TRADE_ACCOUNT_NOT_RECONCILED`, financial admission BLOCKED,
+equity/free margin/native protection UNVERIFIED, and routing/live trading DISABLED.
+Terminal parity stays PENDING_OWNER_VERIFICATION. API inventory validation never
+claims complete exchange exposure. No real command or account modification occurs.
+
+Report timestamps are local receipt clocks, not provider-signed timestamps.
+`observation_samples` counts in-memory state evaluations, not orders/positions.
+Per-source receipt times/quality and snapshot counters contain no account values.
+The final report retains timestamped during-session evidence after normal stop,
+reports `connection_after_stop=DISCONNECTED`, and does not renew sample freshness.
+A reconnect discards the old-generation candidate; conflicts, comparison-window
+mismatches and stale sources cannot become current evidence. No raw frames, signed
+requests, values, private IDs or exception messages are printed/persisted.
+
+The optional older checkpoint workflow below remains supported. Its liveness now
+requires a matching random writer incarnation in the permanent sidecar and saved
+checkpoint, a held lease and a fresh heartbeat. A new writer cannot revive the old
+connected payload. Legacy checkpoints without this proof are historical only.
+Private entrypoints consistently require both stdin/stdout TTYs and reject CI
+before key, checkpoint or network access. All stream factories, including legacy
+watch/probe, share the original per-topic REST/WS budget through reconnect.
+
+The manually dispatched reconciliation workflow uses this redacted command, remains
+main-only, and is **not** activated by this implementation. Standard 3.11–3.13 CI
+runs synthetic tests only, installs the actual WS dependency, and needs no external
+timer helper, private credential, Mac or API connection.
+
+## Status of the earlier private-view increment
 
 - IMPLEMENTED: live-reader operational verdict, per-source validation/receipt/age,
   exact private market scope and USDT, reported total/available, configured TTL,

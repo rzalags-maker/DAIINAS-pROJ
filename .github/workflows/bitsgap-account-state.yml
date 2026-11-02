@@ -30,5 +30,4 @@ jobs:
         env:
           BITSGAP_PRIVATE_KEY_PEM: ${{ secrets.BITSGAP_PRIVATE_KEY_PEM }}
         run: >-
-          python -B -m daiinas.bitsgap_account_state --observe --seconds 8
-          --scope-ref actions-readonly-market-view
+          python -B -m daiinas.bitsgap_account_acceptance --observe --seconds 60

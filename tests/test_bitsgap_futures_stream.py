@@ -203,7 +203,7 @@ class StreamTests(unittest.IsolatedAsyncioTestCase):
             if len(sessions)>=2 and e.get("event")=="VALIDATED_UPDATE":stop.set()
         # Tests reconnect path with no real waiting by overriding asyncio.wait_for
         # would be intrusive; a 1s bound is acceptable for offline regression.
-        await asyncio.wait_for(self.stream.observe_forever(connect,on_event=handle,stop_event=stop,delay_seconds=1),4)
+        await asyncio.wait_for(self.stream.observe_forever(connect,on_event=handle,stop_event=stop,delay_seconds=1),15)
         self.assertGreaterEqual(len(sessions),2)
         self.assertEqual(len([x for x in self.w.calls if x[0]=="balance"]),len(sessions))
         self.assertTrue(any(x["event"]=="DISCONNECTED" for x in events))
@@ -234,7 +234,9 @@ class StreamTests(unittest.IsolatedAsyncioTestCase):
                 return await self.queue.get()
         ws = IdleWS()
         async def later_frame():
-            await asyncio.sleep(0.07)
+            # Wait for budgeted startup, then allow an actual periodic read.
+            while self.stream.snapshot_batches < 2:
+                await asyncio.sleep(0.01)
             await ws.queue.put(json.dumps({"ok":True,"topic":"balance",
                 "params":{"em":72},"value":self.w.balance}))
         task = asyncio.create_task(later_frame())
