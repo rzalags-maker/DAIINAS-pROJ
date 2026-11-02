@@ -173,24 +173,62 @@ def compare_terminal(state, terminal, *, captured_ms=None):
 
 
 def _prompt_terminal():
+    """Validate private operator answers in-place; never echo financial values."""
     print("Private comparison: verify KuCoin FUTURES, USDT, key-bound account and UI rounding.")
-    confirmed = input("Same key-bound market/account corroborated? Type YES: ") == "YES"
-    precision = int(input("Confirmed decimal display precision (half-up rounding): "))
-    mode = input("Terminal mode ONE_WAY/HEDGE/UNVERIFIED: ").strip()
+    while True:
+        answer = input("Same key-bound market/account corroborated? YES or NO: ").strip().upper()
+        if answer in ("YES", "NO"):
+            confirmed = answer == "YES"
+            break
+        print("INVALID_ACCOUNT_CONFIRMATION: enter YES or NO.")
+    if not confirmed:
+        print("ACCOUNT_IDENTITY_UNVERIFIED: account matching cannot be certified.")
+    while True:
+        raw = input("Confirmed decimal display precision (integer 0-18, e.g. 2): ").strip()
+        if raw.isascii() and raw.isdecimal() and len(raw) <= 3 and 0 <= int(raw) <= 18:
+            precision = int(raw)
+            break
+        print("INVALID_PRECISION: enter an integer from 0 to 18, e.g. 2.")
+    while True:
+        mode = input("Terminal mode ONE_WAY/HEDGE/UNVERIFIED: ").strip().upper()
+        if mode == "ONEWAY":
+            mode = "ONE_WAY"
+        if mode in ("ONE_WAY", "HEDGE", "UNVERIFIED"):
+            break
+        print("INVALID_POSITION_MODE: enter ONE_WAY, HEDGE or UNVERIFIED.")
     print("Now sample the live terminal. Enter one line: TOTAL AVAILABLE ORDERS POSITIONS UTC_MS")
-    print("Use ? for unknown counts; NOW for the local time you confirm this live sample.")
-    fields = input("Live sample: ").split()
-    if len(fields) != 5:
-        raise AccountStateError("INVALID_TERMINAL_INPUT")
-    import time
-    observed_ms = int(time.time() * 1000) if fields[4] == "NOW" else int(fields[4])
-    return {"total": fields[0], "available": fields[1], "precision": precision,
-        "observed_ms": observed_ms,
-        "open_orders": None if fields[2] == "?" else int(fields[2]),
-        "positions": None if fields[3] == "?" else int(fields[3]),
-        "position_mode": mode, "same_account_confirmed": confirmed,
-        "identity_basis": "OWNER_CONFIRMED_KEY_BOUND_MARKET" if confirmed else "UNVERIFIED"}
-
+    print("Use ? for unknown counts; NOW only when confirming a current live sample.")
+    while True:
+        fields = input("Live sample: ").split()
+        try:
+            if len(fields) != 5:
+                raise ValueError()
+            total, available = _amount(fields[0]), _amount(fields[1])
+            if available > total:
+                raise ValueError()
+            counts = []
+            for field in fields[2:4]:
+                if field == "?":
+                    counts.append(None)
+                elif field.isascii() and field.isdecimal() and len(field) <= 12:
+                    counts.append(int(field))
+                else:
+                    raise ValueError()
+            timestamp = fields[4].upper()
+            if timestamp == "NOW":
+                import time
+                observed_ms = int(time.time() * 1000)
+            elif timestamp.isascii() and timestamp.isdecimal() and len(timestamp) <= 16:
+                observed_ms = int(timestamp)
+            else:
+                raise ValueError()
+        except (ValueError, AccountStateError):
+            print("INVALID_LIVE_SAMPLE: enter TOTAL AVAILABLE ORDERS POSITIONS NOW; use ? for unknown counts.")
+            continue
+        return {"total": fields[0], "available": fields[1], "precision": precision,
+            "observed_ms": observed_ms, "open_orders": counts[0], "positions": counts[1],
+            "position_mode": mode, "same_account_confirmed": confirmed,
+            "identity_basis": "OWNER_CONFIRMED_KEY_BOUND_MARKET" if confirmed else "UNVERIFIED"}
 
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
@@ -198,6 +236,7 @@ def main(argv=None):
     p.add_argument("--scope-ref", required=True)
     p.add_argument("--private-panel", action="store_true")
     p.add_argument("--compare", action="store_true")
+    p.add_argument("--summary-only", action="store_true", help="Redact private amounts from comparison output")
     p.add_argument("--comparison-file", type=Path)
     args = p.parse_args(argv)
     if (args.private_panel or args.compare) and not trusted_terminal():
@@ -205,6 +244,9 @@ def main(argv=None):
         return 2
     if args.compare and (not args.private_panel or args.comparison_file is None):
         print(json.dumps({"status": "PRIVATE_COMPARISON_REQUIRES_PRIVATE_PANEL_AND_FILE", "orders_enabled": False}))
+        return 2
+    if args.summary_only and not (args.compare and args.private_panel and args.comparison_file):
+        print(json.dumps({"status": "SUMMARY_REQUIRES_PRIVATE_COMPARISON", "orders_enabled": False}))
         return 2
     try:
         if args.comparison_file and args.comparison_file.resolve() == args.state_file.resolve():
@@ -247,11 +289,24 @@ def main(argv=None):
                     result["balance_terminal_parity"] = comparison["balance_outcome"]
             if result["terminal_parity"] == "MATCH":
                 result["blockers"].remove("TERMINAL_PARITY_NOT_VERIFIED")
+            if args.summary_only:
+                # Private numeric comparison is stored locally, not emitted.
+                result = {"status": "PRIVATE_COMPARISON_RECORDED",
+                    "balance_terminal_parity": result["balance_terminal_parity"],
+                    "terminal_parity": result["terminal_parity"],
+                    "open_orders_state": result["open_orders_state"],
+                    "positions_state": result["positions_state"],
+                    "position_mode_state": result["position_mode_state"],
+                    "orders_enabled": False, "new_entry": BLOCKED}
             print(json.dumps(result, sort_keys=True))
         finally:
             with_store.close()
         return 0  # Observation displayed; never execution permission.
-    except (Exception, KeyboardInterrupt):
+    except (EOFError, KeyboardInterrupt):
+        print(json.dumps({"status": "LOCAL_INPUT_CANCELLED", "orders_enabled": False,
+                          "new_entry": BLOCKED}))
+        return 2
+    except Exception:
         # Never emit exception text, arbitrary operator input, paths or payloads.
         print(json.dumps({"status": "LOCAL_VISIBILITY_UNVERIFIED", "orders_enabled": False,
                           "new_entry": BLOCKED}))
