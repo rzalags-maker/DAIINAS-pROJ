@@ -19,6 +19,8 @@ jobs:
         run: |
           set -o pipefail
           python -m unittest discover -s tests -v 2>&1 | tee regression-tests.log
+      - name: Integrated P03.1 P04 redacted MOCK gateway acceptance
+        run: python scripts/verify_p04.py
       - name: Reproducible MOCK account cycles and restart/replay proof
         run: python scripts/verify_v46_account.py --output-dir v46-proof
       - name: v4.7 synthetic leverage and position-conveyor proof

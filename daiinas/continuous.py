@@ -31,6 +31,12 @@ def settings(path):
         if 'initial_capital' not in data or 'funding' not in data:raise ValueError('Explicit v4 funding source and amount required; no default')
         portfolio=PortfolioPolicy(**data)
         values.setdefault('initial_capital_usdt',float(portfolio.initial_capital))
+    if 'p04_mock' in config:
+        from .p04_gateway import MockExecutionContract
+        if config.get('engine')!='v4' or portfolio.strategy_version!='v47' or not portfolio.paper_settlement:
+            raise ValueError('P04 requires the existing v4.7 MOCK ledger')
+        if not isinstance(config['p04_mock'],dict):raise ValueError('P04 explicit MOCK contract required')
+        MockExecutionContract(**config['p04_mock'])
     paper=PaperPolicy(**values);shadow=ShadowPolicy(**config.get('shadow',{}))
     if (config.get('engine','v33')=='v33' and paper.initial_capital_usdt!=8) or paper.margin_fraction>.8:
         raise ValueError('Legacy 8-USDT account or separate explicit funded portfolio, <=80% margin')
@@ -79,7 +85,7 @@ def replay(sources,paper_path,policy=PaperPolicy(),shadow=ShadowPolicy(),*,ledge
 
 
 async def service(args,config,paper,shadow,*,account_adapter=None):
-    pipeline=Pipeline(args.source_db,args.paper_db,paper,shadow,**account_factory(config))
+    pipeline=Pipeline(args.source_db,args.paper_db,paper,shadow,gateway_contract=config.get('p04_mock'),**account_factory(config))
     observer=ContinuousObserver(pipeline,source_path=args.source_db,deep=config.get('deep',5),
         refresh_seconds=config.get('refresh_seconds',180),dwell_ms=config.get('dwell_seconds',120)*1000,
         queue_size=config.get('queue_size',20000))
@@ -127,10 +133,14 @@ async def service(args,config,paper,shadow,*,account_adapter=None):
             await pipeline.append([('CLOCK',f'clock:{boot}:{tick}',{'service':runtime})])
             if config.get('portfolio',{}).get('strategy_version')=='v47':
                 armed=await asyncio.get_running_loop().run_in_executor(pipeline.executor,pipeline.ledger.session_armed)
-                if not armed:stop.set();return
+                should_stop=(not armed) if pipeline.gateway is None else await asyncio.get_running_loop().run_in_executor(
+                    pipeline.executor,lambda:pipeline.gateway.status()['mode']=='STOP' or pipeline.ledger.state.get('session',{}).get('stop_reason')=='SESSION_EXPIRED')
+                if should_stop:stop.set();return
             await asyncio.sleep(1)
     if getattr(args,'start_session',False):
-        await pipeline.append([('CONTROL','session-start:'+boot,{'action':'session-start','request_id':boot,'actor':'local-cli','duration_ms':0})])
+        if pipeline.gateway is not None:
+            await pipeline.gateway_control('START_PAPER',request_id=boot,actor='local-cli')
+        else:await pipeline.append([('CONTROL','session-start:'+boot,{'action':'session-start','request_id':boot,'actor':'local-cli','duration_ms':0})])
     runner=asyncio.create_task(loops());clock=asyncio.create_task(clocks());waiting=asyncio.create_task(stop.wait())
     try:
         done,_=await asyncio.wait([runner,clock,waiting],timeout=args.seconds or None,return_when=asyncio.FIRST_COMPLETED)
@@ -142,7 +152,9 @@ async def service(args,config,paper,shadow,*,account_adapter=None):
         for task in (runner,clock,waiting):task.cancel()
         await asyncio.gather(runner,clock,waiting,return_exceptions=True)
         if config.get('portfolio',{}).get('strategy_version')=='v47':
-            await pipeline.append([('CONTROL','session-stop:'+boot,{'action':'session-stop','reason':'WORKER_EXIT'})])
+            if pipeline.gateway is not None:
+                await pipeline.gateway_control('STOP',request_id='exit:'+boot,actor='local-worker-exit')
+            else:await pipeline.append([('CONTROL','session-stop:'+boot,{'action':'session-stop','reason':'WORKER_EXIT'})])
         result=await pipeline.report()
         result.update({'stream':observer.runtime(),'errors':errors,'fatal_error':fatal,
                        'elapsed_seconds':time.monotonic()-started,'boot_id':boot,
@@ -172,7 +184,7 @@ async def service(args,config,paper,shadow,*,account_adapter=None):
 
 def main(argv=None):
     p=argparse.ArgumentParser(description='Continuous dynamic paper engine. LIVE ORDERS DISABLED.')
-    p.add_argument('command',choices=['run','replay','start','pause','stop','resume','status','reset-halt','capital-flow','backup','verify-backup','archive-source'])
+    p.add_argument('command',choices=['run','replay','start','pause','stop','resume','status','reset-halt','capital-flow','backup','verify-backup','archive-source','p04-mode'])
     p.add_argument('--config',type=Path,default=Path('configs/continuous.json'))
     p.add_argument('--source-db',type=Path,default=None)
     p.add_argument('--paper-db',type=Path,default=None)
@@ -183,6 +195,7 @@ def main(argv=None):
     p.add_argument('--renew-seconds',type=int,default=72000)
     p.add_argument('--review-note',default='')
     p.add_argument('--actor',default='local-cli')
+    p.add_argument('--mode',choices=['OBSERVE','START_PAPER','START_LIVE','PAUSE','STOP','HALT'])
     p.add_argument('--command-id')
     p.add_argument('--session-seconds',type=int,default=0,help='Optional session expiry (0=until STOP, default)')
     p.add_argument('--amount',type=float)
@@ -227,6 +240,14 @@ def main(argv=None):
     if action=='reset-halt':
         if len(a.review_note.strip())<8:p.error('Explicit --review-note required')
         payload['review_note']=a.review_note
+    if a.command=='p04-mode' or 'p04_mock' in path_config and a.command in ('start','pause','stop'):
+        if 'p04_mock' not in path_config or not a.mode and a.command=='p04-mode':p.error('Explicit P04 MOCK configuration and mode required')
+        selected=a.mode if a.command=='p04-mode' else {'start':'START_PAPER','pause':'PAUSE','stop':'STOP'}[a.command]
+        if len(a.actor.strip())<3:p.error('Owner actor required')
+        if selected=='START_LIVE':
+            print(canonical({'status':'BLOCKED','reason':'START_LIVE_BLOCKED_NO_LIVE_TRANSPORT','orders_enabled':False}));return 2
+        if a.session_seconds<0:p.error('Session duration must be nonnegative')
+        action='p04-mode';payload={'action':action,'mode':selected,'request_id':a.command_id or uuid4().hex,'actor':a.actor,'duration_ms':a.session_seconds*1000}
     if action=='capital-flow':
         if a.amount is None:p.error('Explicit simulated --amount required')
         payload['amount']=a.amount
