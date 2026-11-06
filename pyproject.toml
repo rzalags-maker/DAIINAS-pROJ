@@ -12,6 +12,9 @@ dependencies = []
 [project.optional-dependencies]
 live = ["websockets==16.0"]
 bitsgap = ["cryptography>=42,<47"]
+# Development-only generated safety tests.  This is intentionally not a
+# runtime dependency and grants no market or order capability.
+test = ["hypothesis>=6.100,<7"]
 
 [project.scripts]
 daiinas = "daiinas.cli:main"
