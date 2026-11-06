@@ -21,6 +21,8 @@ jobs:
           python -m unittest discover -s tests -v 2>&1 | tee regression-tests.log
       - name: Integrated P03.1 P04 redacted MOCK gateway acceptance
         run: python scripts/verify_p04.py
+      - name: P06 offline first-order feasibility (must remain blocked)
+        run: python scripts/verify_p06.py --output first-order-readiness.json
       - name: Reproducible MOCK account cycles and restart/replay proof
         run: python scripts/verify_v46_account.py --output-dir v46-proof
       - name: v4.7 synthetic leverage and position-conveyor proof
@@ -31,6 +33,7 @@ jobs:
           name: v46-account-python-${{ matrix.python-version }}
           path: |
             regression-tests.log
+            first-order-readiness.json
             v46-proof/status.json
             v47-proof/status.json
           retention-days: 14
