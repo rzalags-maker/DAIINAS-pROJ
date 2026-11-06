@@ -10,26 +10,20 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from daiinas.bitsgap_account_acceptance import AccountAcceptance, blocked_report
+from daiinas.bitsgap_account_acceptance import blocked_report
 from daiinas.bitsgap_capabilities import BitsgapCapabilityRegistry
-from daiinas.bitsgap_first_order import FirstOrderEvidenceBundle, assess_first_order
+from daiinas.p06_first_order_feasibility import assess_first_order
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path)
     args = parser.parse_args(argv)
-    bundle = FirstOrderEvidenceBundle(
-        registry=BitsgapCapabilityRegistry.documented(),
-        account=AccountAcceptance(
-            observed_ms=0, generation=0, account_scope_matches=False,
-            balance='UNVERIFIED', orders='UNVERIFIED', positions='UNVERIFIED',
-            position_mode='UNVERIFIED', connection='DISCONNECTED'),
-        acceptance=blocked_report('NO_CURRENT_SESSION_EVIDENCE'),
-        expected_market_id=0,
-    )
-    report = assess_first_order(bundle, now_ms=0)
-    if report['first_order_readiness'] != 'BLOCKED' or report['orders_enabled'] is not False:
+    report = assess_first_order(BitsgapCapabilityRegistry.documented(),
+                                blocked_report('NO_CURRENT_SESSION_EVIDENCE'),
+                                now_ms=0)
+    readiness = report['first_order_readiness']
+    if readiness['status'] != 'BLOCKED' or readiness['orders_enabled'] is not False:
         raise RuntimeError('P06_FAIL_CLOSED_CHECK_FAILED')
     serialized = json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + '\n'
     if args.output:
