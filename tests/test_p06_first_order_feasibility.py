@@ -47,7 +47,7 @@ def catalog(*, synthetic=False, mode='full'):
         r.records['order_place'] = replace(c, verification='UNSUPPORTED')
     if mode == 'old_catalog':
         c = r.get('order_place')
-        r.records['order_place'] = replace(c, validated_ms=1)
+        r.records['order_place'] = replace(c, validated_ms=-1000)
     return r
 
 
