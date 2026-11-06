@@ -22,6 +22,20 @@ authorized GitHub Actions environment used by previous read-only work. P09 did
 not trigger that environment because it could not establish a permitted
 credential-bearing context locally.
 
+## P09.1 provider-request status
+
+**Status: `NOT_SUBMITTED`** — no Bitsgap ticket/reference exists.
+
+| Field | Record |
+| --- | --- |
+| Attempted at | 2026-11-06 13:27 UTC |
+| Official destination verified | [Bitsgap Developer API GitHub issues](https://github.com/Bitsgap/bitsgap-api-docs/issues). The official repository already uses this channel for a native-protection API question: [issue #1](https://github.com/Bitsgap/bitsgap-api-docs/issues/1). |
+| Subject prepared | `KuCoin Futures: Developer API support for exchange-native TP/SL protection?` |
+| Submission result | GitHub API returned `403 Resource not accessible by integration`. No request body, credential, account identifier or private account message was exposed. |
+| Ticket/reference | None — the provider did not receive or acknowledge a ticket. |
+| Exact external blocker | The connected GitHub integration has read access to `Bitsgap/bitsgap-api-docs` but lacks permission to create issues in that repository. |
+| Next authorized action | Submit the unchanged nine-point request at the official issues URL from a Bitsgap-authorized GitHub account, or use an authenticated Bitsgap Helpdesk channel and retain its ticket reference. When receipt or a response is available, add only that evidence and classify it against the P09 matrix. |
+
 ## Bitsgap Futures protection capability matrix
 
 `DOCUMENTED_ONLY` means a public schema describes the generic mechanism but
