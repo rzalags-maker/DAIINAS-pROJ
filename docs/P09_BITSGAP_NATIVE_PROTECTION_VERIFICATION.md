@@ -91,16 +91,38 @@ that an exchange-native contract exists.
 
 ## Exact provider-facing clarification request
 
-> For a `KUCOIN_FUTURES` USDT account using the signed Bitsgap developer API,
-> which documented topic and exact parameter schema creates exchange-native
-> take-profit and stop-loss protection equivalent to KuCoin Futures
-> `POST /api/v1/st-orders`? Please provide the API schema and response/state
-> examples for trigger prices and trigger reference, reduce-only/close semantics,
-> parent and protective child IDs, contract-unit/precision rules, partial-fill
-> child quantity updates, OCO or sibling cancellation, reconnect/restart order
-> reconciliation, and whether accepted protective orders remain venue-active
-> after the Bitsgap API/WS client disconnects. Please identify any unsupported
-> items explicitly for the KuCoin Futures market and account scope.
+> **Subject:** KuCoin Futures API — native TP/SL protection contract
+>
+> For a `KUCOIN_FUTURES` USDT account connected through the signed Bitsgap
+> Developer API, we need to confirm whether the API supports
+> **exchange-native Take Profit and Stop Loss protection**, equivalent to KuCoin
+> Futures `POST /api/v1/st-orders`.
+>
+> Please provide the exact supported API commands, parameter schema and redacted
+> request/response examples covering:
+>
+> 1. Native TP/SL trigger prices and trigger reference types (last, mark or index).
+> 2. Exchange-enforced reduce-only/close-position behavior, including contract
+>    precision and position mode.
+> 3. Parent entry and protective child order IDs, including exchange-side
+>    confirmation.
+> 4. How TP/SL quantities are created or adjusted after partial fills.
+> 5. OCO or automatic cancellation/neutralisation of the remaining protective
+>    order after execution.
+> 6. Whether protective orders remain active on KuCoin after the originating
+>    API/WebSocket client disconnects or the process terminates.
+> 7. The REST/WS endpoints that provide authoritative order, position and
+>    protective-order states after reconnect or restart.
+> 8. Complete open-position and pending-order inventories, available Futures
+>    margin and trading costs, particularly when `orders` or `positions` return
+>    null or no provider data.
+> 9. Which capabilities are unavailable through the Developer API despite being
+>    available in the Bitsgap user interface.
+>
+> If the Developer API does not support exchange-native TP/SL for KuCoin Futures,
+> please confirm this explicitly. Documentation and read-only examples only are
+> requested; no trading operation, account credential or account modification is
+> requested.
 
 The smallest permitted follow-up, after such a provider answer, is to ingest it
 as redacted **read-only** capability evidence and extend the P06 registry/tests
