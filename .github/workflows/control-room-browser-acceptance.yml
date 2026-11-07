@@ -29,6 +29,12 @@ jobs:
         run: |
           python -m daiinas.control_room > control-room-server.log 2>&1 &
           echo $! > control-room-server.pid
+          for attempt in {1..20}; do
+            curl --fail --silent http://127.0.0.1:8765/ > /dev/null && exit 0
+            sleep 1
+          done
+          cat control-room-server.log
+          exit 1
       - name: Browser acceptance with live Binance and Kraken public data
         env:
           CONTROL_ROOM_ARTIFACTS: control-room-browser-artifacts

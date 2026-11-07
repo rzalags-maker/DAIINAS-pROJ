@@ -145,3 +145,7 @@ def serve(host='127.0.0.1', port=8765, db='control-room.sqlite3'):
     server = build_server(host, port, db)
     print('DAIINAS Control Room: http://%s:%s (public/manual only)' % (host, port))
     server.serve_forever()
+
+
+if __name__ == '__main__':
+    serve()
