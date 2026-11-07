@@ -11,7 +11,9 @@ from .intelligence import analyze, normalize
 from .market_intelligence import update as update_market_intelligence
 from .moneyflow import BestQuotes, Execution, snapshot as flow_snapshot
 
-BINANCE = 'https://api.binance.com'
+# Official public-market-data host.  It avoids the region-restricted trading API;
+# this module has no authenticated or order endpoints.
+BINANCE = 'https://data-api.binance.vision'
 KRAKEN = 'https://api.kraken.com'
 SYMBOLS = {'BTCUSDT': ('BTCUSDT', 'XBTUSDT'), 'ETHUSDT': ('ETHUSDT', 'ETHUSDT')}
 
