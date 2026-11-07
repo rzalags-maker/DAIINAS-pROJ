@@ -1,8 +1,0 @@
-[Unit]
-Description=Probe DAIINAS v3.3 every minute
-[Timer]
-OnBootSec=60
-OnUnitActiveSec=60
-Unit=daiinas-v33-health.service
-[Install]
-WantedBy=timers.target

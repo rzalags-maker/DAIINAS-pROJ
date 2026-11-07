@@ -89,7 +89,7 @@ def analyze(observations):
         'bias': 'NEUTRAL', 'confidence': 'LOW', 'data_quality': quality,
         'regime': 'UNKNOWN', 'mid_price': str(sum(mids) / len(mids)),
         'invalidation_level': None, 'target_level': None,
-        'scenario_status': 'NO_ACTIONABLE_SCENARIO_UNTIL_VALIDATED_STRUCTURE_AND_MODEL_A_RISK',
+        'scenario_status': 'NO_ACTIONABLE_SCENARIO_UNTIL_VALIDATED_MANUAL_REVIEW',
         'expected_spread_bps': str(spread), 'entry_confirmation':
             'require_timestamped_cross_venue_evidence_and_manual_confirmation',
         'evidence': evidence, 'evidence_sha256': digest,

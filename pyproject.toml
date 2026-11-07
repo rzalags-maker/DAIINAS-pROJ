@@ -3,21 +3,11 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "daiinas"
+name = "daiinas-control-room"
 version = "0.1.0"
-description = "Simulation-only perpetual futures liquidity reversal research"
+description = "Public-data, manual-only crypto market observation"
 requires-python = ">=3.11"
 dependencies = []
-
-[project.optional-dependencies]
-live = ["websockets==16.0"]
-bitsgap = ["cryptography>=42,<47"]
-# Development-only generated safety tests.  This is intentionally not a
-# runtime dependency and grants no market or order capability.
-test = ["hypothesis>=6.100,<7"]
-
-[project.scripts]
-daiinas = "daiinas.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["daiinas*"]

@@ -4,6 +4,8 @@ on:
     paths:
       - daiinas/control_room.py
       - daiinas/intelligence.py
+      - daiinas/market_intelligence.py
+      - daiinas/moneyflow.py
       - scripts/verify_control_room_browser.mjs
       - .github/workflows/control-room-browser-acceptance.yml
   workflow_dispatch:

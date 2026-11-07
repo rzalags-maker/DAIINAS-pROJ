@@ -1,4 +1,4 @@
-name: Research engine tests
+name: Control Room tests
 on: [push, pull_request]
 permissions:
   contents: read
@@ -13,28 +13,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install read-only adapter test dependencies
-        run: python -m pip install "cryptography>=42,<47" "websockets>=16,<17" ".[test]"
-      - name: All preserved and account-driven regression tests
-        run: |
-          set -o pipefail
-          python -m unittest discover -s tests -v 2>&1 | tee regression-tests.log
-      - name: Integrated P03.1 P04 redacted MOCK gateway acceptance
-        run: python scripts/verify_p04.py
-      - name: P06 offline first-order feasibility (must remain blocked)
-        run: python scripts/verify_p06.py --output first-order-readiness.json
-      - name: Reproducible MOCK account cycles and restart/replay proof
-        run: python scripts/verify_v46_account.py --output-dir v46-proof
-      - name: v4.7 synthetic leverage and position-conveyor proof
-        run: python scripts/verify_v47.py --output-dir v47-proof
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: v46-account-python-${{ matrix.python-version }}
-          path: |
-            regression-tests.log
-            first-order-readiness.json
-            v46-proof/status.json
-            v47-proof/status.json
-          retention-days: 14
-      - run: python -m daiinas --help
+      - name: Control Room regression tests
+        run: python -m unittest discover -s tests -v

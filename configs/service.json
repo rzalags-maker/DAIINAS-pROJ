@@ -1,8 +1,0 @@
-{
-  "symbols": ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT"],
-  "interval": "5m",
-  "strategy": {},
-  "risk": {},
-  "poll_seconds": 10,
-  "max_catchup_bars": 1000
-}

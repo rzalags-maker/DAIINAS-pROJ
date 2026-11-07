@@ -1,7 +1,7 @@
 """Venue-agnostic, decision-time-only trade-flow features.
 
-Research observations are NOT buy/sell recommendations. KuCoin contract counts
-must be converted with the exchange's validated contract multiplier.
+Research observations are NOT buy/sell recommendations. Quantity must be
+expressed with the source venue's validated multiplier.
 """
 from dataclasses import dataclass
 import math
