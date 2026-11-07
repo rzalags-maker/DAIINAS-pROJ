@@ -1,0 +1,29 @@
+name: Control Room public-data smoke
+on:
+  pull_request:
+    paths:
+      - daiinas/control_room.py
+      - daiinas/intelligence.py
+      - .github/workflows/control-room-public-smoke.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-read-only-snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Verify Binance and Kraken public snapshot (no credentials, no orders)
+        run: |
+          python - <<'PY'
+          from daiinas.control_room import PublicClient
+          result = PublicClient().snapshot('BTCUSDT')
+          assert result['source_status'] == 'PUBLIC_NO_AUTH'
+          assert {item['source'] for item in result['evidence']} == {'BINANCE', 'KRAKEN'}
+          assert result['orders_enabled'] is False
+          print('PUBLIC_CONTROL_ROOM_SMOKE_OK', result['data_quality'], result['request_latency_ms'])
+          PY
